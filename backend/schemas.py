@@ -1,0 +1,24 @@
+from pydantic import BaseModel, EmailStr, Field, validator
+import re
+
+# Creación de tablas
+# Validaciones de datos para los registros
+class UserCreate(BaseModel):
+    name: str = Field(..., min_lenght=6, max_lenght=50)
+    email: EmailStr
+    password: str = Field(..., min_lenght=6, max_lenght=100)
+
+# Aquí se valida la contraseña para que sea más fuerte
+    @validator("password")
+    def password_strength(cls, value):
+        if not re.search(r"[A-Za-z]", value):   # Verifica que haya al menos una letra
+            raise ValueError("La contraseña debe tener al menos una letra")
+        
+        if not re.search(r"[0-9]", value):    # Valida que  haya al menos un número
+            raise ValueError("La contraseña debe tener al menos un número")
+        
+        return value
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_lenght=1)
