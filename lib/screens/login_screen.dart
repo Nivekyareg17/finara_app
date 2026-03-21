@@ -169,15 +169,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 25),
-
                 const Text("OR CONTINUE WITH"),
-
                 const SizedBox(height: 15),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    //googlee
+                    // Google
                     CircleAvatar(
                       radius: 25,
                       backgroundColor:
@@ -187,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(width: 20),
 
-                    //apple
+                    // Apple
                     CircleAvatar(
                       radius: 25,
                       backgroundColor:
@@ -196,6 +194,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 30),
+
+              
               ],
             ),
           ),
