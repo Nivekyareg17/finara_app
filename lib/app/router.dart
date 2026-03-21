@@ -6,7 +6,7 @@ class AppRouter {
   // Definimos las rutas estáticas
   static Map<String, WidgetBuilder> getRoutes() {
     return {
-      '/': (context) => const AIChatPage(), // Esta es la pantalla de Daiko IA
+      '/daiko_ai': (context) => const AIChatPage(), // Esta es la pantalla de Daiko IA
       // Cuando crees más pantallas, las pondrás aquí abajo:
       // '/login': (context) => const LoginPage(),
     };

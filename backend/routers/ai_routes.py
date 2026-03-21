@@ -1,25 +1,37 @@
+import json
 from fastapi import APIRouter, HTTPException
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 
-# Carga la llave desde el archivo .env
+# 1. ESTO TE FALTA: Cargar configuración
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-
-# Configuración de Gemini
 genai.configure(api_key=api_key)
+
+# 2. ESTO TE FALTA: Definir el modelo
 model = genai.GenerativeModel('gemini-2.5-flash')
 
+# 3. ESTO TE FALTA: Definir el router
 router = APIRouter(prefix="/ai", tags=["IA Financiera"])
 
 @router.get("/consultar")
 async def consultar_ia(pregunta: str):
     try:
-        # Aquí le damos la "personalidad" de Finara
-        prompt_config = f"Eres Finara, un asistente de educación financiera. Responde de forma clara y motivadora: {pregunta}"
+        contexto_daiko = (
+            "Eres Daiko, IA de la app Finara. Analiza el siguiente mensaje. "
+            "Si es una consulta financiera, responde en formato JSON con estos campos: "
+            "{ 'text': 'tu respuesta', "
+            "Si es charla normal, usa type: 'text'."
+        )
         
-        response = model.generate_content(prompt_config)
-        return {"respuesta": response.text}
+        response = model.generate_content(
+            f"{contexto_daiko}\n\nMensaje del usuario: {pregunta}",
+            generation_config={"response_mime_type": "application/json"}
+        )
+
+        resultado = json.loads(response.text)
+        return resultado 
     except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error en la IA: {str(e)}") from e
+        # Agregamos el 'from e' que te pedía el otro error
+        raise HTTPException(status_code=500, detail=str(e)) from e
