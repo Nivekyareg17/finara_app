@@ -19,13 +19,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF061A17) : Colors.white,
-
       body: Center(
-        
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
-
             child: Column(
               children: [
                 //logo
@@ -111,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF18B47A),
@@ -119,7 +115,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-
                     onPressed: () async {
                       final auth = context.read<AuthProvider>();
 
@@ -138,7 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       }
                     },
-
                     child: const Text(
                       "Sign In",
                       style: TextStyle(fontSize: 16),
@@ -152,12 +146,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text("Don't have an account? "),
-
                     GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, "/register");
                       },
-
                       child: const Text(
                         "Create an Account",
                         style: TextStyle(
@@ -170,35 +162,35 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 25),
-
                 const Text("OR CONTINUE WITH"),
-
                 const SizedBox(height: 15),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    //googlee
+                    // Google
                     CircleAvatar(
                       radius: 25,
-                      backgroundColor: isDark
-                          ? Colors.black26
-                          : Colors.grey[200],
+                      backgroundColor:
+                          isDark ? Colors.black26 : Colors.grey[200],
                       child: const Icon(Icons.g_mobiledata, size: 30),
                     ),
 
                     const SizedBox(width: 20),
 
-                    //apple
+                    // Apple
                     CircleAvatar(
                       radius: 25,
-                      backgroundColor: isDark
-                          ? Colors.black26
-                          : Colors.grey[200],
+                      backgroundColor:
+                          isDark ? Colors.black26 : Colors.grey[200],
                       child: const Icon(Icons.apple),
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 30),
+
+              
               ],
             ),
           ),
