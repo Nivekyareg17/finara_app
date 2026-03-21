@@ -1,16 +1,25 @@
 # Importaciones
-from fastapi import FastAPI    # Framework que ejecuta a fastAPI
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware  # <-- IMPORTANTE: Nueva importación
 
-from database import engine    # engine es el objeto que conecta SQLAlchemy con PostgreSQL.
-from models import Base    # Base contiene la estructura de las tablas
-
-# 1. AÑADE "ai_routes" A ESTA LÍNEA
-from routers import auth_routes, user_routes, ai_routes    
+from database import engine
+from models import Base
+from routers import auth_routes, user_routes, ai_routes 
 
 # Crea la aplicación backend
 app = FastAPI(
     title="Finara API",
     version="1.0"
+)
+
+# --- CONFIGURACIÓN DE CORS (PERMISOS) ---
+# Esto permite que tu app de Flutter se conecte sin bloqueos
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite todas las conexiones (ideal para desarrollo)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Crear las tablas en la base de datos
@@ -19,6 +28,4 @@ Base.metadata.create_all(bind=engine)
 # Agregar las rutas definidas
 app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
-
-# 2. AÑADE ESTA LÍNEA AL FINAL PARA ACTIVAR LA IA
-app.include_router(ai_routes.router)
+app.include_router(ai_routes.router)  # Tu IA ya está activa aquí

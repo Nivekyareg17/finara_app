@@ -1,3 +1,4 @@
+import 'package:finara_app_v1/features/ai/view/ai_chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -34,6 +35,9 @@ class MyApp extends StatelessWidget {
           "/login": (context) => const LoginScreen(),
           "/register": (context) => const RegisterScreen(),
           "/home": (context) => const HomeScreen(),
+          '/daiko_ai': (context) => const AIChatPage(),
+
+          
 
         },
       ),
