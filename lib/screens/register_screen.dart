@@ -9,55 +9,94 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  Future<void> register() async {
-
-    final success = await ApiService.register(
-      nameController.text,
-      emailController.text,
-      passwordController.text
+  //Funcion mensaje exito-error en create user
+  void showCustomDialog(String message, {bool isError = false}) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isError ? Colors.red : const Color(0xFF18B47A),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isError ? Icons.error : Icons.check_circle,
+                  color: Colors.white,
+                  size: 40,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
 
+    // Se cierra solo después de 2 segundos
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  Future<void> register() async {
+    final success = await ApiService.register(
+        nameController.text, emailController.text, passwordController.text);
+
     if (success) {
+      showCustomDialog("Usuario creado");
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Usuario creado"))
-      );
+      // Espera antes de volver para poder ver el show
+      await Future.delayed(const Duration(seconds: 2));
 
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.of(context).pop(); // cierra dialog
+      }
 
     } else {
+      showCustomDialog("Error al registrar", isError: true);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al registrar"))
-      );
+      await Future.delayed(const Duration(seconds: 2));
 
+      if (mounted) {
+        Navigator.of(context).pop(); // solo cierra dialog
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-
       backgroundColor: isDark ? const Color(0xFF0B1220) : Colors.white,
-
       body: SafeArea(
         child: SingleChildScrollView(
-
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 25),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 const SizedBox(height: 10),
 
                 //Btn atras
@@ -73,7 +112,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 //Logo+Nombre
                 Row(
                   children: [
-
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -86,9 +124,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: Colors.black,
                       ),
                     ),
-
                     const SizedBox(width: 8),
-
                     const Text(
                       "Finara",
                       style: TextStyle(
@@ -206,12 +242,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ///Chechbox-terminos
                 Row(
                   children: [
-
                     Checkbox(
                       value: false,
                       onChanged: (value) {},
                     ),
-
                     Expanded(
                       child: Text(
                         "Acepto los Términos y Condiciones y la Política de Privacidad.",
@@ -230,20 +264,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-
                   child: ElevatedButton(
                     onPressed: register,
-
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0D1B2A),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-
                     child: const Text(
                       "Crear Cuenta",
-                      style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 247, 246, 246)),
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Color.fromARGB(255, 247, 246, 246)),
                     ),
                   ),
                 ),
@@ -253,14 +286,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 //linea
                 Row(
                   children: const [
-
                     Expanded(child: Divider()),
-
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10),
                       child: Text("O REGÍSTRATE CON"),
                     ),
-
                     Expanded(child: Divider()),
                   ],
                 ),
@@ -270,7 +300,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 //btn register rapido
                 Row(
                   children: [
-
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {},
@@ -278,9 +307,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         label: const Text("Google"),
                       ),
                     ),
-
                     const SizedBox(width: 10),
-
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {},
@@ -299,18 +326,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onTap: () {
                       Navigator.pop(context);
                     },
-
                     child: Text(
                       "¿Ya tienes cuenta?  Inicia sesión",
                       style: TextStyle(
-                        color: isDark ? Colors.grey[400] : const Color.fromARGB(255, 0, 32, 138),
+                        color: isDark
+                            ? Colors.grey[400]
+                            : const Color.fromARGB(255, 0, 4, 223),
                       ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 30)
-
               ],
             ),
           ),

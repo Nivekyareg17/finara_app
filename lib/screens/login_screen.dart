@@ -13,6 +13,53 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  void showCustomDialog(String message, {bool isError = false}) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 30),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isError ? Colors.red : const Color(0xFF18B47A),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isError ? Icons.error : Icons.check_circle,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    // Auto cerrar
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -98,7 +145,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text("Forgot Password?"),
+                    child: Text(
+                      "Forgot Password?",
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 1, 26, 173),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -124,18 +177,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
 
                       if (success) {
-                        Navigator.pushReplacementNamed(context, "/home");
+                        showCustomDialog("Inicio de sesión exitoso");
+
+                        // Espera un poco antes de ir al home
+                        Future.delayed(const Duration(seconds: 2), () {
+                          Navigator.pushReplacementNamed(context, "/home");
+                        });
+                        
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Email o contraseña incorrectos"),
-                          ),
+                        showCustomDialog(
+                          "Email o contraseña incorrectos",
+                          isError: true,
                         );
                       }
                     },
                     child: const Text(
                       "Sign In",
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(
+                          fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
                     ),
                   ),
                 ),
@@ -189,8 +248,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 30),
-
-              
               ],
             ),
           ),
