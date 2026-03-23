@@ -61,26 +61,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> register() async {
     final success = await ApiService.register(
-        nameController.text, emailController.text, passwordController.text);
+      nameController.text,
+      emailController.text,
+      passwordController.text,
+    );
+
+    if (!mounted) return;
 
     if (success) {
       showCustomDialog("Usuario creado");
 
-      // Espera antes de volver para poder ver el show
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        Navigator.of(context).pop(); // cierra dialog
-      }
-
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!mounted) return;
+        Navigator.pop(context); // volver al login
+      });
     } else {
       showCustomDialog("Error al registrar", isError: true);
-
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        Navigator.of(context).pop(); // solo cierra dialog
-      }
     }
   }
 

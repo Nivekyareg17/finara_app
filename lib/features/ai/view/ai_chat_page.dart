@@ -18,31 +18,41 @@ class _AIChatPageState extends State<AIChatPage> {
   // --- MÉTODOS DE LÓGICA ---
 
   void _sendMessage() async {
-    if (_controller.text.isEmpty) return;
+  if (_controller.text.isEmpty) return;
 
-    final userMsg = ChatMessage(
-      text: _controller.text,
-      sender: MessageSender.user,
-      timestamp: DateTime.now(),
-    );
+  final userMsg = ChatMessage(
+    text: _controller.text,
+    sender: MessageSender.user,
+    timestamp: DateTime.now(),
+  );
+
+  if (!mounted) return;
+
+  setState(() {
+    _messages.insert(0, userMsg);
+    _isLoading = true;
+  });
+
+  _controller.clear();
+
+  try {
+    final response = await _aiService.sendMessageToDaiko(userMsg.text);
+
+    if (!mounted) return;
 
     setState(() {
-      _messages.insert(0, userMsg);
-      _isLoading = true;
+      _messages.insert(0, response);
+      _isLoading = false;
     });
 
-    _controller.clear();
+  } catch (e) {
+    if (!mounted) return;
 
-    try {
-      final response = await _aiService.sendMessageToDaiko(userMsg.text);
-      setState(() {
-        _messages.insert(0, response);
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   // --- DISEÑO PRINCIPAL ---
 
