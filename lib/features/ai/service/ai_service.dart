@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import '../model/chat_message.dart';
 
 class AIService {
-  // ⚠️ CORREGIDO: IP .9 según tus logs de Uvicorn
-  final String _urlBase = 'http://192.168.1.9:8000/ai/consultar';
+
+  final String _urlBase = 'http://10.107.26.86:8000/ai/consultar';
 
   Future<ChatMessage> sendMessageToDaiko(String prompt) async {
     try {

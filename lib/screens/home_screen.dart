@@ -9,9 +9,8 @@ class HomeScreen extends StatelessWidget {
     const Color primaryColor = Color(0xFF064E3B); // Forest Green de Finara
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
-
+      backgroundColor: isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
+      
       // 1. APPBAR UNIFICADA
       appBar: AppBar(
         backgroundColor: isDark ? Colors.black : Colors.white,
@@ -22,13 +21,12 @@ class HomeScreen extends StatelessWidget {
               "assets/images/Logo_finara.png",
               width: 30,
               height: 30,
-              errorBuilder: (context, error, stackTrace) =>
+              errorBuilder: (context, error, stackTrace) => 
                   const Icon(Icons.account_balance, color: primaryColor),
             ),
             const SizedBox(width: 12),
             const Text("Finara",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: primaryColor)),
+                style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
           ],
         ),
         actions: [
@@ -38,9 +36,7 @@ class HomeScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.account_circle, color: Colors.grey),
-            onPressed: () {
-              Navigator.pushNamed(context, "/profile");
-            },
+            onPressed: () => debugPrint("Perfil"),
           )
         ],
       ),
@@ -54,35 +50,68 @@ class HomeScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                _buildHorizontalCard(
-                    "Market Cycles 101", "8:20", 0.75, primaryColor),
-                _buildHorizontalCard(
-                    "Candlestick Patterns", "15:40", 0.30, primaryColor),
+                Expanded(
+                  child: StatCard(
+                    title: "COMPLETADO",
+                    count: "24",
+                    unit: "Lecciones",
+                    icon: Icons.emoji_events_outlined,
+                    accentColor: Colors.blue,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: StatCard(
+                    title: "CRÉDITOS IA",
+                    count: "850",
+                    unit: "Restantes",
+                    icon: Icons.auto_awesome,
+                    accentColor: Color(0xFF2ECC71),
+                  ),
+                ),
               ],
             ),
           ),
 
           const SizedBox(height: 25),
 
-          // SECCIÓN DE ANÁLISIS TÉCNICO
-          _buildSectionHeader("Technical Analysis"),
-          const SizedBox(height: 15),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                    child:
-                        _buildGridItem("Mastering RSI", "4:12", primaryColor)),
-                const SizedBox(width: 15),
-                Expanded(
-                    child:
-                        _buildGridItem("Support Zones", "6:55", primaryColor)),
-              ],
+          // SECCIÓN DE QUICK WINS (CARRUSEL)
+          const FinaraQuickWins(),
+
+          const SizedBox(height: 25),
+
+          // SECCIÓN DE ACCIONES RÁPIDAS (NUEVO)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'QUICK ACTIONS',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
             ),
           ),
-
-          const SizedBox(height: 100), // Espacio extra abajo
+          const SizedBox(height: 16),
+          QuickActionTile(
+            title: "Ask finara AI",
+            subtitle: "Expert advisory 24/7",
+            icon: Icons.chat_bubble_outline_rounded,
+            iconColor: const Color(0xFF1E8449),
+            onTap: () => Navigator.pushNamed(context, "/daiko_ai"),
+          ),
+          QuickActionTile(
+            title: "Market Overview",
+            subtitle: "Global trends and economic insights",
+            icon: Icons.bar_chart_rounded,
+            iconColor: Colors.blue,
+            onTap: () {},
+          ),
+          QuickActionTile(
+            title: "Learning Path",
+            subtitle: "3 modules to complete today",
+            icon: Icons.school_outlined,
+            iconColor: Colors.purple,
+            onTap: () {},
+          ),
+          
+          const SizedBox(height: 80), // Espacio para que el FAB no tape el contenido
         ],
       ),
 
@@ -94,83 +123,6 @@ class HomeScreen extends StatelessWidget {
         onPressed: () => Navigator.pushNamed(context, "/daiko_ai"),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  // --- WIDGETS DE APOYO ---
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title.toUpperCase(),
-              style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                  letterSpacing: 1.2)),
-          const Text("See All",
-              style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHorizontalCard(
-      String title, String duration, double progress, Color primary) {
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-                color: primary, borderRadius: BorderRadius.circular(20)),
-            child: Stack(
-              alignment: Alignment.bottomLeft,
-              children: [
-                const Center(
-                    child: Icon(Icons.play_circle_outline,
-                        color: Colors.white, size: 30)),
-                Container(
-                    height: 4, width: 200 * progress, color: Colors.green),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              maxLines: 1),
-          Text("$duration • ${(progress * 100).toInt()}% watched",
-              style: const TextStyle(color: Colors.grey, fontSize: 11)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGridItem(String title, String duration, Color primary) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          height: 100,
-          decoration: BoxDecoration(
-              color: primary, borderRadius: BorderRadius.circular(20)),
-          child: const Icon(Icons.play_circle, color: Colors.white54, size: 30),
-        ),
-        const SizedBox(height: 8),
-        Text(title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            maxLines: 2),
-      ],
     );
   }
 
@@ -302,8 +254,7 @@ class FinaraQuickWins extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
             'QUICK WINS',
-            style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
           ),
         ),
         const SizedBox(height: 12),
@@ -313,10 +264,8 @@ class FinaraQuickWins extends StatelessWidget {
             itemExtent: 300,
             shrinkExtent: 200,
             children: [
-              _buildQuickCard(
-                  "INVESTING BASICS", "Mastering Bull Markets", "5 min read"),
-              _buildQuickCard(
-                  "AI ASSISTANT", "Optimizing Portfolios", "3 min read"),
+              _buildQuickCard("INVESTING BASICS", "Mastering Bull Markets", "5 min read"),
+              _buildQuickCard("AI ASSISTANT", "Optimizing Portfolios", "3 min read"),
               _buildQuickCard("FINANCE", "Risk Management", "8 min read"),
             ],
           ),
@@ -335,19 +284,12 @@ class FinaraQuickWins extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(categoria,
-              style: const TextStyle(
-                  color: Colors.greenAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12)),
+          Text(categoria, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 10)),
           const SizedBox(height: 8),
-          Text(titulo,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold)),
+          Text(titulo, 
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           const Spacer(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -356,24 +298,14 @@ class FinaraQuickWins extends StatelessWidget {
                 children: [
                   const Icon(Icons.access_time, color: Colors.white, size: 12),
                   const SizedBox(width: 4),
-                  Text(tiempo,
-                      style:
-                          const TextStyle(color: Colors.white, fontSize: 12)),
+                  Text(tiempo, style: const TextStyle(color: Colors.white, fontSize: 11)),
                 ],
               ),
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF064131),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                ),
-                child: const Text("CONTINUE",
-                    style:
-                        TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                child: const Text("CONTINUE", style: TextStyle(color: Color(0xFF064131), fontSize: 10, fontWeight: FontWeight.bold)),
+              )
             ],
           ),
         ],
