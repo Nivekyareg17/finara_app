@@ -1,16 +1,16 @@
 enum MessageType { text, image, analysis }
-enum MessageSender { user, ai }
+// ⚠️ CAMBIO: Usamos 'daiko' en lugar de 'ai'
+enum MessageSender { user, daiko } 
 
 class ChatMessage {
   final String text;
   final MessageSender sender;
   final DateTime timestamp;
-  final String? imageUrl;     // Para mostrar el gráfico de la imagen
+  final String? imageUrl;     
   final MessageType type;     
   
-  // Nuevos campos para el "Análisis de Daiko"
-  final String? trend;        // Ej: "Alcista"
-  final String? rsiLevel;     // Ej: "62.4 (Neutral)"
+  final String? trend;        
+  final String? rsiLevel;     
 
   ChatMessage({
     required this.text,
@@ -22,11 +22,11 @@ class ChatMessage {
     this.rsiLevel,
   });
 
-  // Esto nos servirá cuando Gemini nos devuelva datos estructurados
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
       text: json['text'] ?? '',
-      sender: json['sender'] == 'user' ? MessageSender.user : MessageSender.ai,
+      // ⚠️ IMPORTANTE: Si viene de la IA, le asignamos 'daiko'
+      sender: json['sender'] == 'user' ? MessageSender.user : MessageSender.daiko,
       timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toString()),
       imageUrl: json['imageUrl'],
       trend: json['trend'],

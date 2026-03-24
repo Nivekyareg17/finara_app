@@ -15,7 +15,11 @@ class _AIChatPageState extends State<AIChatPage> {
   final AIService _aiService = AIService();
   bool _isLoading = false;
 
-  // --- MÉTODOS DE LÓGICA ---
+  // Colores del diseño HTML
+  final Color primaryGreen = const Color(0xFF10B981);
+  final Color accentGreen = const Color(0xFF059669);
+  final Color aiBubbleColor = const Color(0xFFECFDF5);
+  final Color userBubbleColor = const Color(0xFFF1F5F9);
 
   void _sendMessage() async {
   if (_controller.text.isEmpty) return;
@@ -54,8 +58,6 @@ class _AIChatPageState extends State<AIChatPage> {
   }
 }
 
-  // --- DISEÑO PRINCIPAL ---
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,71 +67,93 @@ class _AIChatPageState extends State<AIChatPage> {
         children: [
           Expanded(
             child: ListView.builder(
-              reverse: true, // Para que los mensajes nuevos salgan abajo
-              padding: const EdgeInsets.all(20),
+              reverse: true,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
-                if (msg.sender == MessageSender.user) {
-                  return _buildUserMessage(msg);
-                } else {
-                  return _buildDaikoMessage(msg);
-                }
+                return msg.sender == MessageSender.user 
+                  ? _buildUserMessage(msg) 
+                  : _buildDaikoMessage(msg);
               },
             ),
           ),
-          if (_isLoading) const LinearProgressIndicator(color: Color(0xFF2ECC71)),
+          if (_isLoading) LinearProgressIndicator(color: primaryGreen, backgroundColor: aiBubbleColor),
           _buildInputSection(),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: _buildBottomNav(primaryGreen, false),
     );
   }
 
-  // --- COMPONENTES QUE FALTABAN (SOLUCIÓN A LOS ERRORES) ---
+  // --- APP BAR ESTILO MODERN ---
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white.withOpacity(0.8),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      title: Row(
+        children: [
+          _buildDaikoAvatar(size: 40),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("DAIKO AI", style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 16)),
+              Row(
+                children: [
+                  Container(width: 6, height: 6, decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle)),
+                  const SizedBox(width: 4),
+                  Text("ACTIVE INTELLIGENCE", style: TextStyle(color: primaryGreen, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(onPressed: () {}, icon: const Icon(Icons.info_outline, color: const Color(0xFF64748B)))
+      ],
+    );
+  }
 
+  // --- BURBUJA DE USUARIO ---
   Widget _buildUserMessage(ChatMessage msg) {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 20, left: 50),
-        padding: const EdgeInsets.all(15),
-        decoration: const BoxDecoration(
-          color: Color(0xFFF4FBF7),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(15),
-            topRight: Radius.circular(15),
-            bottomLeft: Radius.circular(15),
-          ),
+        margin: const EdgeInsets.only(bottom: 20, left: 60),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: userBubbleColor,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20), bottomLeft: Radius.circular(20)),
         ),
-        child: Text(msg.text, style: const TextStyle(color: Color(0xFF2C3E50))),
+        child: Text(msg.text, style: const TextStyle(color: Color(0xFF334155), fontSize: 14, fontWeight: FontWeight.w500)),
       ),
     );
   }
 
+  // --- BURBUJA DE DAIKO (IA) ---
   Widget _buildDaikoMessage(ChatMessage msg) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
-            radius: 15,
-            backgroundColor: Color(0xFFE8F8F1),
-            child: Icon(Icons.auto_awesome, size: 15, color: Color(0xFF2ECC71)),
-          ),
-          const SizedBox(width: 10),
+          _buildDaikoAvatar(size: 32, iconSize: 16),
+          const SizedBox(width: 12),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F8F1),
-                borderRadius: BorderRadius.circular(15),
+                color: aiBubbleColor,
+                borderRadius: const BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20), bottomLeft: Radius.circular(20)),
+                border: Border.all(color: primaryGreen.withOpacity(0.1)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(msg.text, style: const TextStyle(color: Color(0xFF2C3E50))),
+                  Text(msg.text, style: const TextStyle(color: Color(0xFF1E293B), fontSize: 14, height: 1.5, fontWeight: FontWeight.w500)),
                   if (msg.type == MessageType.analysis) _buildAnalysisCard(msg),
                 ],
               ),
@@ -140,21 +164,31 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
+  Widget _buildDaikoAvatar({required double size, double iconSize = 20}) {
+    return Container(
+      width: size, height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [primaryGreen, accentGreen], begin: Alignment.bottomLeft, end: Alignment.topRight),
+        shape: BoxShape.circle,
+        boxShadow: [BoxShadow(color: primaryGreen.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Icon(Icons.auto_awesome, color: Colors.white, size: iconSize),
+    );
+  }
+
+  // --- CARDS DE ANÁLISIS ---
   Widget _buildAnalysisCard(ChatMessage msg) {
     return Container(
-      margin: const EdgeInsets.only(top: 15),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white.withOpacity(0.6), borderRadius: BorderRadius.circular(16), border: Border.all(color: primaryGreen.withOpacity(0.2))),
       child: Column(
         children: [
           Row(
             children: [
-              _buildMetricTile("TENDENCIA", msg.trend ?? "Neutral", Icons.trending_up, Colors.green),
-              const SizedBox(width: 10),
-              _buildMetricTile("RSI", msg.rsiLevel ?? "50.0", Icons.speed, Colors.orange),
+              _buildMetric("TENDENCIA", msg.trend ?? "Bullish", Icons.trending_up, primaryGreen),
+              const SizedBox(width: 12),
+              _buildMetric("RSI LEVEL", msg.rsiLevel ?? "62.4", Icons.speed, Colors.amber),
             ],
           ),
         ],
@@ -162,23 +196,21 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildMetricTile(String label, String value, IconData icon, Color color) {
+  Widget _buildMetric(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFF2F3F4)),
-          borderRadius: BorderRadius.circular(8),
-        ),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFF1F5F9))),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 8, color: Colors.grey)),
+            Text(label, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color:  const Color(0xFF64748B))),
+            const SizedBox(height: 4),
             Row(
               children: [
-                Icon(icon, size: 12, color: color),
+                Icon(icon, size: 14, color: color),
                 const SizedBox(width: 4),
-                Text(value, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
               ],
             ),
           ],
@@ -187,51 +219,106 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  // --- WIDGETS DE APOYO ---
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: const Text("DAIKO IA", style: TextStyle(color: Colors.black, fontSize: 16)),
-      centerTitle: true,
-    );
-  }
-
+  // --- INPUT SECTION (CON BOTONES DE FOTO/VIDEO) ---
   Widget _buildInputSection() {
     return Container(
       padding: const EdgeInsets.all(20),
-      child: Row(
+      color: Colors.white,
+      child: Column(
         children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: "Pregunta a DAIKO...",
-                filled: true,
-                fillColor: const Color(0xFFF8F9F9),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
-              ),
-            ),
+          Row(
+            children: [
+              _buildQuickAction("Photo", Icons.image),
+              const SizedBox(width: 12),
+              _buildQuickAction("Video", Icons.videocam),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.send, color: Color(0xFF2ECC71)),
-            onPressed: _sendMessage,
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.add, color: primaryGreen),
+                    hintText: "Ask DAIKO anything...",
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                width: 56, height: 56,
+                decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: primaryGreen.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))]),
+                child: IconButton(onPressed: _sendMessage, icon: const Icon(Icons.mic, color: Colors.white)),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      selectedItemColor: const Color(0xFF2ECC71),
-      unselectedItemColor: Colors.grey,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Inicio"),
-        BottomNavigationBarItem(icon: Icon(Icons.analytics), label: "Ideas"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
-      ],
+  Widget _buildQuickAction(String label, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF1F5F9))),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: primaryGreen),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+        ],
+      ),
     );
   }
+  int _selectedIndex = 2; // Empezamos en 2 porque es el índice de DAIKO
+  Widget _buildBottomNav(Color primaryColor, bool isDark) {
+  return BottomNavigationBar(
+    currentIndex: _selectedIndex, // Indica cuál está activo
+    onTap: (index) {
+      // 1. Cambiamos el estado visual
+      setState(() {
+        _selectedIndex = index;
+      });
+
+      // 2. Navegamos según el índice
+      switch (index) {
+        case 0:
+          Navigator.pushNamed(context, "/home");
+          break;
+        case 1:
+          Navigator.pushNamed(context, "/insights");
+          break;
+        case 2:
+          // Si ya estás en el chat, quizás quieras limpiar la pantalla
+          // o simplemente no hacer nada.
+          Navigator.pushNamed(context, "/daiko_ai"); 
+          break;
+        case 3:
+          Navigator.pushNamed(context, "/wallet");
+          break;
+        case 4:
+          Navigator.pushNamed(context, "/profile");
+          break;
+      }
+    },
+    type: BottomNavigationBarType.fixed,
+    selectedItemColor: primaryColor,
+    unselectedItemColor: const Color(0xFF64748B), // Slate-500
+    showSelectedLabels: true,
+    showUnselectedLabels: true,
+    selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+    unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+    items: const [
+      BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "HOME"),
+      BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "INSIGHTS"),
+      BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: "DAIKO"),
+      BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: "WALLET"),
+      BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "PROFILE"),
+    ],
+  );
+}
 }

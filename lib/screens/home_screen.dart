@@ -45,22 +45,14 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
 
-      // 2. CUERPO CON SCROLL (ListView)
+      // 2. CUERPO CON SCROLL
       body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
-          // SECCIÓN DE QUICK WINS (CARRUSEL)
-          const FinaraQuickWins(),
-
-          const SizedBox(height: 20),
-
-          // SECCIÓN DE VIDEOS POPULARES
-          _buildSectionHeader("Popular Videos"),
-          const SizedBox(height: 15),
-          SizedBox(
-            height: 200,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 20),
+          // SECCIÓN DE ESTADÍSTICAS (NUEVO)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
               children: [
                 _buildHorizontalCard(
                     "Market Cycles 101", "8:20", 0.75, primaryColor),
@@ -70,7 +62,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 25),
 
           // SECCIÓN DE ANÁLISIS TÉCNICO
           _buildSectionHeader("Technical Analysis"),
@@ -204,8 +196,100 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// --- CLASE DEL CARRUSEL (Corregida) ---
+// --- WIDGETS DE APOYO AGREGADOS ---
 
+class StatCard extends StatelessWidget {
+  final String title, count, unit;
+  final IconData icon;
+  final Color accentColor;
+
+  const StatCard({super.key, required this.title, required this.count, required this.unit, required this.icon, required this.accentColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF121212) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: accentColor, size: 18),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(count, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+              const SizedBox(width: 4),
+              Text(unit, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class QuickActionTile extends StatelessWidget {
+  final String title, subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const QuickActionTile({super.key, required this.title, required this.subtitle, required this.icon, required this.iconColor, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF121212) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
+                child: Icon(icon, color: iconColor),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+                    Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- CLASE DEL CARRUSEL (Mantenida) ---
 class FinaraQuickWins extends StatelessWidget {
   const FinaraQuickWins({super.key});
 
@@ -215,17 +299,18 @@ class FinaraQuickWins extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
             'QUICK WINS',
             style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
           ),
         ),
+        const SizedBox(height: 12),
         ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 250),
+          constraints: const BoxConstraints(maxHeight: 200),
           child: CarouselView(
-            itemExtent: 330,
+            itemExtent: 300,
             shrinkExtent: 200,
             children: [
               _buildQuickCard(
@@ -264,15 +349,12 @@ class FinaraQuickWins extends StatelessWidget {
                   fontSize: 20,
                   fontWeight: FontWeight.bold)),
           const Spacer(),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.access_time, color: Colors.white, size: 14),
+                  const Icon(Icons.access_time, color: Colors.white, size: 12),
                   const SizedBox(width: 4),
                   Text(tiempo,
                       style:
