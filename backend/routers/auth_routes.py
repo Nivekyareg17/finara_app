@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import User
 from security import hash_password, verify_password
-from auth import create_access_token
+from auth import create_access_token, require_admin
 import schemas
 
 
@@ -44,7 +44,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         name=user.name,
         email=user.email,
-        password=hashed_password
+        password=hashed_password,
+        role_id=2
     )
 
     db.add(new_user)    # Agrega el usuario a la sesión
@@ -76,8 +77,12 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
     
 # Crear el token JWT
+# El token guarda email y rol
     access_token = create_access_token(
-        data={"sub": db_user.email}
+        data={
+            "sub": db_user.email,
+            "role": db_user.role.name
+            }
     )
 
 # Si todo está bien retorna el mensaje exitoso
@@ -85,3 +90,7 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+@router.get("/admin-only")
+def admin_only(data = Depends(require_admin)):
+    return {"message": "Bienvenido admin"}

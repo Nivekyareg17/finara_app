@@ -1,12 +1,13 @@
 # Importaciones
 from jose import JWTError, jwt  # Permite crear, decodificar y verificar tokens
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta    # Manejo de fechas
-from models import User
 
 from dotenv import load_dotenv
 import os
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")    # Clave que usa el servidor para firmar el token (datos del usuario + SECRET_KEY = token firmado), si se intenta modificar la firma no coincidirá
@@ -33,12 +34,20 @@ def verify_token(token: str):
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
 
+        email = payload.get("sub")
         if email is None:
             raise HTTPException(status_code=401, detail="Token inválido")
         
-        return email
+        return payload  # Retorna sub y role
     
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
+    
+def require_admin(token: str = Depends(oauth2_scheme)):
+    data = verify_token(token)
+
+    if data["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Solo admin")
+    
+    return data

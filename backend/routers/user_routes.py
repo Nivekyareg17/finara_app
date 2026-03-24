@@ -1,11 +1,13 @@
 # Importaciones
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+import schemas
+from security import hash_password
 from database import SessionLocal
 from models import User
-from auth import verify_token
+from auth import verify_token, require_admin
 
 router = APIRouter(
     prefix="/users",
@@ -29,7 +31,9 @@ def get_db():
 @router.get("/profile")    # Esto crea la ruta HTTP GET
 def profile(token: str = Depends(oauth2_scheme)):   # Función que extrae el token JWT del header Authorization
 
-    email = verify_token(token)    # Verificar el token creado en verify_token()
+    data = verify_token(token)
+    email = data["sub"]
+    role = data["role"]
 
 # Si el token es válido se devuelve el mensaje de Acceso permitido y el email del usuario
     return {
@@ -48,7 +52,8 @@ def get_current_user(   # Función cuando alguien llame /me
     db: Session = Depends(get_db)   # Abrir conexión con PostgreSQL
 ):
     
-    email = verify_token(token)    # Verificar el token 
+    data = verify_token(token)
+    email = data["sub"]    # Verificar el token 
 
     user = db.query(User).filter(User.email == email).first()   # Buscar usuario en la base de datos
 
@@ -57,3 +62,30 @@ def get_current_user(   # Función cuando alguien llame /me
         "name": user.name,
         "email": user.email
     }
+
+
+@router.post("/create-admin")
+def create_admin(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    data = Depends(require_admin)
+):
+    existing_user = db.query(User).filter(User.email == user.email).first()
+
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email ya existe")
+
+    hashed_password = hash_password(user.password)
+
+    new_admin = User(
+        name=user.name,
+        email=user.email,
+        password=hashed_password,
+        role_id=1  # admin
+    )
+
+    db.add(new_admin)
+    db.commit()
+    db.refresh(new_admin)
+
+    return {"message": "Admin creado"}
