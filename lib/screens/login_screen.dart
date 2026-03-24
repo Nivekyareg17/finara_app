@@ -1,6 +1,6 @@
+import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -179,11 +179,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (success) {
                         showCustomDialog("Inicio de sesión exitoso");
 
-                        // Espera un poco antes de ir al home
                         Future.delayed(const Duration(seconds: 2), () {
                           Navigator.pushReplacementNamed(context, "/home");
                         });
-                        
                       } else {
                         showCustomDialog(
                           "Email o contraseña incorrectos",

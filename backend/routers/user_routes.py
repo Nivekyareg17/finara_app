@@ -60,7 +60,8 @@ def get_current_user(   # Función cuando alguien llame /me
 # Retorna nombre y email del usuario
     return {
         "name": user.name,
-        "email": user.email
+        "email": user.email,
+        "role": data["role"]
     }
 
 
