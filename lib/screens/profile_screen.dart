@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/transaction_model.dart';
-import '../services/local_service.dart';
+import '../services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,9 +26,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void loadTransactions() async {
-    final data = await LocalService.getAll();
+    final auth = context.read<AuthProvider>();
+
+    final data = await ApiService.getTransactions(auth.token!);
+
     setState(() {
-      transactions = data;
+      transactions = data.map((e) => TransactionModel.fromMap(e)).toList();
     });
   }
 
@@ -218,7 +221,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ));
               }
 
-              await LocalService.saveAll(transactions);
+              final auth = context.read<AuthProvider>();
+
+              final success = await ApiService.createTransaction(
+                auth.token!,
+                type,
+                parsedAmount ?? 0,
+                desc.text,
+              );
+
+              print("GUARDADO: $success");
+
+              loadTransactions();
 
               if (!mounted) return;
 
@@ -249,7 +263,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               try {
                 transactions.removeWhere((e) => e.id == t.id);
 
-                await LocalService.saveAll(transactions);
+                transactions.removeWhere((e) => e.id == t.id);
+                setState(() {});
 
                 if (!mounted) return;
 
@@ -276,6 +291,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Mejorar a futuro
 
@@ -348,4 +388,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
   //     },
   //   );
   // }
-}

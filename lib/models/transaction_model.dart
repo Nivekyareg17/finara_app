@@ -20,9 +20,9 @@ class TransactionModel {
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
     return TransactionModel(
-      id: map["id"],
+      id: map["id"].toString(),
       type: map["type"],
-      amount: map["amount"],
+      amount: (map["amount"] as num).toDouble(),
       description: map["description"],
     );
   }
