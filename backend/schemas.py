@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, validator
+from typing import Literal
 import re
 
 # Creación de tablas
@@ -24,9 +25,9 @@ class UserLogin(BaseModel):
     password: str = Field(..., min_lenght=1)
 
 class TransactionCreate(BaseModel):
-    amount: float
-    type: str
-    description: str
+    amount: float = Field(..., gt=0)
+    type: Literal["ingreso", "gasto"]
+    description: str = Field(..., min_length=1, max_length=100)
 
 
 class TransactionResponse(BaseModel):

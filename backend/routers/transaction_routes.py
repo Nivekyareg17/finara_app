@@ -30,6 +30,16 @@ def create_transaction(
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
+    existing = db.query(Transaction).filter(
+        Transaction.user_id == user.id,
+        Transaction.type == transaction.type,
+        Transaction.amount == transaction.amount,
+        Transaction.description == transaction.description
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Transacción duplicada")
+
     new_transaction = Transaction(
         amount=transaction.amount,
         type=transaction.type,
@@ -76,6 +86,17 @@ def update_transaction(
 
     if not db_transaction:
         raise HTTPException(status_code=404, detail="Transacción no encontrada")
+    
+    existing = db.query(Transaction).filter(
+        Transaction.user_id == user.id,
+        Transaction.type == transaction.type,
+        Transaction.amount == transaction.amount,
+        Transaction.description == transaction.description,
+        Transaction.id != id  # 🔥 CLAVE
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Transacción duplicada")
 
     db_transaction.amount = transaction.amount
     db_transaction.type = transaction.type

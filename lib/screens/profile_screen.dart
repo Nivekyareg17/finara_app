@@ -206,37 +206,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () async {
+              // VALIDACIONES PRIMERO ✅
+              if (desc.text.trim().isEmpty || amount.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text("Todos los campos son obligatorios")),
+                );
+                return;
+              }
+
               final parsedAmount = double.tryParse(amount.text);
 
-              if (edit != null) {
-                edit.description = desc.text;
-                edit.amount = parsedAmount ?? 0;
-                edit.type = type;
-              } else {
-                transactions.add(TransactionModel(
-                  id: DateTime.now().toString(),
-                  type: type,
-                  amount: parsedAmount ?? 0,
-                  description: desc.text,
-                ));
+              if (parsedAmount == null || parsedAmount <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Monto inválido")),
+                );
+                return;
+              }
+
+              if (desc.text.trim().length < 3) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Descripción muy corta")),
+                );
+                return;
               }
 
               final auth = context.read<AuthProvider>();
 
-              final success = await ApiService.createTransaction(
-                auth.token!,
-                type,
-                parsedAmount ?? 0,
-                desc.text,
-              );
+              bool success;
+
+              if (edit != null) {
+                success = await ApiService.updateTransaction(
+                  auth.token!,
+                  edit.id, // 🔥 IMPORTANTE
+                  type,
+                  parsedAmount,
+                  desc.text,
+                );
+              } else {
+                success = await ApiService.createTransaction(
+                  auth.token!,
+                  type,
+                  parsedAmount,
+                  desc.text,
+                );
+              }
 
               print("GUARDADO: $success");
 
               loadTransactions();
 
               if (!mounted) return;
-
-              setState(() {}); // refresca la UI
 
               Navigator.pop(context);
             },
@@ -260,15 +280,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () async {
-              try {
-                transactions.removeWhere((e) => e.id == t.id);
+              final auth = context.read<AuthProvider>();
 
-                transactions.removeWhere((e) => e.id == t.id);
-                setState(() {});
+              try {
+                final success = await ApiService.deleteTransaction(
+                  auth.token!,
+                  t.id,
+                );
+
+                if (success) {
+                  loadTransactions(); // recarga desde backend
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Error al eliminar")),
+                  );
+                }
 
                 if (!mounted) return;
-
-                loadTransactions();
                 Navigator.pop(context);
               } catch (e) {
                 if (!mounted) return;

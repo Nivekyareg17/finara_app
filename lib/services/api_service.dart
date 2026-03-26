@@ -82,10 +82,15 @@ class ApiService {
       }),
     );
 
+    if (response.statusCode == 400) {
+      print("Duplicado");
+    }
+
     print("STATUS: ${response.statusCode}");
     print("BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
+    
   }
 
 // OBTENER transacciones
@@ -102,5 +107,43 @@ class ApiService {
     }
 
     return [];
+  }
+
+  static Future<bool> updateTransaction(
+    String token,
+    int id,
+    String type,
+    double amount,
+    String description,
+  ) async {
+    final url = Uri.parse("$baseUrl/transactions/$id");
+
+    final response = await http.put(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+      body: jsonEncode({
+        "type": type,
+        "amount": amount,
+        "description": description,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> deleteTransaction(String token, int id) async {
+    final url = Uri.parse("$baseUrl/transactions/$id");
+
+    final response = await http.delete(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    return response.statusCode == 200;
   }
 }

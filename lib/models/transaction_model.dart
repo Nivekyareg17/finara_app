@@ -1,5 +1,5 @@
 class TransactionModel {
-  String id;
+  int id;
   String type;
   double amount;
   String description;
@@ -20,7 +20,7 @@ class TransactionModel {
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
     return TransactionModel(
-      id: map["id"].toString(),
+      id: map["id"],
       type: map["type"],
       amount: (map["amount"] as num).toDouble(),
       description: map["description"],
