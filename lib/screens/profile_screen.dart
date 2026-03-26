@@ -25,8 +25,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     loadTransactions();
   }
 
-  bool isLoading = false;
-
   void loadTransactions() async {
     final auth = context.read<AuthProvider>();
 
@@ -50,6 +48,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         email = data["email"];
       });
     }
+  }
+
+  double getBalance() {
+    double total = 0;
+
+    for (var t in transactions) {
+      if (t.type == "ingreso") {
+        total += t.amount;
+      } else {
+        total -= t.amount;
+      }
+    }
+
+    return total;
   }
 
   @override
@@ -127,6 +139,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             SizedBox(height: 10),
 
+            const Divider(height: 30, thickness: 1),
+
+            Column(
+              children: [
+                const Text(
+                  "Balance total",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  "\$${getBalance().toStringAsFixed(2)}",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: getBalance() >= 0 ? Colors.green : Colors.red,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
             Expanded(
               child: ListView(
                 children: [
@@ -175,156 +212,181 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String type = edit?.type ?? "ingreso";
 
     showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(edit == null ? "Nuevo" : "Editar"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: desc,
-              decoration: const InputDecoration(labelText: "Descripción"),
-            ),
-            TextField(
-              controller: amount,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Monto"),
-            ),
-            DropdownButton<String>(
-              value: type,
-              isExpanded: true,
-              items: ["ingreso", "gasto"]
-                  .map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ))
-                  .toList(),
-              onChanged: (v) => type = v!,
-            )
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
-          ),
-          TextButton(
-            onPressed: isLoading
-                ? null
-                : () async {
-                    setState(() => isLoading = true);
+        context: context,
+        builder: (_) {
+          bool isLoadingDialog = false;
 
-                    // VALIDACIONES
-                    if (desc.text.trim().isEmpty ||
-                        amount.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text("Todos los campos son obligatorios")),
-                      );
-                      setState(() => isLoading = false);
-                      return;
-                    }
+          return StatefulBuilder(
+            builder: (context, setStateDialog) {
+              return AlertDialog(
+                title: Text(edit == null ? "Nuevo" : "Editar"),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: desc,
+                      decoration:
+                          const InputDecoration(labelText: "Descripción"),
+                    ),
+                    TextField(
+                      controller: amount,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: "Monto"),
+                    ),
+                    DropdownButton<String>(
+                      value: type,
+                      isExpanded: true,
+                      items: ["ingreso", "gasto"]
+                          .map((e) => DropdownMenuItem(
+                                value: e,
+                                child: Text(e),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        setStateDialog(() {
+                          type = v!;
+                        });
+                      },
+                    )
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancelar"),
+                  ),
+                  TextButton(
+                    onPressed: isLoadingDialog
+                        ? null
+                        : () async {
+                            setStateDialog(() => isLoadingDialog = true);
 
-                    final parsedAmount = double.tryParse(amount.text);
+                            // VALIDACIONES
+                            if (desc.text.trim().isEmpty ||
+                                amount.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text("Todos los campos son obligatorios"),
+                                ),
+                              );
+                              setStateDialog(() => isLoadingDialog = false);
+                              return;
+                            }
 
-                    if (parsedAmount == null || parsedAmount <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Monto inválido")),
-                      );
-                      setState(() => isLoading = false);
-                      return;
-                    }
+                            final parsedAmount = double.tryParse(amount.text);
 
-                    final auth = context.read<AuthProvider>();
+                            if (parsedAmount == null || parsedAmount <= 0) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Monto inválido")),
+                              );
+                              setStateDialog(() => isLoadingDialog = false);
+                              return;
+                            }
 
-                    bool success;
+                            final auth = context.read<AuthProvider>();
 
-                    if (edit != null) {
-                      success = await ApiService.updateTransaction(
-                        auth.token!,
-                        edit.id,
-                        type,
-                        parsedAmount,
-                        desc.text,
-                      );
-                    } else {
-                      success = await ApiService.createTransaction(
-                        auth.token!,
-                        type,
-                        parsedAmount,
-                        desc.text,
-                      );
-                    }
+                            bool success;
 
-                    print("GUARDADO: $success");
+                            if (edit != null) {
+                              success = await ApiService.updateTransaction(
+                                auth.token!,
+                                edit.id,
+                                type,
+                                parsedAmount,
+                                desc.text,
+                              );
+                            } else {
+                              success = await ApiService.createTransaction(
+                                auth.token!,
+                                type,
+                                parsedAmount,
+                                desc.text,
+                              );
+                            }
+                            Navigator.pop(context);
 
-                    if (!mounted) return;
+                            if (!mounted) return;
 
-                    Navigator.pop(context); // 🔥 primero cerrar
-
-                    loadTransactions();
-
-                    setState(() => isLoading = false);
-                  },
-            child: isLoading
-                ? const CircularProgressIndicator()
-                : const Text("Guardar"),
-          ),
-        ],
-      ),
-    );
+                            loadTransactions();
+                          },
+                    child: isLoadingDialog
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text("Guardar"),
+                  ),
+                ],
+              );
+            },
+          );
+        });
   }
 
   void confirmDelete(TransactionModel t) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Confirmar"),
-        content: Text("¿Eliminar '${t.description}'?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
-          ),
-          TextButton(
-            onPressed: () async {
-              final auth = context.read<AuthProvider>();
+      builder: (_) {
+        bool isDeleting = false;
 
-              try {
-                final success = await ApiService.deleteTransaction(
-                  auth.token!,
-                  t.id,
-                );
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text("Confirmar"),
+              content: Text("¿Eliminar '${t.description}'?"),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () => Navigator.pop(context),
+                  child: const Text("Cancelar"),
+                ),
+                TextButton(
+                  onPressed: isDeleting
+                      ? null
+                      : () async {
+                          setStateDialog(() => isDeleting = true);
 
-                if (success) {
-                  loadTransactions(); // recarga desde backend
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Error al eliminar")),
-                  );
-                }
+                          final auth = context.read<AuthProvider>();
 
-                if (!mounted) return;
-                Navigator.pop(context);
-              } catch (e) {
-                if (!mounted) return;
+                          try {
+                            final success = await ApiService.deleteTransaction(
+                              auth.token!,
+                              t.id,
+                            );
 
-                Navigator.pop(context);
+                            if (!mounted) return;
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Error al eliminar"),
-                  ),
-                );
-              }
-            },
-            child: const Text(
-              "Eliminar",
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+                            Navigator.pop(context); // cerrar dialog
+                            loadTransactions(); // recargar lista
+                          } catch (e) {
+                            if (!mounted) return;
+
+                            Navigator.pop(context);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Error al eliminar"),
+                              ),
+                            );
+                          }
+                        },
+                  child: isDeleting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          "Eliminar",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
