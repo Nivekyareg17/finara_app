@@ -1,13 +1,29 @@
+import 'package:finara_app_v1/features/ai/model/chat_message.dart';
+import 'package:finara_app_v1/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:finara_app_v1/features/ai/view/ai_chat_page.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+ 
+int currentIndex = 0;
+
+final List<Widget> screens = [
+  HomeScreen(),
+  AIChatPage(), // tu contenido actual
+  ProfileScreen(),
+];
+ @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color primaryColor = Color(0xFF064E3B); // Forest Green de Finara
-
+     
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
       
@@ -116,7 +132,7 @@ class HomeScreen extends StatelessWidget {
       ),
 
       // 3. NAVEGACIÓN
-      bottomNavigationBar: _buildBottomNav(primaryColor, isDark),
+     bottomNavigationBar: _buildBottomNav(primaryColor, isDark, context),
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         child: const Icon(Icons.auto_awesome, color: Colors.white),
@@ -126,26 +142,49 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNav(Color primary, bool isDark) {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      color: isDark ? Colors.black : Colors.white,
-      child: SizedBox(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const Icon(Icons.home, color: Colors.green),
-            const Icon(Icons.smart_display, color: Colors.grey),
-            const SizedBox(width: 40),
-            const Icon(Icons.school, color: Colors.grey),
-            const Icon(Icons.person, color: Colors.grey),
-          ],
-        ),
+  Widget _buildBottomNav(Color primary, bool isDark, BuildContext context) {
+  return BottomAppBar(
+    shape: const CircularNotchedRectangle(),
+    notchMargin: 8,
+    color: isDark ? Colors.black : Colors.white,
+    child: SizedBox(
+      height: 60,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+
+          // 🏠 HOME
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.green),
+            onPressed: () {
+               Navigator.pushReplacementNamed(context, "/home");
+              // ya estás en home
+            },
+          ),
+
+          // 🎥 VIDEO / AI
+          const Icon(Icons.smart_display, color: Colors.grey),
+
+        const SizedBox(width: 40),
+
+          const SizedBox(width: 40),
+
+          // 📚 SCHOOL
+          const Icon(Icons.school, color: Colors.grey),
+
+
+          // 👤 PERFIL
+         IconButton(
+          icon: const Icon(Icons.person, color: Colors.grey),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, "/profile");
+          },
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // --- WIDGETS DE APOYO AGREGADOS ---

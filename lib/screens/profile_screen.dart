@@ -1,10 +1,10 @@
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:finara_app_v1/providers/theme_provider.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
-
+import 'package:finara_app_v1/screens/home_screen.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -64,119 +64,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    const Color primaryColor = Color(0xFF064E3B);
+ @override
+Widget build(BuildContext context) {
+  final bool isDark = Theme.of(context).brightness == Brightness.dark;
+  const Color primaryColor = Color(0xFF064E3B);
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF061A17) : Colors.white,
-      appBar: AppBar(
-        title: const Text("Perfil"),
-        backgroundColor: isDark ? Colors.black : Colors.white,
-        foregroundColor: primaryColor,
-        elevation: 0,
+  return Scaffold(
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+    // 🔝 APPBAR
+    appBar: AppBar(
+      title: const Text("Perfil"),
+      centerTitle: true,
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      foregroundColor: primaryColor,
+      elevation: 0,
+    ),
+
+    // ☰ DRAWER (MENÚ)
+    drawer: Drawer(
+      child: Column(
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF064E3B)),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Text(
+                "Opciones",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+            ),
+          ),
+
+          // 🌙 MODO OSCURO
+          ListTile(
+            leading: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+            title: Text(isDark ? "Modo claro" : "Modo oscuro"),
+            onTap: () {
+              final themeProvider = context.read<ThemeProvider>();
+              themeProvider.toggleTheme();
+            },
+          ),
+
+          // 🚪 LOGOUT
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text("Cerrar sesión"),
+            onTap: () async {
+              Navigator.pop(context);
+
+              final auth = context.read<AuthProvider>();
+              await auth.logout();
+
+              if (!mounted) return;
+
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                "/login",
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Avatar
-            const CircleAvatar(
-              radius: 50,
-              backgroundColor: primaryColor,
-              child: Icon(Icons.person, size: 50, color: Colors.white),
+    ),
+
+    // 🧠 BODY (CRUD RESTAURADO)
+    body: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const CircleAvatar(
+            radius: 50,
+            backgroundColor: primaryColor,
+            child: Icon(Icons.person, size: 50, color: Colors.white),
+          ),
+
+          const SizedBox(height: 15),
+
+          Text(
+            name.isEmpty ? "Cargando..." : name,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 5),
+
+          Text(
+            email.isEmpty ? "Cargando..." : email,
+            style: const TextStyle(color: Colors.grey),
+          ),
+
+          const SizedBox(height: 10),
+          const Divider(),
+
+          Text(
+            "Balance: \$${getBalance().toStringAsFixed(2)}",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: getBalance() >= 0 ? Colors.green : Colors.red,
             ),
+          ),
 
-            const SizedBox(height: 15),
+          const SizedBox(height: 20),
 
-            // Nombre
-            Text(
-              name.isEmpty ? "Cargando..." : name,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 5),
-
-            Text(
-              email.isEmpty ? "Cargando..." : email,
-              style: const TextStyle(color: Colors.grey),
-            ),
-
-            const SizedBox(height: 30),
-
-            //Botón logout
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final auth = context.read<AuthProvider>();
-
-                  await auth.logout();
-
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    "/login",
-                    (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  "Cerrar sesión",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-            const Divider(height: 30, thickness: 1),
-
-            Column(
+          Expanded(
+            child: ListView(
               children: [
-                const Text(
-                  "Balance total",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                ElevatedButton(
+                  onPressed: () => showForm(),
+                  child: const Text("Agregar"),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  "\$${getBalance().toStringAsFixed(2)}",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: getBalance() >= 0 ? Colors.green : Colors.red,
-                  ),
-                ),
-              ],
-            ),
 
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: ListView(
-                children: [
-                  ElevatedButton(
-                    onPressed: () => showForm(),
-                    child: const Text("Agregar"),
-                  ),
-                  ...transactions.map((t) => ListTile(
+                ...transactions.map((t) => Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
                         title: Text(
                           "${t.type} - ${t.amount}",
                           style: TextStyle(
-                            color:
-                                t.type == "ingreso" ? Colors.green : Colors.red,
+                            color: t.type == "ingreso"
+                                ? Colors.green
+                                : Colors.red,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -194,15 +207,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
-                      ))
-                ],
-              ),
-            )
+                      ),
+                    ))
+              ],
+            ),
+          )
+        ],
+      ),
+    ),
+
+    // 🔥 BOTÓN IA (CENTRO)
+    floatingActionButton: FloatingActionButton(
+      backgroundColor: primaryColor,
+      child: const Icon(Icons.auto_awesome, color: Colors.white),
+      onPressed: () {
+        Navigator.pushNamed(context, "/daiko_ai");
+      },
+    ),
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+    // 🔻 BOTTOM NAV
+    bottomNavigationBar: BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8,
+      color: isDark ? Colors.black : Colors.white,
+      child: SizedBox(
+        height: 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.home),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, "/home");
+              },
+            ),
+            const Icon(Icons.smart_display, color: Colors.grey),
+            const SizedBox(width: 40),
+            const Icon(Icons.school, color: Colors.grey),
+            IconButton(
+              icon: const Icon(Icons.person, color: Colors.green),
+              onPressed: () {},
+            ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void showForm({TransactionModel? edit}) {
     final desc = TextEditingController(text: edit?.description);
