@@ -3,8 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import User
-from security import hash_password, verify_password
+from models import User, PasswordResetToken
+from security import hash_password, verify_password, create_reset_token, get_expiration
+from email_utils import send_email
+from datetime import datetime
 from auth import create_access_token, require_admin
 import schemas
 
@@ -94,3 +96,29 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 @router.get("/admin-only")
 def admin_only(data = Depends(require_admin)):
     return {"message": "Bienvenido admin"}
+
+
+@router.post("/forgot-password")
+def forgot_password(email: str, db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return {"msg": "Si existe, se enviará correo"}
+    
+    token = create_reset_token()
+
+    reset = PasswordResetToken(
+        user_id = user.id,
+        token = token,
+        expires_at = get_expiration()
+    )
+
+    db.add(reset)
+    db.commit()
+
+    link = f"http://localhost:8000/reset-password?token={token}"
+
+    send_email(email, link)
+
+    return {"msg": "Correo enviado"}
