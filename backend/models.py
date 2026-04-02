@@ -37,7 +37,7 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="transactions")
 
-class PasswordResetToken():
+class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 
     id = Column(Integer, primary_key=True, index=True)
