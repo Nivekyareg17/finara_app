@@ -8,6 +8,7 @@ from security import hash_password, verify_password, create_reset_token, get_exp
 from email_utils import send_email
 from datetime import datetime
 from auth import create_access_token, require_admin
+from pydantic import BaseModel
 import schemas
 
 
@@ -15,6 +16,14 @@ router = APIRouter(
     prefix="/auth",
     tags=["Auth"]
 )
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 
 # Entrega la sesión al endpoint que la necesite
@@ -99,26 +108,50 @@ def admin_only(data = Depends(require_admin)):
 
 
 @router.post("/forgot-password")
-def forgot_password(email: str, db: Session = Depends(get_db)):
-
-    user = db.query(User).filter(User.email == email).first()
+def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    
+    user = db.query(User).filter(User.email == data.email).first()
 
     if not user:
         return {"msg": "Si existe, se enviará correo"}
-    
+
     token = create_reset_token()
 
     reset = PasswordResetToken(
-        user_id = user.id,
-        token = token,
-        expires_at = get_expiration()
+        user_id=user.id,
+        token=token,
+        expires_at=get_expiration()
     )
 
     db.add(reset)
     db.commit()
+    db.refresh(reset)
 
-    link = f"http://localhost:8000/reset-password?token={token}"
+    print("TOKEN GUARDADO:", token)  #  DEBUG
 
-    send_email(email, link)
+    #  comenta esto temporalmente
+    # send_email(data.email, link)
 
-    return {"msg": "Correo enviado"}
+    return {"msg": "Correo enviado", "token": token}
+
+
+
+
+@router.post("/reset-password")
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+
+    reset = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == data.token
+    ).first()
+
+    if not reset or reset.expires_at < datetime.utcnow():
+        return {"error": "Token invalido o expirado"}
+    
+    user = db.query(User).filter(User.id == reset.user_id).first()
+
+    user.password = hash_password(data.new_password)
+
+    db.delete(reset)
+    db.commit()
+
+    return {"msg": "Contraseña actualizada"}
