@@ -715,7 +715,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           try {
                             final success = await ApiService.deleteTransaction(
                               auth.token!,
-                              t.id,
+                              t.id!, 
                             );
 
                             if (!mounted) return;
