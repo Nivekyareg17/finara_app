@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # <-- IMPORTANTE: Nueva importación
 
 from database import engine
-from models import Base
+from models import Base, PasswordResetToken
 from routers import auth_routes, user_routes, transaction_routes
 # from routers import ai_routes
 

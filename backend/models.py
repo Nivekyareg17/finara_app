@@ -1,5 +1,5 @@
 # Importaciones
-from sqlalchemy import Column, ForeignKey, Integer, String  # Importa sqlalchemy para la creación de tablas
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime  # Importa sqlalchemy para la creación de tablas
 from sqlalchemy.orm import relationship  # Permite conectar tablas user - role
 from database import Base  # DB donde salen los modelos (SQLAlchemy)
 
@@ -36,3 +36,11 @@ class Transaction(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="transactions")
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    token = Column(String, unique=True, index=True)
+    expires_at = Column(DateTime)
