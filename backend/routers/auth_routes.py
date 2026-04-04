@@ -131,10 +131,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     link = f"https://finara-api.onrender.com/reset-password?token={token}"
 
-    threading.Thread(
-        target=send_email,
-        args=(data.email, link)
-    ).start()
+    send_email(data.email, link)
 
     return {"msg": "Correo enviado"}
 
