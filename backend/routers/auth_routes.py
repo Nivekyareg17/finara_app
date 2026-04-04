@@ -10,6 +10,7 @@ from datetime import datetime
 from auth import create_access_token, require_admin
 from pydantic import BaseModel
 import schemas
+import threading
 
 
 router = APIRouter(
@@ -127,12 +128,12 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(reset)
 
-    print("TOKEN GUARDADO:", token)  #  DEBUG
 
-    #  comenta esto temporalmente
-    # send_email(data.email, link)
+    link = f"https://finara-api.onrender.com/reset-password?token={token}"
 
-    return {"msg": "Correo enviado", "token": token}
+    send_email(data.email, link)
+
+    return {"msg": "Correo enviado"}
 
 
 

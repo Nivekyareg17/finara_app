@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_bottom_nav.dart';
-import '../widgets/statcard.dart';
 import '../widgets/QuickActionTile.dart';
 import '../widgets/quick_wins.dart';
+import '../widgets/statcard.dart';
+import '../widgets/custom_bottom_nav.dart';
 
-//Pantalla principal de la aplicación.
-//Muestra estadísticas, accesos rápidos y contenido educativo.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  int currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +98,7 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          const SizedBox(height: 25),
-
+        
           //CARRUSEL
           const FinaraQuickWins(),
 

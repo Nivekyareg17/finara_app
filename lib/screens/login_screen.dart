@@ -1,4 +1,5 @@
 import 'package:finara_app_v1/providers/auth_provider.dart';
+import 'package:finara_app_v1/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -156,8 +157,49 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
+                    onPressed: () {
+                      final emailController = TextEditingController();
+
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Recuperar contraseña"),
+                            content: TextField(
+                              controller: emailController,
+                              decoration: const InputDecoration(
+                                hintText: "Ingresa tu email",
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text("Cancelar"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final success =
+                                      await ApiService.forgotPassword(
+                                    emailController.text,
+                                  );
+
+                                  Navigator.pop(context);
+
+                                  showCustomDialog(
+                                    success
+                                        ? "Revisa tu correo"
+                                        : "Error al enviar correo",
+                                    isError: !success,
+                                  );
+                                },
+                                child: const Text("Enviar"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: Text(
                       "Forgot Password?",
                       style: TextStyle(
                         color: Color.fromARGB(255, 1, 26, 173),

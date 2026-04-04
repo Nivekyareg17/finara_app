@@ -25,7 +25,7 @@ class CustomBottomNav extends StatelessWidget {
             Navigator.pushReplacementNamed(context, "/daiko_ai");
             break;
           case 3:
-            Navigator.pushReplacementNamed(context, "/wallet");
+            Navigator.pushReplacementNamed(context, "/video");
             break;
           case 4:
             Navigator.pushReplacementNamed(context, "/profile");
@@ -45,7 +45,7 @@ class CustomBottomNav extends StatelessWidget {
             icon: Icon(Icons.analytics_outlined), label: "NEWS"),
         BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: "DAIKO"),
         BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined), label: "WALLET"),
+            icon: Icon(Icons.account_balance_wallet_outlined), label: "VIDEOS"),
         BottomNavigationBarItem(
             icon: Icon(Icons.person_outline), label: "PROFILE"),
       ],
