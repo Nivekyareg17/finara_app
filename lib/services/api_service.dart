@@ -90,7 +90,6 @@ class ApiService {
     print("BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
-    
   }
 
 // OBTENER transacciones
@@ -142,6 +141,35 @@ class ApiService {
       headers: {
         "Authorization": "Bearer $token",
       },
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> resetPassword(String token, String newPassword) async {
+    final url =
+        Uri.parse("https://finara-api.onrender.com/auth/reset-password");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "token": token,
+        "new_password": newPassword,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> forgotPassword(String email) async {
+    final url =
+        Uri.parse("https://finara-api.onrender.com/auth/forgot-password");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email}),
     );
 
     return response.statusCode == 200;
