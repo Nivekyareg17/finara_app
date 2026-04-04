@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "https://finara-app.onrender.com";
+  static const String baseUrl = "https://finara-api.onrender.com";
 
   static Future<String?> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
