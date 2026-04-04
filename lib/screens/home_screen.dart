@@ -100,12 +100,12 @@ class _HomeScreenState extends State<HomeScreen> {
       return _homeContent();
     case 1:
       return const VideoScreen();
-      case 2:
-      return const AIChatPage(); // 🔥 ahora sí coincide con chat
+    case 2:
+      return const AIChatPage(); 
     case 3:
-     return const  NewsScreen(); // 🔥 ahora sí coincide con school
+      return const NewsScreen(); 
     case 4:
-      return const ProfileScreen(); // 🔥 ahora sí coincide con person
+      return const ProfileScreen(); 
     default:
       return _homeContent();
   }
