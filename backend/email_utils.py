@@ -5,11 +5,26 @@ EMAIL = "felipearandia24@gmail.com"
 PASSWORD = "aexusudnhvrggzbl"
 
 def send_email(to_email, link):
-    msg = MIMEText(f"Recupera tu contraseña aquí: {link}")
-    msg["Subject"] = "Recuperar contraseña"
-    msg["From"] = EMAIL
-    msg["To"] = to_email
+    try:
+        msg = MIMEText(f"""
+Hola,
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(EMAIL, PASSWORD)
-        server.send_message(msg)
+Recupera tu contraseña aquí:
+
+{link}
+
+Si no fuiste tú, ignora este mensaje.
+""")
+
+        msg["Subject"] = "Recuperar contraseña - Finara"
+        msg["From"] = EMAIL
+        msg["To"] = to_email
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(EMAIL, PASSWORD)
+            server.send_message(msg)
+
+        print("EMAIL ENVIADO")
+
+    except Exception as e:
+        print("ERROR EMAIL:", e)
