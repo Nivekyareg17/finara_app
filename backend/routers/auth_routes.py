@@ -130,7 +130,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     link = f"http://localhost:8000/reset-password?token={token}"
 
-    send_email(data.email, link)
+    # send_email(data.email, link)
 
     return {"msg": "Correo enviado"}
 
