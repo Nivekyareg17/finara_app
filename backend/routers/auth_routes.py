@@ -10,6 +10,7 @@ from datetime import datetime
 from auth import create_access_token, require_admin
 from pydantic import BaseModel
 import schemas
+import threading
 
 
 router = APIRouter(
@@ -130,7 +131,10 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     link = f"http://localhost:8000/reset-password?token={token}"
 
-    # send_email(data.email, link)
+    threading.Thread(
+        target=send_email,
+        args=(data.email, link)
+    ).start()
 
     return {"msg": "Correo enviado"}
 
