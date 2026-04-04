@@ -1,6 +1,7 @@
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../widgets/custom_bottom_nav.dart';
 
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
@@ -30,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final data = await ApiService.getTransactions(auth.token!);
 
-    if (!mounted) return; // 🔥 SOLUCIÓN
+    if (!mounted) return;
 
     setState(() {
       transactions = data.map((e) => TransactionModel.fromMap(e)).toList();
@@ -41,6 +42,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.read<AuthProvider>();
 
     final data = await auth.getUserData();
+
+    if (!mounted) return;
 
     if (data != null) {
       setState(() {
@@ -200,6 +203,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             )
           ],
         ),
+      ),
+      bottomNavigationBar: const CustomBottomNav(
+        selectedIndex: 4, // PROFILE = índice 4
       ),
     );
   }

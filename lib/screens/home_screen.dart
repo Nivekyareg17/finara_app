@@ -1,34 +1,53 @@
 import 'package:flutter/material.dart';
+import '../widgets/custom_bottom_nav.dart';
+import '../widgets/statcard.dart';
+import '../widgets/QuickActionTile.dart';
+import '../widgets/quick_wins.dart';
 
+//Pantalla principal de la aplicación.
+//Muestra estadísticas, accesos rápidos y contenido educativo.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Detecta si el tema actual es oscuro
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    const Color primaryColor = Color(0xFF064E3B); // Forest Green de Finara
+
+    // Color principal de la app
+    const Color primaryColor = Color(0xFF064E3B);
 
     return Scaffold(
+      // Fondo dinámico según tema
       backgroundColor: isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
-      
-      // 1. APPBAR UNIFICADA
+
+      // APP BAR
       appBar: AppBar(
         backgroundColor: isDark ? Colors.black : Colors.white,
         elevation: 0,
+
+        //Logo + nombre
         title: Row(
           children: [
             Image.asset(
               "assets/images/Logo_finara.png",
               width: 30,
               height: 30,
-              errorBuilder: (context, error, stackTrace) => 
+              errorBuilder: (context, error, stackTrace) =>
                   const Icon(Icons.account_balance, color: primaryColor),
             ),
             const SizedBox(width: 12),
-            const Text("Finara",
-                style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
+            const Text(
+              "Finara",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+            ),
           ],
         ),
+
+        //Acciones del lado derecho
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.grey),
@@ -41,15 +60,16 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
 
-      // 2. CUERPO CON SCROLL
+      //BODY 
+      //Contenido principal con scroll
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
-          // SECCIÓN DE ESTADÍSTICAS (NUEVO)
+          //ESTADÍSTICAS
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
-              children: [
+              children: const [
                 Expanded(
                   child: StatCard(
                     title: "COMPLETADO",
@@ -75,34 +95,47 @@ class HomeScreen extends StatelessWidget {
 
           const SizedBox(height: 25),
 
-          // SECCIÓN DE QUICK WINS (CARRUSEL)
+          //CARRUSEL
           const FinaraQuickWins(),
 
           const SizedBox(height: 25),
 
-          // SECCIÓN DE ACCIONES RÁPIDAS (NUEVO)
+          //ACCIONES RÁPIDAS
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               'QUICK ACTIONS',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
+
           const SizedBox(height: 16),
+
+          //Acceso al chat IA
           QuickActionTile(
-            title: "Ask finara AI",
+            title: "Ask Finara AI",
             subtitle: "Expert advisory 24/7",
             icon: Icons.chat_bubble_outline_rounded,
             iconColor: const Color(0xFF1E8449),
-            onTap: () => Navigator.pushNamed(context, "/daiko_ai"),
+            onTap: () =>
+                Navigator.pushReplacementNamed(context, "/daiko_ai"),
           ),
+
+          //Vista de mercado
           QuickActionTile(
             title: "Market Overview",
-            subtitle: "Global trends and economic insights",
+            subtitle: "Global trends and insights",
             icon: Icons.bar_chart_rounded,
             iconColor: Colors.blue,
             onTap: () {},
           ),
+
+          // Ruta de aprendizaje
           QuickActionTile(
             title: "Learning Path",
             subtitle: "3 modules to complete today",
@@ -110,206 +143,17 @@ class HomeScreen extends StatelessWidget {
             iconColor: Colors.purple,
             onTap: () {},
           ),
-          
-          const SizedBox(height: 80), // Espacio para que el FAB no tape el contenido
+
+          const SizedBox(height: 80),
         ],
       ),
 
-      // 3. NAVEGACIÓN
-      bottomNavigationBar: _buildBottomNav(primaryColor, isDark),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: primaryColor,
-        child: const Icon(Icons.auto_awesome, color: Colors.white),
-        onPressed: () => Navigator.pushNamed(context, "/daiko_ai"),
-      ),
+      //NAVBAR GLOBAL 
+      //Se usa el widget bar
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),
+
+      // Posición del FAB integrada con el notch
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  Widget _buildBottomNav(Color primary, bool isDark) {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      color: isDark ? Colors.black : Colors.white,
-      child: SizedBox(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const Icon(Icons.home, color: Colors.green),
-            const Icon(Icons.smart_display, color: Colors.grey),
-            const SizedBox(width: 40),
-            const Icon(Icons.school, color: Colors.grey),
-            const Icon(Icons.person, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// --- WIDGETS DE APOYO AGREGADOS ---
-
-class StatCard extends StatelessWidget {
-  final String title, count, unit;
-  final IconData icon;
-  final Color accentColor;
-
-  const StatCard({super.key, required this.title, required this.count, required this.unit, required this.icon, required this.accentColor});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF121212) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: accentColor, size: 18),
-              const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(count, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
-              const SizedBox(width: 4),
-              Text(unit, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class QuickActionTile extends StatelessWidget {
-  final String title, subtitle;
-  final IconData icon;
-  final Color iconColor;
-  final VoidCallback onTap;
-
-  const QuickActionTile({super.key, required this.title, required this.subtitle, required this.icon, required this.iconColor, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF121212) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
-                child: Icon(icon, color: iconColor),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
-                    Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// --- CLASE DEL CARRUSEL (Mantenida) ---
-class FinaraQuickWins extends StatelessWidget {
-  const FinaraQuickWins({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            'QUICK WINS',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
-          ),
-        ),
-        const SizedBox(height: 12),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: CarouselView(
-            itemExtent: 300,
-            shrinkExtent: 200,
-            children: [
-              _buildQuickCard("INVESTING BASICS", "Mastering Bull Markets", "5 min read"),
-              _buildQuickCard("AI ASSISTANT", "Optimizing Portfolios", "3 min read"),
-              _buildQuickCard("FINANCE", "Risk Management", "8 min read"),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickCard(String categoria, String titulo, String tiempo) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF064131),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(categoria, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 10)),
-          const SizedBox(height: 8),
-          Text(titulo, 
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.access_time, color: Colors.white, size: 12),
-                  const SizedBox(width: 4),
-                  Text(tiempo, style: const TextStyle(color: Colors.white, fontSize: 11)),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                child: const Text("CONTINUE", style: TextStyle(color: Color(0xFF064131), fontSize: 10, fontWeight: FontWeight.bold)),
-              )
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

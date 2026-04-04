@@ -13,11 +13,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  // DIALOG CORREG
   void showCustomDialog(String message, {bool isError = false}) {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) {
+      builder: (dialogContext) {
+        // Auto cerrar usando el context
+        Future.delayed(const Duration(seconds: 2), () {
+          if (Navigator.canPop(dialogContext)) {
+            Navigator.pop(dialogContext);
+          }
+        });
+
         return Center(
           child: Material(
             color: Colors.transparent,
@@ -53,11 +61,13 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       },
     );
+  }
 
-    // Auto cerrar
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) Navigator.of(context).pop();
-    });
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -72,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               children: [
-                //logo
+                // logo
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
@@ -106,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 40),
 
-                //email
+                // email
                 TextField(
                   controller: emailController,
                   decoration: InputDecoration(
@@ -117,13 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 20),
                   ),
                 ),
 
                 const SizedBox(height: 15),
 
-                //password
+                // password
                 TextField(
                   controller: passwordController,
                   obscureText: true,
@@ -135,7 +146,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 20),
                   ),
                 ),
 
@@ -145,10 +157,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: Text(
+                    child: const Text(
                       "Forgot Password?",
                       style: TextStyle(
-                        color: const Color.fromARGB(255, 1, 26, 173),
+                        color: Color.fromARGB(255, 1, 26, 173),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -157,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 10),
 
-                //btn login
+                //  BOTÓN LOGIN CORREG
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -176,12 +188,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         passwordController.text,
                       );
 
+                      if (!mounted) return;
+
                       if (success) {
                         showCustomDialog("Inicio de sesión exitoso");
 
-                        Future.delayed(const Duration(seconds: 2), () {
-                          Navigator.pushReplacementNamed(context, "/home");
-                        });
+                        await Future.delayed(const Duration(seconds: 2));
+
+                        if (!mounted) return;
+
+                        Navigator.pushReplacementNamed(context, "/home");
                       } else {
                         showCustomDialog(
                           "Email o contraseña incorrectos",
@@ -192,7 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text(
                       "Sign In",
                       style: TextStyle(
-                          fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
@@ -225,17 +243,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Google
                     CircleAvatar(
                       radius: 25,
                       backgroundColor:
                           isDark ? Colors.black26 : Colors.grey[200],
                       child: const Icon(Icons.g_mobiledata, size: 30),
                     ),
-
                     const SizedBox(width: 20),
-
-                    // Apple
                     CircleAvatar(
                       radius: 25,
                       backgroundColor:
