@@ -1,4 +1,5 @@
 import 'package:finara_app_v1/features/ai/view/ai_chat_page.dart';
+import 'package:finara_app_v1/screens/news_card.screen.dart';
 import 'package:finara_app_v1/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/theme_provider.dart';
+import 'screens/Video_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -46,6 +48,8 @@ Widget build(BuildContext context) {
             "/home": (context) => const HomeScreen(),
             '/daiko_ai': (context) => const AIChatPage(),
             "/profile": (context) => const ProfileScreen(),
+            "/video": (context) => const VideoScreen(),
+            
           },
         );
       },

@@ -82,8 +82,7 @@ class _AIChatPageState extends State<AIChatPage> {
           _buildInputSection(),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(primaryGreen, false),
-    );
+       );
   }
 
   // --- APP BAR ESTILO MODERN ---
@@ -275,50 +274,5 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
   int _selectedIndex = 2; // Empezamos en 2 porque es el índice de DAIKO
-  Widget _buildBottomNav(Color primaryColor, bool isDark) {
-  return BottomNavigationBar(
-    currentIndex: _selectedIndex, // Indica cuál está activo
-    onTap: (index) {
-      // 1. Cambiamos el estado visual
-      setState(() {
-        _selectedIndex = index;
-      });
-
-      // 2. Navegamos según el índice
-      switch (index) {
-        case 0:
-          Navigator.pushNamed(context, "/home");
-          break;
-        case 1:
-          Navigator.pushNamed(context, "/insights");
-          break;
-        case 2:
-          // Si ya estás en el chat, quizás quieras limpiar la pantalla
-          // o simplemente no hacer nada.
-          Navigator.pushNamed(context, "/daiko_ai"); 
-          break;
-        case 3:
-          Navigator.pushNamed(context, "/wallet");
-          break;
-        case 4:
-          Navigator.pushNamed(context, "/profile");
-          break;
-      }
-    },
-    type: BottomNavigationBarType.fixed,
-    selectedItemColor: primaryColor,
-    unselectedItemColor: const Color(0xFF64748B), // Slate-500
-    showSelectedLabels: true,
-    showUnselectedLabels: true,
-    selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-    unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-    items: const [
-      BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "HOME"),
-      BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "INSIGHTS"),
-      BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: "DAIKO"),
-      BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: "WALLET"),
-      BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "PROFILE"),
-    ],
-  );
-}
+  
 }

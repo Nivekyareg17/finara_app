@@ -5,6 +5,7 @@ import 'package:finara_app_v1/providers/theme_provider.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
 import 'package:finara_app_v1/screens/home_screen.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -30,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final data = await ApiService.getTransactions(auth.token!);
 
-    if (!mounted) return; // 🔥 SOLUCIÓN
+    if (!mounted) return; 
 
     setState(() {
       transactions = data.map((e) => TransactionModel.fromMap(e)).toList();
@@ -38,17 +39,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void loadUser() async {
+  try {
     final auth = context.read<AuthProvider>();
-
     final data = await auth.getUserData();
+    print(data);
 
-    if (data != null) {
-      setState(() {
-        name = data["name"];
-        email = data["email"];
-      });
-    }
+    setState(() {
+      if (data != null) {
+        name = data["name"] ?? "Sin nombre";
+        email = data["email"] ?? "Sin email";
+      } else {
+        name = "No se pudo cargar";
+        email = "";
+      }
+    });
+
+  } catch (e) {
+    print("Error: $e");
+    setState(() {
+      name = "Error cargando";
+      email = "";
+    });
   }
+}
 
   double getBalance() {
     double total = 0;
@@ -74,12 +87,21 @@ Widget build(BuildContext context) {
 
     // 🔝 APPBAR
     appBar: AppBar(
-      title: const Text("Perfil"),
-      centerTitle: true,
-      backgroundColor: isDark ? Colors.black : Colors.white,
-      foregroundColor: primaryColor,
       elevation: 0,
-    ),
+        title: Row(
+          children: [
+            
+            Container(
+              padding: EdgeInsets.all(6),
+              decoration: BoxDecoration(color: Color(0xFF00C853), borderRadius: BorderRadius.circular(4)),
+              child: Icon(Icons.account_circle_rounded, color: Colors.white, size: 18),
+            ),
+            SizedBox(width: 8),
+            Text("Profile", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        
+      ),
 
     // ☰ DRAWER (MENÚ)
     drawer: Drawer(
@@ -216,43 +238,11 @@ Widget build(BuildContext context) {
       ),
     ),
 
-    // 🔥 BOTÓN IA (CENTRO)
-    floatingActionButton: FloatingActionButton(
-      backgroundColor: primaryColor,
-      child: const Icon(Icons.auto_awesome, color: Colors.white),
-      onPressed: () {
-        Navigator.pushNamed(context, "/daiko_ai");
-      },
-    ),
+    
     floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-    // 🔻 BOTTOM NAV
-    bottomNavigationBar: BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      color: isDark ? Colors.black : Colors.white,
-      child: SizedBox(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.home),
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, "/home");
-              },
-            ),
-            const Icon(Icons.smart_display, color: Colors.grey),
-            const SizedBox(width: 40),
-            const Icon(Icons.school, color: Colors.grey),
-            IconButton(
-              icon: const Icon(Icons.person, color: Colors.green),
-              onPressed: () {},
-            ),
-          ],
-        ),
-      ),
-    ),
+   
+    
   );
 }
 
@@ -266,7 +256,7 @@ Widget build(BuildContext context) {
     showDialog(
         context: context,
         builder: (_) {
-          bool isLoadingDialog = false;
+          bool isLoadingDialog = false; 
 
           return StatefulBuilder(
             builder: (context, setStateDialog) {
