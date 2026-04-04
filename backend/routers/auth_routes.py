@@ -127,12 +127,12 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(reset)
 
-    print("TOKEN GUARDADO:", token)  #  DEBUG
 
-    #  comenta esto temporalmente
-    # send_email(data.email, link)
+    link = f"http://localhost:8000/reset-password?token={token}"
 
-    return {"msg": "Correo enviado", "token": token}
+    send_email(data.email, link)
+
+    return {"msg": "Correo enviado"}
 
 
 

@@ -1,8 +1,8 @@
 import smtplib
 from email.mime.text import MIMEText
 
-EMAIL = "tuemail@gmail.com"
-PASSWORD = "tu_app_password"
+EMAIL = "felipearandia24@gmail.com"
+PASSWORD = "aexusudnhvrggzbl"
 
 def send_email(to_email, link):
     msg = MIMEText(f"Recupera tu contraseña aquí: {link}")
