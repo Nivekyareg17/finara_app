@@ -5,9 +5,9 @@ import re
 # Creación de tablas
 # Validaciones de datos para los registros
 class UserCreate(BaseModel):
-    name: str = Field(..., min_lenght=6, max_lentht=50)
+    name: str = Field(..., min_length=6, max_length=50)
     email: EmailStr
-    password: str = Field(..., min_lenght=6, max_length=100)
+    password: str = Field(..., min_length=6, max_length=100)
 
 # Aquí se valida la contraseña para que sea más fuerte
     @validator("password")

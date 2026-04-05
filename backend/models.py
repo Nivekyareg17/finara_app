@@ -30,7 +30,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    amount = Column(Integer)
+    amount = Column(float)
     type = Column(String)
     description = Column(String)
 
