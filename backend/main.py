@@ -32,4 +32,4 @@ app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
 # app.include_router(ai_routes.router)  # Tu IA ya está activa aquí
 app.include_router(transaction_routes.router)
-app.include_router(news_router, prefix="/api")
+app.include_router(news_router)
