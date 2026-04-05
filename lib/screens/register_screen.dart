@@ -1,3 +1,4 @@
+import 'package:finara_app_v1/screens/terms_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
@@ -12,6 +13,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  bool obscurePassword = true;
+  bool obscureConfirmPassword = true;
+  bool acceptedTerms = false;
+
+  final confirmPasswordController = TextEditingController();
 
   //Funcion mensaje exito-error en create user
   void showCustomDialog(String message, {bool isError = false}) {
@@ -60,6 +67,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> register() async {
+    if (passwordController.text != confirmPasswordController.text) {
+      showCustomDialog("Las contraseñas no coinciden", isError: true);
+      return;
+    }
+
+    if (!acceptedTerms) {
+      showCustomDialog("Debes aceptar los términos", isError: true);
+      return;
+    }
+
     final success = await ApiService.register(
       nameController.text,
       emailController.text,
@@ -73,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
-        Navigator.pop(context); // volver al login
+        Navigator.pop(context);
       });
     } else {
       showCustomDialog("Error al registrar", isError: true);
@@ -221,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: obscurePassword,
                   decoration: InputDecoration(
                     hintText: "123456",
                     filled: true,
@@ -229,7 +246,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    suffixIcon: const Icon(Icons.visibility_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  "CONFIRMAR CONTRASEÑA",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: obscureConfirmPassword,
+                  decoration: InputDecoration(
+                    hintText: "Repite tu contraseña",
+                    filled: true,
+                    fillColor: isDark ? Colors.black26 : Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureConfirmPassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscureConfirmPassword = !obscureConfirmPassword;
+                        });
+                      },
+                    ),
                   ),
                 ),
 
@@ -239,18 +305,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   children: [
                     Checkbox(
-                      value: false,
-                      onChanged: (value) {},
+                      value: acceptedTerms,
+                      onChanged: (value) {
+                        setState(() {
+                          acceptedTerms = value!;
+                        });
+                      },
                     ),
                     Expanded(
-                      child: Text(
-                        "Acepto los Términos y Condiciones y la Política de Privacidad.",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[400] : Colors.grey[700],
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const TermsScreen()),
+                          );
+                        },
+                        child: Text(
+                          "Acepto los Términos y Condiciones y la Política de Privacidad.",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
 
@@ -261,9 +341,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: register,
+                    onPressed: acceptedTerms &&
+                            nameController.text.isNotEmpty &&
+                            emailController.text.isNotEmpty &&
+                            passwordController.text.isNotEmpty &&
+                            confirmPasswordController.text.isNotEmpty
+                        ? register
+                        : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0D1B2A),
+                      backgroundColor:
+                          acceptedTerms ? const Color(0xFF0D1B2A) : Colors.grey,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
