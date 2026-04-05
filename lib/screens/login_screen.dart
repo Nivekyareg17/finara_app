@@ -15,15 +15,18 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
 
   // DIALOG CORREG
-  void showCustomDialog(String message, {bool isError = false}) {
+  void showCustomDialog(String message,
+      {bool isError = false, VoidCallback? onClose}) {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
-        // Auto cerrar usando el context
         Future.delayed(const Duration(seconds: 2), () {
           if (Navigator.canPop(dialogContext)) {
             Navigator.pop(dialogContext);
+
+            // 👇 aquí ejecuta la acción después de cerrar
+            if (onClose != null) onClose();
           }
         });
 
@@ -128,8 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 20),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                   ),
                 ),
 
@@ -147,8 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 20),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                   ),
                 ),
 
@@ -233,13 +234,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (!mounted) return;
 
                       if (success) {
-                        showCustomDialog("Inicio de sesión exitoso");
-
-                        await Future.delayed(const Duration(seconds: 2));
-
-                        if (!mounted) return;
-
-                        Navigator.pushReplacementNamed(context, "/home");
+                        showCustomDialog(
+                          "Inicio de sesión exitoso",
+                          onClose: () {
+                            Navigator.pushReplacementNamed(context, "/home");
+                          },
+                        );
                       } else {
                         showCustomDialog(
                           "Email o contraseña incorrectos",
