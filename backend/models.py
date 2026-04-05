@@ -1,5 +1,5 @@
 # Importaciones
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime  # Importa sqlalchemy para la creación de tablas
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Float  # Importa sqlalchemy para la creación de tablas
 from sqlalchemy.orm import relationship  # Permite conectar tablas user - role
 from database import Base  # DB donde salen los modelos (SQLAlchemy)
 
@@ -30,7 +30,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    amount = Column(float)
+    amount = Column(Float)
     type = Column(String)
     description = Column(String)
 
