@@ -170,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
 
-      //BODY CRUD 
+      //BODY CRUD
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -621,9 +621,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   : () async {
                                       setStateDialog(
                                           () => isLoadingDialog = true);
-                                      // ... (Tu lógica de guardado)
+
+                                      final auth = context.read<AuthProvider>();
+
+                                      bool success;
+
+                                      if (edit == null) {
+                                        // CREAR
+                                        success =
+                                            await ApiService.createTransaction(
+                                          auth.token!,
+                                          type,
+                                          double.tryParse(amount.text) ?? 0,
+                                          desc.text,
+                                        );
+                                      } else {
+                                        // UPDATE
+                                        success =
+                                            await ApiService.updateTransaction(
+                                          auth.token!,
+                                          edit.id!,
+                                          type,
+                                          double.tryParse(amount.text) ?? 0,
+                                          desc.text,
+                                        );
+                                      }
+
+                                      if (!mounted) return;
+
                                       Navigator.pop(context);
-                                      loadTransactions();
+
+                                      if (success) {
+                                        loadTransactions();
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text("Error")),
+                                        );
+                                      }
                                     },
                               child: isLoadingDialog
                                   ? const CircularProgressIndicator(
@@ -713,26 +749,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           final auth = context.read<AuthProvider>();
 
-                          try {
-                            final success = await ApiService.deleteTransaction(
-                              auth.token!,
-                              t.id!, 
-                            );
+                          final success = await ApiService.deleteTransaction(
+                            auth.token!,
+                            t.id!,
+                          );
 
-                            if (!mounted) return;
+                          if (!mounted) return;
 
-                            Navigator.pop(context); // cerrar dialog
-                            loadTransactions(); // recargar lista
-                          } catch (e) {
-                            if (!mounted) return;
+                          Navigator.pop(context);
 
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Error al eliminar"),
-                              ),
-                            );
+                          if (success) {
+                            loadTransactions();
                           }
                         },
                   child: isDeleting
@@ -754,99 +781,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Mejorar a futuro
-
-  // 🔒 Confirmación logout
-  // void _confirmLogout(BuildContext context) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return Dialog(
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(20),
-  //         ),
-  //         child: Container(
-  //           padding: const EdgeInsets.all(20),
-  //           decoration: BoxDecoration(
-  //             color: const Color(0xFF18B47A),
-  //             borderRadius: BorderRadius.circular(20),
-  //           ),
-  //           child: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               const Icon(Icons.logout, color: Colors.white, size: 40),
-  //               const SizedBox(height: 10),
-  //               const Text(
-  //                 "¿Deseas cerrar sesión?",
-  //                 textAlign: TextAlign.center,
-  //                 style: TextStyle(
-  //                   color: Colors.white,
-  //                   fontWeight: FontWeight.bold,
-  //                   fontSize: 16,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 20),
-  //               Row(
-  //                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //                 children: [
-  //                   // Cancelar
-  //                   TextButton(
-  //                     onPressed: () => Navigator.pop(context),
-  //                     child: const Text(
-  //                       "Cancelar",
-  //                       style: TextStyle(color: Colors.white),
-  //                     ),
-  //                   ),
-
-  //                   // Confirmar logout
-  //                   ElevatedButton(
-  //                     style: ElevatedButton.styleFrom(
-  //                       backgroundColor: Colors.white,
-  //                       foregroundColor: Colors.green,
-  //                     ),
-  //                     onPressed: () {
-  //                       Navigator.pop(context);
-
-  //                       // 🔁 Ir a login y borrar historial
-  //                       Navigator.pushNamedAndRemoveUntil(
-  //                         context,
-  //                         "/login",
-  //                         (route) => false,
-  //                       );
-  //                     },
-  //                     child: const Text("Salir"),
-  //                   ),
-  //                 ],
-  //               )
-  //             ],
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
