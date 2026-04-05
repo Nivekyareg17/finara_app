@@ -12,7 +12,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   int currentIndex = 0;
 
   @override
@@ -25,7 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       // Fondo dinámico según tema
-      backgroundColor: isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
+      backgroundColor:
+          isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
 
       // APP BAR
       appBar: AppBar(
@@ -57,16 +57,18 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.grey),
-            onPressed: () => debugPrint("Notificaciones"),
+            onPressed: () => _showNotifications(context),
           ),
           IconButton(
             icon: const Icon(Icons.account_circle, color: Colors.grey),
-            onPressed: () => debugPrint("Perfil"),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, "/profile");
+            },
           )
         ],
       ),
 
-      //BODY 
+      //BODY
       //Contenido principal con scroll
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 20),
@@ -98,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        
+
           //CARRUSEL
           const FinaraQuickWins(),
 
@@ -126,8 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
             subtitle: "Expert advisory 24/7",
             icon: Icons.chat_bubble_outline_rounded,
             iconColor: const Color(0xFF1E8449),
-            onTap: () =>
-                Navigator.pushReplacementNamed(context, "/daiko_ai"),
+            onTap: () => Navigator.pushReplacementNamed(context, "/daiko_ai"),
           ),
 
           //Vista de mercado
@@ -136,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
             subtitle: "Global trends and insights",
             icon: Icons.bar_chart_rounded,
             iconColor: Colors.blue,
-            onTap: () {},
+            onTap: () => Navigator.pushReplacementNamed(context, "/news"),
           ),
 
           // Ruta de aprendizaje
@@ -145,19 +146,66 @@ class _HomeScreenState extends State<HomeScreen> {
             subtitle: "3 modules to complete today",
             icon: Icons.school_outlined,
             iconColor: Colors.purple,
-            onTap: () {},
+            onTap: () => Navigator.pushReplacementNamed(context, "/video"),
           ),
 
           const SizedBox(height: 80),
         ],
       ),
 
-      //NAVBAR GLOBAL 
-      //Se usa el widget bar
+      //NAVBAR GLOBAL
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),
 
-      // Posición del FAB integrada con el notch
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
+  }
+
+  void _showNotifications(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        height: MediaQuery.of(context).size.height * 0.5,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Notificaciones",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 15),
+
+            Expanded(
+              child: ListView(
+                children: const [
+                  ListTile(
+                    leading: Icon(Icons.trending_up, color: Colors.green),
+                    title: Text("BTC subió 5%"),
+                    subtitle: Text("Hace 2 minutos"),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.warning, color: Colors.orange),
+                    title: Text("Alta volatilidad detectada"),
+                    subtitle: Text("Hace 10 minutos"),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.check_circle, color: Colors.blue),
+                    title: Text("Transacción completada"),
+                    subtitle: Text("Hace 1 hora"),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
   }
 }
