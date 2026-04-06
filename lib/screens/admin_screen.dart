@@ -17,7 +17,10 @@ class _AdminScreenState extends State<AdminScreen> {
     final auth = context.read<AuthProvider>();
     final token = auth.token!;
 
+    print("Cargando users...");
+
     final response = await ApiService.getUsers(token);
+    print("USERS: $response");
     setState(() => users = response);
   }
 
@@ -54,14 +57,25 @@ class _AdminScreenState extends State<AdminScreen> {
                   },
                 ),
 
-                // hacer admin
-                IconButton(
-                  icon: const Icon(Icons.security),
-                  onPressed: () async {
-                    await ApiService.makeAdmin(token, user["id"]);
-                    loadUsers();
-                  },
-                ),
+                // SI NO es admin => mostrar botón hacer admin
+                if (user["role"] != "admin")
+                  IconButton(
+                    icon: const Icon(Icons.security),
+                    onPressed: () async {
+                      await ApiService.makeAdmin(token, user["id"]);
+                      loadUsers();
+                    },
+                  ),
+
+                // SI es admin => mostrar botón quitar admin
+                if (user["role"] == "admin")
+                  IconButton(
+                    icon: const Icon(Icons.person),
+                    onPressed: () async {
+                      await ApiService.removeAdmin(token, user["id"]);
+                      loadUsers();
+                    },
+                  ),
               ],
             ),
           );

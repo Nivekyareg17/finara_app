@@ -179,14 +179,17 @@ class ApiService {
     final url = Uri.parse("$baseUrl/users/all");
 
     final res =
-        await http.get(url, headers: {"Authotization": "Bearer $token"});
+        await http.get(url, headers: {"Authorization": "Bearer $token"});
+
+    print("STATUS USERS: ${res.statusCode}");
+    print("BODY USERS: ${res.body}");
 
     return jsonDecode(res.body);
   }
 
   static Future<void> deleteUser(String token, int id) async {
     await http.delete(
-      Uri.parse("$baseUrl/users/$id"),
+      Uri.parse("$baseUrl/users/delete/$id"),
       headers: {"Authorization": "Bearer $token"},
     );
   }
@@ -194,6 +197,13 @@ class ApiService {
   static Future<void> makeAdmin(String token, int id) async {
     await http.put(
       Uri.parse("$baseUrl/users/make-admin/$id"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+  }
+
+  static Future<void> removeAdmin(String token, int id) async {
+    await http.put(
+      Uri.parse("$baseUrl/users/remove-admin/$id"),
       headers: {"Authorization": "Bearer $token"},
     );
   }
