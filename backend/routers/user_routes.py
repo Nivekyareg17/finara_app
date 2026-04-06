@@ -111,20 +111,26 @@ def get_users(
 
 # Eliminar usuario
 @router.delete("/delete/{user_id}")
-def delete_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    data = Depends(require_admin)
-):
-    user = db.query(User).flter(User.id == user_id).first()
+def delete_user(user_id: int, db: Session = Depends(get_db), data = Depends(require_admin)):
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
 
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    db.delete(user)
-    db.commit()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    return {"message": "Usuario eliminado"}
+        from models import Transaction, PasswordResetToken
+
+        db.query(Transaction).filter(Transaction.user_id == user_id).delete()
+        db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete()
+
+        db.delete(user)
+        db.commit()
+
+        return {"message": "Usuario eliminado"}
+
+    except Exception as e:
+        print("ERROR DELETE:", str(e))  # 👈 ESTO ES CLAVE
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Cambiar Rol (admin <-> user)
