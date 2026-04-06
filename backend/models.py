@@ -30,6 +30,12 @@ class User(Base):
         cascade="all, delete-orphan"
     )
 
+    reset_tokens = relationship(
+        "PasswordResetToken",
+        backref="user",
+        cascade="all, delete-orphan"
+    )
+
 class Transaction(Base):
     __tablename__ = "transactions"
 
@@ -38,13 +44,13 @@ class Transaction(Base):
     type = Column(String)
     description = Column(String)
 
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="transactions")
 
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     token = Column(String, unique=True, index=True)
     expires_at = Column(DateTime)

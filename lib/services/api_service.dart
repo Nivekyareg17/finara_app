@@ -188,10 +188,13 @@ class ApiService {
   }
 
   static Future<void> deleteUser(String token, int id) async {
-    await http.delete(
+    final res = await http.delete(
       Uri.parse("$baseUrl/users/delete/$id"),
       headers: {"Authorization": "Bearer $token"},
     );
+
+    print("DELETE STATUS: ${res.statusCode}");
+    print("DELETE BODY: ${res.body}");
   }
 
   static Future<void> makeAdmin(String token, int id) async {
