@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
-      // 🔝 APPBAR
+      // APPBAR
       appBar: AppBar(
         elevation: 0,
         title: Row(
@@ -122,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
 
-      // ☰ DRAWER (MENÚ)
+      //DRAWER (MENU)
       drawer: Drawer(
         child: Column(
           children: [
@@ -137,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            // 🌙 MODO OSCURO
+            //MODO OSCURO
             ListTile(
               leading: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
               title: Text(isDark ? "Modo claro" : "Modo oscuro"),
@@ -147,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
 
-            // 🚪 LOGOUT
+            //LOGOUT
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text("Cerrar sesión"),
@@ -209,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                // light/dark
+                //light/dark
                 color:
                     isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
                 borderRadius: BorderRadius.circular(20),
@@ -605,7 +605,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 40),
 
-                          // BOTÓN GUARDAR
+                          //BOTÓN GUARDAR
                           SizedBox(
                             width: double.infinity,
                             height: 60,
@@ -627,7 +627,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       bool success;
 
                                       if (edit == null) {
-                                        // CREAR
+                                        //CREAR
                                         success =
                                             await ApiService.createTransaction(
                                           auth.token!,
@@ -636,7 +636,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           desc.text,
                                         );
                                       } else {
-                                        // UPDATE
+                                        //UPDATE
                                         success =
                                             await ApiService.updateTransaction(
                                           auth.token!,

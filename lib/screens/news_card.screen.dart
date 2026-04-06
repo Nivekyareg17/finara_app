@@ -36,7 +36,7 @@ class NewsScreen extends StatelessWidget {
             ),
             SizedBox(width: 8),
             Text(
-              "Noticias Finara",
+              "Finara News",
               style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -87,7 +87,7 @@ class NewsScreen extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 1, // NEWS
+        selectedIndex: 1, //NEWS
       ),
     );
   }

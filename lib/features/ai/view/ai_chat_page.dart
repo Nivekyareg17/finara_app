@@ -16,81 +16,92 @@ class _AIChatPageState extends State<AIChatPage> {
   final AIService _aiService = AIService();
   bool _isLoading = false;
 
-  // Colores del diseño HTML
   final Color primaryGreen = const Color(0xFF10B981);
   final Color accentGreen = const Color(0xFF059669);
-  final Color aiBubbleColor = const Color(0xFFECFDF5);
-  final Color userBubbleColor = const Color(0xFFF1F5F9);
 
   void _sendMessage() async {
-  if (_controller.text.isEmpty) return;
+    if (_controller.text.isEmpty) return;
 
-  final userMsg = ChatMessage(
-    text: _controller.text,
-    sender: MessageSender.user,
-    timestamp: DateTime.now(),
-  );
-
-  if (!mounted) return;
-
-  setState(() {
-    _messages.insert(0, userMsg);
-    _isLoading = true;
-  });
-
-  _controller.clear();
-
-  try {
-    final response = await _aiService.sendMessageToDaiko(userMsg.text);
+    final userMsg = ChatMessage(
+      text: _controller.text,
+      sender: MessageSender.user,
+      timestamp: DateTime.now(),
+    );
 
     if (!mounted) return;
 
     setState(() {
-      _messages.insert(0, response);
-      _isLoading = false;
+      _messages.insert(0, userMsg);
+      _isLoading = true;
     });
 
-  } catch (e) {
-    if (!mounted) return;
+    _controller.clear();
 
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      final response = await _aiService.sendMessageToDaiko(userMsg.text);
+
+      if (!mounted) return;
+
+      setState(() {
+        _messages.insert(0, response);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final aiBubbleColor =
+        isDark ? const Color(0xFF1E293B) : const Color(0xFFECFDF5);
+    final userBubbleColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+
     return Scaffold(
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 2),
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : Colors.white,
+      appBar: _buildAppBar(isDark),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               reverse: true,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
-                return msg.sender == MessageSender.user 
-                  ? _buildUserMessage(msg) 
-                  : _buildDaikoMessage(msg);
+                return msg.sender == MessageSender.user
+                    ? _buildUserMessage(msg, isDark, userBubbleColor)
+                    : _buildDaikoMessage(msg, isDark, aiBubbleColor);
               },
             ),
           ),
-          if (_isLoading) LinearProgressIndicator(color: primaryGreen, backgroundColor: aiBubbleColor),
-          _buildInputSection(),
+          if (_isLoading)
+            LinearProgressIndicator(
+              color: primaryGreen,
+              backgroundColor:
+                  isDark ? Colors.white10 : const Color(0xFFECFDF5),
+            ),
+          _buildInputSection(isDark),
         ],
       ),
     );
   }
 
-  // --- APP BAR ESTILO MODERN ---
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(bool isDark) {
     return AppBar(
-      backgroundColor: Colors.white.withOpacity(0.8),
+      backgroundColor: isDark
+          ? const Color(0xFF0F172A).withOpacity(0.8)
+          : Colors.white.withOpacity(0.8),
       elevation: 0,
       scrolledUnderElevation: 0,
       title: Row(
@@ -100,12 +111,34 @@ class _AIChatPageState extends State<AIChatPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("DAIKO AI", style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 16)),
+              Text(
+                "DAIKO AI",
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
               Row(
                 children: [
-                  Container(width: 6, height: 6, decoration: BoxDecoration(color: primaryGreen, shape: BoxShape.circle)),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: primaryGreen,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                   const SizedBox(width: 4),
-                  Text("ACTIVE INTELLIGENCE", style: TextStyle(color: primaryGreen, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                  Text(
+                    "ACTIVE INTELLIGENCE",
+                    style: TextStyle(
+                      color: primaryGreen,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -113,13 +146,19 @@ class _AIChatPageState extends State<AIChatPage> {
         ],
       ),
       actions: [
-        IconButton(onPressed: () {}, icon: const Icon(Icons.info_outline, color: const Color(0xFF64748B)))
+        IconButton(
+          onPressed: () {},
+          icon: Icon(
+            Icons.info_outline,
+            color: isDark ? Colors.white70 : const Color(0xFF64748B),
+          ),
+        )
       ],
     );
   }
 
-  // --- BURBUJA DE USUARIO ---
-  Widget _buildUserMessage(ChatMessage msg) {
+  Widget _buildUserMessage(
+      ChatMessage msg, bool isDark, Color userBubbleColor) {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
@@ -127,15 +166,27 @@ class _AIChatPageState extends State<AIChatPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: userBubbleColor,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20), bottomLeft: Radius.circular(20)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(20),
+          ),
         ),
-        child: Text(msg.text, style: const TextStyle(color: Color(0xFF334155), fontSize: 14, fontWeight: FontWeight.w500)),
+        child: Text(
+          msg.text,
+          style: TextStyle(
+            color:
+                isDark ? Colors.white70 : const Color(0xFF334155),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
 
-  // --- BURBUJA DE DAIKO (IA) ---
-  Widget _buildDaikoMessage(ChatMessage msg) {
+  Widget _buildDaikoMessage(
+      ChatMessage msg, bool isDark, Color aiBubbleColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Row(
@@ -148,14 +199,30 @@ class _AIChatPageState extends State<AIChatPage> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: aiBubbleColor,
-                borderRadius: const BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20), bottomLeft: Radius.circular(20)),
-                border: Border.all(color: primaryGreen.withOpacity(0.1)),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                ),
+                border: Border.all(
+                  color: primaryGreen.withOpacity(0.1),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(msg.text, style: const TextStyle(color: Color(0xFF1E293B), fontSize: 14, height: 1.5, fontWeight: FontWeight.w500)),
-                  if (msg.type == MessageType.analysis) _buildAnalysisCard(msg),
+                  Text(
+                    msg.text,
+                    style: TextStyle(
+                      color:
+                          isDark ? Colors.white : const Color(0xFF1E293B),
+                      fontSize: 14,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (msg.type == MessageType.analysis)
+                    _buildAnalysisCard(msg, isDark),
                 ],
               ),
             ),
@@ -167,29 +234,52 @@ class _AIChatPageState extends State<AIChatPage> {
 
   Widget _buildDaikoAvatar({required double size, double iconSize = 20}) {
     return Container(
-      width: size, height: size,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [primaryGreen, accentGreen], begin: Alignment.bottomLeft, end: Alignment.topRight),
+        gradient: LinearGradient(
+          colors: [primaryGreen, accentGreen],
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
+        ),
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: primaryGreen.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: primaryGreen.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
-      child: Icon(Icons.auto_awesome, color: Colors.white, size: iconSize),
+      child: Icon(Icons.auto_awesome,
+          color: Colors.white, size: iconSize),
     );
   }
 
-  // --- CARDS DE ANÁLISIS ---
-  Widget _buildAnalysisCard(ChatMessage msg) {
+  Widget _buildAnalysisCard(ChatMessage msg, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.6), borderRadius: BorderRadius.circular(16), border: Border.all(color: primaryGreen.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0F172A)
+            : Colors.white.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: primaryGreen.withOpacity(0.2),
+        ),
+      ),
       child: Column(
         children: [
           Row(
             children: [
-              _buildMetric("TENDENCIA", msg.trend ?? "Bullish", Icons.trending_up, primaryGreen),
+              _buildMetric(
+                  "TENDENCIA", msg.trend ?? "Bullish",
+                  Icons.trending_up, primaryGreen, isDark),
               const SizedBox(width: 12),
-              _buildMetric("RSI LEVEL", msg.rsiLevel ?? "62.4", Icons.speed, Colors.amber),
+              _buildMetric(
+                  "RSI LEVEL", msg.rsiLevel ?? "62.4",
+                  Icons.speed, Colors.amber, isDark),
             ],
           ),
         ],
@@ -197,21 +287,44 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildMetric(String label, String value, IconData icon, Color color) {
+  Widget _buildMetric(String label, String value, IconData icon,
+      Color color, bool isDark) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFF1F5F9))),
+        decoration: BoxDecoration(
+          color: isDark
+              ? const Color(0xFF1E293B)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color:  const Color(0xFF64748B))),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  color: isDark
+                      ? Colors.white54
+                      : const Color(0xFF64748B),
+                )),
             const SizedBox(height: 4),
             Row(
               children: [
                 Icon(icon, size: 14, color: color),
                 const SizedBox(width: 4),
-                Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                Text(value,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isDark
+                          ? Colors.white
+                          : const Color(0xFF0F172A),
+                    )),
               ],
             ),
           ],
@@ -220,18 +333,17 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  // --- INPUT SECTION (CON BOTONES DE FOTO/VIDEO) ---
-  Widget _buildInputSection() {
+  Widget _buildInputSection(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
-      color: Colors.white,
+      color: isDark ? const Color(0xFF0F172A) : Colors.white,
       child: Column(
         children: [
           Row(
             children: [
-              _buildQuickAction("Photo", Icons.image),
+              _buildQuickAction("Photo", Icons.image, isDark),
               const SizedBox(width: 12),
-              _buildQuickAction("Video", Icons.videocam),
+              _buildQuickAction("Video", Icons.videocam, isDark),
             ],
           ),
           const SizedBox(height: 16),
@@ -240,20 +352,45 @@ class _AIChatPageState extends State<AIChatPage> {
               Expanded(
                 child: TextField(
                   controller: _controller,
+                  style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black),
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.add, color: primaryGreen),
+                    prefixIcon:
+                        Icon(Icons.add, color: primaryGreen),
                     hintText: "Ask DAIKO anything...",
+                    hintStyle: TextStyle(
+                        color: isDark
+                            ? Colors.white54
+                            : Colors.grey),
                     filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                    fillColor: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Container(
-                width: 56, height: 56,
-                decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: primaryGreen.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))]),
-                child: IconButton(onPressed: _sendMessage, icon: const Icon(Icons.mic, color: Colors.white)),
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: primaryGreen,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryGreen.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    )
+                  ],
+                ),
+                child: IconButton(
+                    onPressed: _sendMessage,
+                    icon: const Icon(Icons.mic,
+                        color: Colors.white)),
               ),
             ],
           ),
@@ -262,18 +399,34 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildQuickAction(String label, IconData icon) {
+  Widget _buildQuickAction(
+      String label, IconData icon, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF1F5F9))),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1E293B)
+            : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
+        ),
+      ),
       child: Row(
         children: [
           Icon(icon, size: 18, color: primaryGreen),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+          Text(label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDark
+                    ? Colors.white
+                    : const Color(0xFF0F172A),
+              )),
         ],
       ),
     );
   }
-  
 }

@@ -47,25 +47,11 @@ class _HomeScreenState extends State<HomeScreen> {
               "Finara",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: primaryColor,
+                color: Color.fromARGB(255, 10, 109, 82),
               ),
             ),
           ],
         ),
-
-        //Acciones del lado derecho
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.grey),
-            onPressed: () => _showNotifications(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.account_circle, color: Colors.grey),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, "/profile");
-            },
-          )
-        ],
       ),
 
       //BODY
@@ -159,53 +145,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showNotifications(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        height: MediaQuery.of(context).size.height * 0.5,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Notificaciones",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 15),
-
-            Expanded(
-              child: ListView(
-                children: const [
-                  ListTile(
-                    leading: Icon(Icons.trending_up, color: Colors.green),
-                    title: Text("BTC subió 5%"),
-                    subtitle: Text("Hace 2 minutos"),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.warning, color: Colors.orange),
-                    title: Text("Alta volatilidad detectada"),
-                    subtitle: Text("Hace 10 minutos"),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.check_circle, color: Colors.blue),
-                    title: Text("Transacción completada"),
-                    subtitle: Text("Hace 1 hora"),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-  }
 }
