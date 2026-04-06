@@ -90,3 +90,73 @@ def create_admin(
     db.refresh(new_admin)
 
     return {"message": "Admin creado"}
+
+
+# Listar usuarios
+@router.get("/all")
+def get_users(
+    db: Session = Depends(get_db),
+    data = Depends(require_admin)
+):
+    users = db.query(User).all()
+
+    return [
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "role": u.role.name
+        } for u in users
+    ]
+
+# Eliminar usuario
+@router.delete("/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    data = Depends(require_admin)
+):
+    user = db.query(User).flter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    db.delete(user)
+    db.commit()
+
+    return {"message": "Usuario eliminado"}
+
+
+# Cambiar Rol (admin <-> user)
+@router.put("/make-admin/{user_id}")
+def make_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    data = Depends(require_admin)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Uusuario no encontrado")
+    
+    user.role_id = 1
+    db.commit()
+
+    return {"message": "Ahora es admin"}
+
+
+@router.put("/remove-admin/{user_id}")
+def remove_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    data = Depends(require_admin)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    user.role_id = 2
+    db.commit()
+
+    return {"message": "Ahora es usuario normal"}

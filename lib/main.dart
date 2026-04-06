@@ -1,4 +1,5 @@
 import 'package:finara_app_v1/features/ai/view/ai_chat_page.dart';
+import 'package:finara_app_v1/screens/admin_screen.dart';
 import 'package:finara_app_v1/screens/news_card.screen.dart';
 import 'package:finara_app_v1/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,7 @@ Widget build(BuildContext context) {
             "/news": (context) => const NewsScreen(),
             "/profile": (context) => const ProfileScreen(),
             "/video": (context) => const VideoScreen(),
+            "/admin": (context) => const AdminScreen(),
             
           },
         );

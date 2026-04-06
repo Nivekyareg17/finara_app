@@ -174,4 +174,27 @@ class ApiService {
 
     return response.statusCode == 200;
   }
+
+  static Future<List<dynamic>> getUsers(String token) async {
+    final url = Uri.parse("$baseUrl/users/all");
+
+    final res =
+        await http.get(url, headers: {"Authotization": "Bearer $token"});
+
+    return jsonDecode(res.body);
+  }
+
+  static Future<void> deleteUser(String token, int id) async {
+    await http.delete(
+      Uri.parse("$baseUrl/users/$id"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+  }
+
+  static Future<void> makeAdmin(String token, int id) async {
+    await http.put(
+      Uri.parse("$baseUrl/users/make-admin/$id"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+  }
 }

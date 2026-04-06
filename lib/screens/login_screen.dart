@@ -234,12 +234,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (!mounted) return;
 
                       if (success) {
-                        showCustomDialog(
-                          "Inicio de sesión exitoso",
-                          onClose: () {
+                        showCustomDialog("Inicio de sesión exitoso",
+                            onClose: () async {
+                          final userData = await auth.getUserData();
+
+                          if (userData?["role"] == "admin") {
+                            Navigator.pushReplacementNamed(context, "/admin");
+                          } else {
                             Navigator.pushReplacementNamed(context, "/home");
-                          },
-                        );
+                          }
+                        });
                       } else {
                         showCustomDialog(
                           "Email o contraseña incorrectos",
