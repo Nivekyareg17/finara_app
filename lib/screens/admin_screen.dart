@@ -12,6 +12,7 @@ class AdminScreen extends StatefulWidget {
 
 class _AdminScreenState extends State<AdminScreen> {
   List users = [];
+  String? currentUserEmail;
 
   Future<void> loadUsers() async {
     final auth = context.read<AuthProvider>();
@@ -21,6 +22,7 @@ class _AdminScreenState extends State<AdminScreen> {
 
     final response = await ApiService.getUsers(token);
     print("USERS: $response");
+
     setState(() => users = response);
   }
 
@@ -28,6 +30,16 @@ class _AdminScreenState extends State<AdminScreen> {
   void initState() {
     super.initState();
     loadUsers();
+    loadCurrentUser();
+  }
+
+  Future<void> loadCurrentUser() async {
+    final auth = context.read<AuthProvider>();
+    final data = await auth.getUserData();
+
+    setState(() {
+      currentUserEmail = data?["email"];
+    });
   }
 
   @override
@@ -49,13 +61,34 @@ class _AdminScreenState extends State<AdminScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // eliminar
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () async {
-                    await ApiService.deleteUser(token, user["id"]);
-                    loadUsers();
-                  },
-                ),
+                if (user["email"] != currentUserEmail)
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () async {
+                      final confirm = await showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text("Eliminar usuario"),
+                          content: const Text("¿Estás seguro?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancelar"),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text("Eliminar"),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        await ApiService.deleteUser(token, user["id"]);
+                        loadUsers();
+                      }
+                    },
+                  ),
 
                 // SI NO es admin => mostrar botón hacer admin
                 if (user["role"] != "admin")
