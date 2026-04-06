@@ -48,7 +48,42 @@ class _AdminScreenState extends State<AdminScreen> {
     final token = auth.token!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Admin Panel")),
+      appBar: AppBar(
+        title: const Text("Admin Panel"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final confirm = await showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text("Cerrar sesión"),
+                  content: const Text("¿Seguro que quieres salir?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text("Cancelar"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text("Salir"),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                final auth = context.read<AuthProvider>();
+                await auth.logout();
+
+                if (!mounted) return;
+
+                Navigator.pushReplacementNamed(context, "/login");
+              }
+            },
+          ),
+        ],
+      ),
       body: ListView.builder(
         itemCount: users.length,
         itemBuilder: (context, i) {
