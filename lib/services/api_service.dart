@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+
 class ApiService {
   static const String baseUrl = "https://finara-api.onrender.com";
 
@@ -227,5 +228,27 @@ class ApiService {
       Uri.parse("$baseUrl/users/remove-admin/$id"),
       headers: {"Authorization": "Bearer $token"},
     );
+  }
+
+  static Future<List<dynamic>> getCategories() async {
+    final response = await http.get(Uri.parse("$baseUrl/videos/categories"));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar categorías");
+    }
+  }
+
+  // Obtener videos por categoría
+  static Future<List<dynamic>> getVideos(int categoryId) async {
+    final response =
+        await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar videos");
+    }
   }
 }
