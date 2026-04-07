@@ -38,27 +38,44 @@ class _VideoListScreenState extends State<VideoListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Videos"),
+        elevation: 0,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C853),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Icon(Icons.play_circle_fill,
+                  color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              "Videos",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
+
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
+              padding: const EdgeInsets.all(12),
               itemCount: videos.length,
               itemBuilder: (context, index) {
                 final video = videos[index];
 
-                // 🔥 obtener thumbnail
                 final videoId =
                     YoutubePlayer.convertUrlToId(video["url"]);
                 final thumbnail =
                     "https://img.youtube.com/vi/$videoId/0.jpg";
 
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -71,29 +88,52 @@ class _VideoListScreenState extends State<VideoListScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 🎥 Imagen del video
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(12)),
-                          child: Image.network(
-                            thumbnail,
-                            width: double.infinity,
-                            height: 180,
-                            fit: BoxFit.cover,
-                          ),
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                thumbnail,
+                                height: 180,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+
+                            // botón play encima
+                            Positioned.fill(
+                              child: Center(
+                                child: Icon(
+                                  Icons.play_circle_fill,
+                                  size: 60,
+                                  color: Colors.white.withOpacity(0.85),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
 
-                        // 📌 Título
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Text(
-                            video["title"],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 10),
+
+                        // Título
+                        Text(
+                          video["title"],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // Texto secundario
+                        const Text(
+                          "Video educativo",
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
                           ),
                         ),
                       ],

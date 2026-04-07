@@ -1,8 +1,8 @@
-import 'package:finara_app_v1/services/api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:finara_app_v1/main.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../services/api_service.dart';
+import 'video_player_screen.dart';
 import '../widgets/custom_bottom_nav.dart';
-import 'video_list_screen.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -13,19 +13,26 @@ class VideoScreen extends StatefulWidget {
 
 class _VideoScreenState extends State<VideoScreen> {
   List categories = [];
+  Map<int, List> videosByCategory = {};
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    loadCategories();
+    loadData();
   }
 
-  void loadCategories() async {
+  void loadData() async {
     try {
-      final data = await ApiService.getCategories();
+      final cats = await ApiService.getCategories();
+
+      for (var cat in cats) {
+        final vids = await ApiService.getVideos(cat["id"]);
+        videosByCategory[cat["id"]] = vids;
+      }
+
       setState(() {
-        categories = data;
+        categories = cats;
         isLoading = false;
       });
     } catch (e) {
@@ -41,66 +48,163 @@ class _VideoScreenState extends State<VideoScreen> {
         title: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(6),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                  color: Color(0xFF00C853),
-                  borderRadius: BorderRadius.circular(4)),
-              child: Icon(Icons.play_circle_fill_rounded,
+                color: const Color(0xFF00C853),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Icon(Icons.play_circle_fill,
                   color: Colors.white, size: 18),
             ),
-            SizedBox(width: 8),
-            Text("Videos",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18)),
+            const SizedBox(width: 8),
+            const Text("Videos",
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
 
-                return ListTile(
-                  title: Text(category["title"]),
-                  subtitle: Text(category["description"]),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            VideoListScreen(categoryId: category["id"]),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              children: [
+                // 🔥 VIDEO DESTACADO
+                if (categories.isNotEmpty)
+                  _buildFeatured(videosByCategory[categories[0]["id"]]),
+
+                // 🔥 LISTAS POR CATEGORÍA
+                ...categories.map((category) {
+                  final videos = videosByCategory[category["id"]] ?? [];
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          category["title"].toUpperCase(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            letterSpacing: 1,
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                );
-              },
+
+                      SizedBox(
+                        height: 180,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: videos.length,
+                          itemBuilder: (context, index) {
+                            final video = videos[index];
+
+                            final videoId =
+                                YoutubePlayer.convertUrlToId(video["url"]);
+                            final thumbnail =
+                                "https://img.youtube.com/vi/$videoId/0.jpg";
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        VideoPlayerScreen(url: video["url"]),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 160,
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 8),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      child: Image.network(
+                                        thumbnail,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      video["title"],
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ],
             ),
-      bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 3,
-      ),
+
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 3),
     );
   }
 
-  // --- WIDGETS CON INTERACCIÓN ---
+  // 🔥 VIDEO DESTACADO
+  Widget _buildFeatured(List? videos) {
+    if (videos == null || videos.isEmpty) return const SizedBox();
 
-  Widget _buildFeaturedCard({required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        height: 200,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient:
-              LinearGradient(colors: [Color(0xFF2D6A4F), Color(0xFF1B4332)]),
-        ),
+    final video = videos[0];
+    final videoId = YoutubePlayer.convertUrlToId(video["url"]);
+    final thumbnail = "https://img.youtube.com/vi/$videoId/0.jpg";
+
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VideoPlayerScreen(url: video["url"]),
+            ),
+          );
+        },
         child: Stack(
           children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(
+                thumbnail,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+
+            // overlay oscuro
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.transparent
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+            ),
+
+            // texto
             Positioned(
               bottom: 20,
               left: 20,
@@ -108,184 +212,45 @@ class _VideoScreenState extends State<VideoScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                        color: Color(0xFF40916C),
-                        borderRadius: BorderRadius.circular(8)),
-                    child: Text("DESTACADO",
+                      color: const Color(0xFF00C853),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text("DESTACADO",
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.bold)),
                   ),
-                  SizedBox(height: 8),
-                  Text("Introducción a la inversión en\nCripto",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold)),
-                  Text("12:45 • Módulo 1",
-                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: 250,
+                    child: Text(
+                      video["title"],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ),
-            Center(
-                child: Icon(Icons.play_circle_fill,
-                    size: 60, color: Colors.white.withOpacity(0.8))),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildHorizontalList() {
-    return Container(
-      height: 180,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          _buildSquareCard("Ciclos de Mercado 101", "8:20 • 75% visto",
-              onTap: () => print("Click Ciclos")),
-          _buildSquareCard("Patrones de Velas", "15:40 • 30% visto",
-              onTap: () => print("Click Velas")),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTechnicalGrid() {
-    return Row(
-      children: [
-        Expanded(
-            child: _buildSquareCard("Dominando indicadores RSI", "4:12",
-                onTap: () => print("Click RSI"))),
-        SizedBox(width: 12),
-        Expanded(
-            child: _buildSquareCard("Zonas de Soporte y Resistencia", "6:55",
-                onTap: () => print("Click Soporte"))),
-      ],
-    );
-  }
-
-  Widget _buildSquareCard(String title, String subtitle,
-      {required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-        width: 200,
-        padding: EdgeInsets.all(4), // Espaciado para el ripple
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                  color: Color(0xFF95D5B2).withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(15)),
+            // botón play
+            const Positioned.fill(
               child: Center(
-                  child: Icon(Icons.play_circle_outline, color: Colors.white)),
+                child: Icon(Icons.play_circle_fill,
+                    size: 70, color: Colors.white),
+              ),
             ),
-            SizedBox(height: 8),
-            Text(title,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-            Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 12)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildVerticalList() {
-    return Column(
-      children: [
-        _buildListTile(
-            "La magia del interés compuesto", "Módulo 1 • 12 mins", true,
-            onTap: () => print("Click Interés")),
-        _buildListTile("Conceptos básicos de eficiencia fiscal",
-            "Módulo 2 • 18 mins", false,
-            onTap: () => print("Click Fiscal")),
-      ],
-    );
-  }
-
-  Widget _buildListTile(String title, String sub, bool completed,
-      {required VoidCallback onTap}) {
-    return Card(
-      elevation: 2,
-      margin: EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                    color: Color(0xFF52796F),
-                    borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.play_arrow, color: Colors.white),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(sub,
-                        style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    SizedBox(height: 4),
-                    completed
-                        ? Text("VISTO ✓",
-                            style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold))
-                        : Text("EMPEZAR AHORA →",
-                            style: TextStyle(
-                                color: Colors.blueGrey,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title,
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[600],
-                  letterSpacing: 0.5)),
-          if (title == "VIDEOS POPULARES")
-            TextButton(
-              onPressed: () => print("Ver todos"),
-              child: Text("Ver todos",
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.green[700],
-                      fontWeight: FontWeight.bold)),
-            ),
-        ],
       ),
     );
   }
