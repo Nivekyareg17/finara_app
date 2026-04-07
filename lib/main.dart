@@ -11,7 +11,7 @@ import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/theme_provider.dart';
-import 'screens/Video_screen.dart';
+import 'screens/video_screen.dart';
 
 void main() {
   runApp(const MyApp());

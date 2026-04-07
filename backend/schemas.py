@@ -38,3 +38,32 @@ class TransactionResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+# VIDEO CATEGORY
+class VideoCategoryCreate(BaseModel):
+    title: str
+    description: str
+
+class VideoCategoryResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+
+    class Config:
+        orm_mode = True
+
+
+class VideoCreate(BaseModel):
+    title: str
+    url: str
+    category_id: int
+
+class VideoResponse(BaseModel):
+    id: int
+    title: str
+    url: str
+    category_id: int
+
+    class Config:
+        orm_mode = True
