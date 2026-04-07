@@ -19,7 +19,7 @@ app = FastAPI(
 # Esto permite que tu app de Flutter se conecte sin bloqueos
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite todas las conexiones (ideal para desarrollo)
+    allow_origins=["*"],  # Permite todas las conexiones
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

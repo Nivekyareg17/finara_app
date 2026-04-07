@@ -1,9 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from database import get_db
+from database import SessionLocal
 import models, schemas
 
 router = APIRouter(prefix="/videos", tags=["Videos"])
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # Crear categoría
 @router.post("/categories", response_model=schemas.VideoCategoryResponse)
