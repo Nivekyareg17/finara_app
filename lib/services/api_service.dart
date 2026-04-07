@@ -147,32 +147,50 @@ class ApiService {
   }
 
   static Future<bool> resetPassword(String token, String newPassword) async {
-    final url =
-        Uri.parse("https://finara-api.onrender.com/auth/reset-password");
+    final url = Uri.parse("$baseUrl/auth/reset-password");
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "token": token,
-        "new_password": newPassword,
-      }),
-    );
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "token": token,
+              "new_password": newPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 60)); // 👈 importante
 
-    return response.statusCode == 200;
+      print("RESET STATUS: ${response.statusCode}");
+      print("RESET BODY: ${response.body}");
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("ERROR RESET PASSWORD: $e");
+      return false;
+    }
   }
 
   static Future<bool> forgotPassword(String email) async {
-    final url =
-        Uri.parse("https://finara-api.onrender.com/auth/forgot-password");
+    final url = Uri.parse("$baseUrl/auth/forgot-password");
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email}),
-    );
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"email": email}),
+          )
+          .timeout(const Duration(seconds: 60));
 
-    return response.statusCode == 200;
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("ERROR FORGOT PASSWORD: $e");
+      return false;
+    }
   }
 
   static Future<List<dynamic>> getUsers(String token) async {

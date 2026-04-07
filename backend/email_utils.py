@@ -1,12 +1,6 @@
 import os
-import smtplib
 from email.mime.text import MIMEText
 import resend
-
-EMAIL = "felipearandia24@gmail.com"
-PASSWORD = "aexusudnhvrggzbl"
-
-
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 
