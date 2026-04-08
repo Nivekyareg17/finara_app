@@ -115,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(width: 8),
             Text("Profile",
                 style: TextStyle(
-                    color: Colors.white,
+                    color: const Color.fromARGB(255, 7, 71, 17),
                     fontWeight: FontWeight.bold,
                     fontSize: 18)),
           ],

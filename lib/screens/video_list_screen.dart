@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/api_service.dart';
 import 'video_player_screen.dart';
+import '../widgets/custom_bottom_nav.dart';
 
 class VideoListScreen extends StatefulWidget {
   final int categoryId;
@@ -39,6 +40,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Videos"),
+        
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -47,7 +49,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
               itemBuilder: (context, index) {
                 final video = videos[index];
 
-                // 🔥 obtener thumbnail
+                //obtener thumbnail
                 final videoId =
                     YoutubePlayer.convertUrlToId(video["url"]);
                 final thumbnail =
@@ -71,7 +73,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 🎥 Imagen del video
+                        //Imagen del video
                         ClipRRect(
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(12)),
@@ -83,7 +85,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
                           ),
                         ),
 
-                        // 📌 Título
+                        //Título
                         Padding(
                           padding: const EdgeInsets.all(10),
                           child: Text(
@@ -102,6 +104,10 @@ class _VideoListScreenState extends State<VideoListScreen> {
                 );
               },
             ),
+           bottomNavigationBar: const CustomBottomNav(
+        selectedIndex: 3,
+      ), 
     );
+    
   }
 }

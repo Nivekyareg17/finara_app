@@ -92,7 +92,7 @@ def update_transaction(
         Transaction.type == transaction.type,
         Transaction.amount == transaction.amount,
         Transaction.description == transaction.description,
-        Transaction.id != id  # 🔥 CLAVE
+        Transaction.id != id
     ).first()
 
     if existing:

@@ -160,7 +160,7 @@ class ApiService {
               "new_password": newPassword,
             }),
           )
-          .timeout(const Duration(seconds: 60)); // 👈 importante
+          .timeout(const Duration(seconds: 60));
 
       print("RESET STATUS: ${response.statusCode}");
       print("RESET BODY: ${response.body}");

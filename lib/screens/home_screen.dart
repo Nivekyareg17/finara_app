@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 30,
               height: 30,
               errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.account_balance, color: primaryColor),
+                  const Icon(Icons.account_balance, color: Color.fromRGBO(6, 78, 59, 1)),
             ),
             const SizedBox(width: 12),
             const Text(

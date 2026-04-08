@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../widgets/custom_bottom_nav.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String url;
@@ -22,7 +23,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     controller = YoutubePlayerController(
       initialVideoId: videoId,
       flags: const YoutubePlayerFlags(
-        autoPlay: false,
+        autoPlay: true,
         mute: false,
       ),
     );
@@ -37,10 +38,27 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Reproduciendo")),
-      body: YoutubePlayer(
-        controller: controller,
-        showVideoProgressIndicator: true,
+      appBar: AppBar(
+        title: const Text("Reproduciendo"),
+      ),
+      body: Column(
+        children: [
+          YoutubePlayer(
+            controller: controller,
+            showVideoProgressIndicator: true,
+          ),
+          const SizedBox(height: 10),
+          const Padding(
+            padding: EdgeInsets.all(12),
+            child: Text(
+              "Video educativo",
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const CustomBottomNav(
+        selectedIndex: 3,
       ),
     );
   }

@@ -49,9 +49,9 @@ class _VideoScreenState extends State<VideoScreen> {
                   color: Colors.white, size: 18),
             ),
             SizedBox(width: 8),
-            Text("Videos",
+            Text("Learn",
                 style: TextStyle(
-                    color: Colors.white,
+                    color: Color.fromARGB(255, 10, 109, 82),
                     fontWeight: FontWeight.bold,
                     fontSize: 18)),
           ],
