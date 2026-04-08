@@ -13,6 +13,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  String? _errorMessage;
 
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
@@ -66,15 +67,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  Future<void> register() async {
+  Future<bool> register() async {
     if (passwordController.text != confirmPasswordController.text) {
       showCustomDialog("Las contraseñas no coinciden", isError: true);
-      return;
+      return false;
+    }
+    if (passwordController.text.length < 6) {
+      showCustomDialog(
+        "La contraseña debe tener mínimo 6 caracteres",
+        isError: true,
+      );
+      return false;
+    }
+    if (!RegExp(r'[A-Za-z]').hasMatch(passwordController.text)) {
+      showCustomDialog(
+        "La contraseña debe contener al menos una letra",
+        isError: true,
+      );
+      return false;
     }
 
     if (!acceptedTerms) {
       showCustomDialog("Debes aceptar los términos", isError: true);
-      return;
+      return false;
     }
 
     final success = await ApiService.register(
@@ -83,7 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       passwordController.text,
     );
 
-    if (!mounted) return;
+    if (!mounted) return false;
 
     if (success) {
       showCustomDialog("Usuario creado");
@@ -92,8 +107,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (!mounted) return;
         Navigator.pop(context);
       });
+
+      return true; //IMPORTANTE
     } else {
       showCustomDialog("Error al registrar", isError: true);
+      return false; //IMPORTANTE
     }
   }
 
@@ -261,6 +279,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
 
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 10),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+
                 const SizedBox(height: 20),
 
                 const Text(
@@ -346,7 +376,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             emailController.text.isNotEmpty &&
                             passwordController.text.isNotEmpty &&
                             confirmPasswordController.text.isNotEmpty
-                        ? register
+                        ? () async {
+                            try {
+                              final success = await register();
+
+                              if (success) {
+                                setState(() {
+                                  _errorMessage = null;
+                                });
+
+                                showCustomDialog("Registro exitoso");
+                              }
+                            } catch (e) {
+                              setState(() {
+                                _errorMessage =
+                                    e.toString().replaceAll("Exception: ", "");
+                              });
+                            }
+                          }
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
