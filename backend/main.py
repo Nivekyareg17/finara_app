@@ -5,7 +5,7 @@ from database import engine
 from models import Base, PasswordResetToken
 from routers import auth_routes, user_routes, transaction_routes
 from routers.news_routes import news_router
-from routers import video_routes
+from routers import video_routes, lecturas_routes
 
 # from routers import ai_routes
 
@@ -35,3 +35,4 @@ app.include_router(user_routes.router)
 app.include_router(transaction_routes.router)
 app.include_router(news_router)
 app.include_router(video_routes.router)
+app.include_router(lecturas_routes.router)

@@ -67,3 +67,18 @@ class VideoResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class LecturaCreate(BaseModel):
+    titulo: str
+    contenido: str
+    tiempo_lectura: str
+
+class LecturaResponse(BaseModel):
+    id: int
+    titulo: str
+    contenido: str
+    tiempo_lectura: str
+
+    class Config:
+        orm_mode = True
