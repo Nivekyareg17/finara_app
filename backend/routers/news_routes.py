@@ -17,16 +17,22 @@ def get_news():
     response = requests.get(url)
     data = response.json()
 
+    # DEBUG (muy importante)
+    print(data)
+
     noticias = []
 
-    for item in data["articles"][:10]:
-        noticias.append({
-            "titulo": item.get("title"),
-            "categoria": "GENERAL",
-            "imagen": item.get("image"),
-            "fecha": item.get("publishedAt"),
-            "fuente": item.get("source", {}).get("name"),
-            "url": item.get("url")
-        })
+    if "articles" in data:
+        for item in data["articles"][:10]:
+            noticias.append({
+                "titulo": item.get("title"),
+                "categoria": "GENERAL",
+                "imagen": item.get("image"),
+                "fecha": item.get("publishedAt"),
+                "fuente": item.get("source", {}).get("name"),
+                "url": item.get("url")
+            })
+    else:
+        return {"error": data}
 
     return noticias
