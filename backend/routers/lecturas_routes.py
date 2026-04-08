@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends
-from requests import Session
+from sqlalchemy.orm import Session
 
-from backend.database import SessionLocal
-from backend.models import Lectura
-from backend.schemas import LecturaCreate
+from database import SessionLocal
+from models import Lectura
+from schemas import LecturaCreate
 
 
 router = APIRouter(
     prefix="/api/lecturas",
-    tags="Lecturas"
+    tags=["Lecturas"]
 )
 
 #DB
@@ -32,4 +32,4 @@ def crear_lectura(data: LecturaCreate, db: Session = Depends(get_db)):
 # GET
 @router.get("/")
 def obtener_lecturas(db: Session = Depends(get_db)):
-    return db.__query(Lectura).all()
+    return db.query(Lectura).all()
