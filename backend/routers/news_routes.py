@@ -12,14 +12,14 @@ API_KEY = os.getenv("GNEWS_API_KEY")
 
 @news_router.get("/")
 def get_news():
-    url = f"https://gnews.io/api/v4/top-headlines?lang=es&topic-business&token={API_KEY}"
+    url = f"https://gnews.io/api/v4/top-headlines?lang=es&topic=business&token={API_KEY}"
 
     response = requests.get(url)
     data = response.json()
 
     noticias = []
 
-    for item in data[:10]:
+    for item in data["articles"][:10]:
         noticias.append({
             "titulo": item.get("title"),
             "categoria": "GENERAL",
