@@ -1,102 +1,139 @@
 import json
 import os
-from fastapi import FastAPI, APIRouter, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 import google.generativeai as genai
 from dotenv import load_dotenv
 
+# --- IMPORTACIONES DE TU PROYECTO ---
+from database import get_db
+from models import User, AIUsageStats, AIChatHistory, Transaction
+# from auth import verify_token, oauth2_scheme # COMENTADO PARA BYPASS
+
 # 1. CARGAR CONFIGURACIÓN
 load_dotenv()
-# Asegúrate de configurar la variable GEMINI_API_KEY en tu hosting
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# 2. INICIALIZAR FASTAPI
-app = FastAPI(title="Finara Daiko API")
+# 2. CONFIGURAR EL MODELO DE IA
+model = genai.GenerativeModel('gemini-2.0-flash') 
 
-# 3. CONFIGURACIÓN DE CORS (Crucial para conexión desde Flutter/Móvil)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Permite que cualquier origen (tu app) se conecte
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# 3. DEFINIR RUTAS (ROUTER)
+router = APIRouter(prefix="/ai", tags=["IA (Daiko)"])
 
 # --- EL PROMPT MAESTRO DE DAIKO ---
 CONTEXTO_DAIKO = """
 ROLE:
-You are DAIKO (Active Intelligence), the premier financial digital assistant for the 'Finara' ecosystem. Your goal is to provide high-level financial education, technical analysis, and saving strategies.
+You are DAIKO (Active Intelligence), the premier financial digital assistant for the 'Finara' ecosystem. 
+Your goal is to provide high-level financial education, technical analysis, and saving strategies.
 
 PERSONALITY & TONE:
 - Professional, encouraging, and strictly objective.
 - Always start the very first interaction of a session with: "¡Hola! Soy Daiko".
 - Language: You MUST process the logic in English but provide the 'text' field content in SPANISH.
 
-STRICT GUARDRAILS (TOPIC CONTROL):
-1. FINANCIAL SCOPE ONLY: You are strictly forbidden from discussing topics outside of finance, economics, markets, and saving.
-   - If asked about sports (e.g., "¿Cómo quedó Colombia?"), weather, politics, or celebrities, respond: "Lo siento, como tu asistente de Finara, mi especialidad son tus finanzas. No puedo ayudarte con temas fuera de ese ámbito."
-2. NO INVESTMENT ADVICE: Do NOT say "Buy X" or "Sell Y". Instead, use: "Based on technical indicators...", "Educational perspective...", "Market trends suggest...".
-3. NO LEGAL/MEDICAL ADVICE: If asked, redirect to a professional.
-
-TECHNICAL RESPONSE GUIDELINES:
-- You must ALWAYS output a valid JSON object. NEVER include markdown backticks or plain text outside the JSON.
-- If the user asks for a market analysis (Stocks, Crypto, Forex):
-  - Set "type": "analysis".
-  - Provide "trend": "Bullish", "Bearish", or "Neutral".
-  - Provide "rsiLevel": A realistic estimated value if data is provided, or "N/A" if not.
-- For general chat/questions:
-  - Set "type": "text".
-  - Leave "trend" and "rsiLevel" as null or omit them.
+STRICT GUARDRAILS:
+1. FINANCIAL SCOPE ONLY. If asked about other topics, politely decline.
+2. NO INVESTMENT ADVICE.
+3. ALWAYS output a valid JSON object.
 
 JSON SCHEMA STRUCTURE:
 {
-  "text": "Your detailed response in Spanish here.",
+  "text": "Respuesta detallada en español.",
   "type": "text" | "analysis",
   "trend": "string" | null,
   "rsiLevel": "string" | null
 }
-
-KNOWLEDGE BASE (FINARA CONTEXT):
-- Finara is an app for financial education and management.
-- Daiko is the 'Active Intelligence' module.
-- You analyze receipts, stock charts, and provide saving tips (e.g., the 50/30/20 rule).
 """
 
-# 4. CONFIGURAR EL MODELO DE IA
-model = genai.GenerativeModel('gemini-2.0-flash') 
-
-# 5. DEFINIR RUTAS (ROUTER)
-router = APIRouter(prefix="/ai", tags=["IA"])
-
 @router.get("/consultar")
-async def consultar(pregunta: str):
-    try:
-        print(f"DEBUG: Pregunta recibida -> {pregunta}")
+async def consultar(
+    pregunta: str, 
+    db: Session = Depends(get_db)
+    # token: str = Depends(oauth2_scheme) <-- ELIMINADO PARA BYPASS
+):
+    print("--- INICIANDO MODO BYPASS ---")
+    
+    # A. FORZAR USUARIO (Bypass de Token usando ID 39)
+    user = db.query(User).filter(User.id == 39).first()
+    if not user:
+        raise HTTPException(
+            status_code=404, 
+            detail="MODO BYPASS: No existe el usuario ID 39 en la base de datos."
+        )
 
-        # Enviamos el prompt + la pregunta al modelo
+    # B. LÓGICA DE BASE DE DATOS E IA
+    try:
+        # 1. VERIFICAR LÍMITE DE TOKENS
+        stats = db.query(AIUsageStats).filter(AIUsageStats.user_id == user.id).first()
+        if not stats:
+            stats = AIUsageStats(user_id=user.id)
+            db.add(stats)
+            db.commit()
+            db.refresh(stats)
+
+        if stats.daily_tokens_count >= stats.daily_limit:
+            return {
+                "text": "¡Hola! Soy Daiko. Has alcanzado tu límite de 50 consultas diarias. ¡Nos vemos mañana para seguir mejorando tus finanzas!",
+                "type": "text"
+            }
+
+        # 2. OBTENER CONTEXTO REAL (Últimos 5 gastos del usuario)
+        gastos = db.query(Transaction).filter(Transaction.user_id == user.id).limit(5).all()
+        if gastos:
+            resumen_gastos = "\n".join([f"- {g.description}: ${g.amount}" for g in gastos])
+        else:
+            resumen_gastos = "El usuario aún no tiene gastos registrados."
+
+        # 3. LLAMADA A GEMINI
+        prompt_final = f"{CONTEXTO_DAIKO}\n\nCONTEXTO GASTOS USUARIO:\n{resumen_gastos}\n\nPREGUNTA USUARIO: {pregunta}"
+        
         response = model.generate_content(
-            f"{CONTEXTO_DAIKO}\n\nUser Question: {pregunta}",
+            prompt_final,
             generation_config={"response_mime_type": "application/json"}
         )
 
-        # Convertimos el texto de la IA en un objeto JSON real
         resultado = json.loads(response.text)
+
+        # 4. ACTUALIZAR BASE DE DATOS
+        nuevo_chat = AIChatHistory(
+            user_id=user.id,
+            user_message=pregunta,
+            ai_response=resultado 
+        )
         
-        print(f"DEBUG: Respuesta enviada -> {resultado.get('text', '')[:30]}...")
+        stats.daily_tokens_count += 1
+        
+        db.add(nuevo_chat)
+        db.commit()
+
         return resultado 
 
     except Exception as e:
-        print(f"Error en Python: {e}")
-        # 'from e' ayuda a debugear errores encadenados
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        db.rollback() 
+        print(f"FALLO MASIVO EN MODO BYPASS: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"El servidor explotó por: {str(e)}")
 
-# Incluir el router en la aplicación principal
-app.include_router(router)
 
-# 6. CONFIGURACIÓN DE INICIO PARA DESPLIEGUE (Render, Railway, etc.)
-if __name__ == "__main__":
-    import uvicorn
-    # Leemos el puerto que asigne el hosting automáticamente
-    port = int(os.getenv("PORT", 8000))
-    # '0.0.0.0' permite que el servidor sea visible desde internet
-    uvicorn.run(app, host="0.0.0.0", port=port)
+@router.get("/historial")
+async def ver_historial(
+    db: Session = Depends(get_db)
+    # token: str = Depends(oauth2_scheme) <-- ELIMINADO PARA BYPASS
+):
+    print("--- INICIANDO HISTORIAL MODO BYPASS ---")
+    try:
+        # Forzamos el mismo usuario 39
+        user = db.query(User).filter(User.id == 39).first()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado para historial (ID 39)")
+        
+        chats = db.query(AIChatHistory).filter(
+            AIChatHistory.user_id == user.id
+        ).order_by(AIChatHistory.created_at.desc()).limit(10).all()
+        
+        return chats
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error consultando historial: {e}")
+        raise HTTPException(status_code=500, detail="Error obteniendo el historial")
