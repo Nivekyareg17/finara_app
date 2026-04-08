@@ -51,7 +51,7 @@ class _VideoScreenState extends State<VideoScreen> {
             SizedBox(width: 8),
             Text("Videos",
                 style: TextStyle(
-                    color: Colors.white,
+                    color: Color.fromARGB(255, 10, 109, 82),
                     fontWeight: FontWeight.bold,
                     fontSize: 18)),
           ],
@@ -85,7 +85,7 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  // --- WIDGETS CON INTERACCIÓN ---
+  //WIDGETS CON INTERACCIÓN
 
   Widget _buildFeaturedCard({required VoidCallback onTap}) {
     return InkWell(
@@ -174,7 +174,7 @@ class _VideoScreenState extends State<VideoScreen> {
       borderRadius: BorderRadius.circular(15),
       child: Container(
         width: 200,
-        padding: EdgeInsets.all(4), // Espaciado para el ripple
+        padding: EdgeInsets.all(4), //Espaciado para el ripple
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -38,7 +38,7 @@ class NewsScreen extends StatelessWidget {
             Text(
               "Finara News",
               style: TextStyle(
-                  color: Colors.white,
+                  color:Color.fromARGB(255, 10, 109, 82),
                   fontWeight: FontWeight.bold,
                   fontSize: 18),
             ),

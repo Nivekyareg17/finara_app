@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/api_service.dart';
 import 'video_player_screen.dart';
 
@@ -22,11 +21,46 @@ class _VideoListScreenState extends State<VideoListScreen> {
     loadVideos();
   }
 
+  String getVideoId(String url) {
+    try {
+      final uri = Uri.parse(url);
+
+      // Caso 1: youtube.com/watch?v=ID
+      if (uri.queryParameters['v'] != null) {
+        return uri.queryParameters['v']!;
+      }
+
+      // Caso 2: youtu.be/ID
+      if (uri.host.contains('youtu.be')) {
+        return uri.pathSegments.isNotEmpty ? uri.pathSegments[0] : '';
+      }
+
+      // Caso 3: embed
+      if (uri.pathSegments.contains('embed')) {
+        return uri.pathSegments.last;
+      }
+
+      return '';
+    } catch (e) {
+      print("Error parsing URL: $e");
+      return '';
+    }
+  }
+
+  //verifica si es embed
+  bool isValidYoutubeUrl(String url) {
+    return url.contains("youtube.com") || url.contains("youtu.be");
+  }
+
   void loadVideos() async {
     try {
       final data = await ApiService.getVideos(widget.categoryId);
+
       setState(() {
-        videos = data;
+        videos = data.where((video) {
+          return isValidYoutubeUrl(video["url"]);
+        }).toList();
+
         isLoading = false;
       });
     } catch (e) {
@@ -39,6 +73,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Videos"),
+        
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -47,11 +82,9 @@ class _VideoListScreenState extends State<VideoListScreen> {
               itemBuilder: (context, index) {
                 final video = videos[index];
 
-                // 🔥 obtener thumbnail
-                final videoId =
-                    YoutubePlayer.convertUrlToId(video["url"]);
-                final thumbnail =
-                    "https://img.youtube.com/vi/$videoId/0.jpg";
+                //obtener thumbnail
+                final videoId = getVideoId(video["url"]);
+                final thumbnail = "https://img.youtube.com/vi/$videoId/0.jpg";
 
                 return Card(
                   margin: const EdgeInsets.all(10),
@@ -60,18 +93,24 @@ class _VideoListScreenState extends State<VideoListScreen> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
+                      if (video["url"] == null || video["url"].isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Video no disponible")),
+                        );
+                        return;
+                      }
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              VideoPlayerScreen(url: video["url"]),
+                          builder: (_) => VideoPlayerScreen(url: video["url"]),
                         ),
                       );
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 🎥 Imagen del video
+                        //Imagen del video
                         ClipRRect(
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(12)),
@@ -83,7 +122,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
                           ),
                         ),
 
-                        // 📌 Título
+                        //Título
                         Padding(
                           padding: const EdgeInsets.all(10),
                           child: Text(

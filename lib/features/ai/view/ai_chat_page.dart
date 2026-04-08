@@ -114,7 +114,7 @@ class _AIChatPageState extends State<AIChatPage> {
               Text(
                 "DAIKO AI",
                 style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: Color.fromARGB(255, 10, 109, 82),
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
                 ),
