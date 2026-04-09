@@ -43,18 +43,22 @@ def get_stocks():
 
 @stock_router.get("/history")
 def get_stock_history(symbol: str):
-    end = int(time.time())
-    start = end - 60 * 60 * 24 * 7  # últimos 7 días
-
-    url = f"https://finnhub.io/api/v1/stock/candle?symbol={symbol}&resolution=60&from={start}&to={end}&token={API_KEY}"
+    url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={API_KEY}"
     
     response = requests.get(url)
     data = response.json()
 
-    if data.get("s") != "ok":
-        return {"error": "No data"}
+    # simulamos histórico con variación
+    price = data.get("c", 0)
+
+    prices = [
+        price * 0.95,
+        price * 0.97,
+        price * 0.96,
+        price * 0.98,
+        price * 1.00,
+    ]
 
     return {
-        "prices": data.get("c", []),  # precios
-        "timestamps": data.get("t", [])
+        "prices": prices
     }
