@@ -1,3 +1,4 @@
+from datetime import time
 import os
 import requests
 from fastapi import APIRouter
@@ -39,3 +40,21 @@ def get_stocks():
         })
 
     return stocks
+
+@stock_router.get("/history")
+def get_stock_history(symbol: str):
+    end = int(time.time())
+    start = end - 60 * 60 * 24 * 7  # últimos 7 días
+
+    url = f"https://finnhub.io/api/v1/stock/candle?symbol={symbol}&resolution=60&from={start}&to={end}&token={API_KEY}"
+    
+    response = requests.get(url)
+    data = response.json()
+
+    if data.get("s") != "ok":
+        return {"error": "No data"}
+
+    return {
+        "prices": data.get("c", []),  # precios
+        "timestamps": data.get("t", [])
+    }
