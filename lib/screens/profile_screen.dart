@@ -546,34 +546,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               isExpanded: true,
                               underline: const SizedBox(),
                               icon: const Icon(Icons.keyboard_arrow_down),
-                              items: [
-                                ...(type == "gasto" 
-                                    ? ["Mercado", "Ahorro", "Gastos Adicionales"] 
-                                    : ["Pago del Trabajo", "Ahorro", "Regalo"])
-                                    
-                                    .map((cat) => DropdownMenuItem(
-                                          value: cat,
-                                          child: Row(
-                                            children: [
-
-                                              Icon(_getCategoryData(cat)['icon'],
-                                                  color: _getCategoryData(cat)['color'], size: 20),
-                                              const SizedBox(width: 12),
-                                              Text(cat),
-                                            ],
-                                          ),
-                                        )),
-                                const DropdownMenuItem(
-                                  value: "add_new",
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.add, color: Colors.green),
-                                      SizedBox(width: 12),
-                                      Text("Agregar categoría"),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                             items: [
+  // Usamos las variables que definiste arriba, no listas estáticas
+  ...(type == "gasto" ? categoriasGasto : categoriasIngreso)
+      .map((cat) => DropdownMenuItem(
+            value: cat,
+            child: Row(
+              children: [
+                Icon(_getCategoryData(cat)['icon'],
+                    color: _getCategoryData(cat)['color'], size: 20),
+                const SizedBox(width: 12),
+                Text(cat),
+              ],
+            ),
+          )),
+  const DropdownMenuItem(
+    value: "add_new",
+    child: Row(
+      children: [
+        Icon(Icons.add, color: Colors.green),
+        SizedBox(width: 12),
+        Text("Agregar categoría"),
+      ],
+    ),
+  ),
+],
                               onChanged: (v) async {
   if (v == "add_new") {
     String? nueva = await _mostrarDialogoNuevaCategoria();
