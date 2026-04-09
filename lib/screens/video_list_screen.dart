@@ -1,6 +1,7 @@
+import 'package:finara_app_v1/screens/video_webView_Screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'video_player_screen.dart';
+
 import '../widgets/custom_bottom_nav.dart';
 
 class VideoListScreen extends StatefulWidget {
@@ -97,18 +98,18 @@ class _VideoListScreenState extends State<VideoListScreen> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      if (video["url"] == null || video["url"].isEmpty) {
+                      final videoId = getVideoId(video["url"]);
+
+                      if (videoId.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Video no disponible")),
+                          const SnackBar(content: Text("Video no válido")),
                         );
                         return;
                       }
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              VideoPlayerScreen(videoUrl: video["url"]),
+                          builder: (_) => VideoWebViewScreen(videoId: videoId),
                         ),
                       );
                     },
