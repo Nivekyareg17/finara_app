@@ -225,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 10),
 
-                //  BOTÓN LOGIN CORREG
+                //BOTÓN LOGIN CORREG
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -237,6 +237,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     onPressed: () async {
+                      //FUERZA A ACTUALIZAR(EYE)
+                      FocusScope.of(context).unfocus();
+
                       final auth = context.read<AuthProvider>();
 
                       final success = await auth.login(
