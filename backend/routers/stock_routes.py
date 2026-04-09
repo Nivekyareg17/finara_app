@@ -1,3 +1,4 @@
+from datetime import time
 import os
 import requests
 from fastapi import APIRouter
@@ -39,3 +40,21 @@ def get_stocks():
         })
 
     return stocks
+
+@stock_router.get("/history")
+def get_stock_history(symbol: str, range: str = "1W"):
+    url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={API_KEY}"
+    
+    response = requests.get(url)
+    data = response.json()
+
+    price = data.get("c", 0)
+
+    if range == "1D":
+        prices = [price * 0.99, price * 1.01, price]
+    elif range == "1M":
+        prices = [price * 0.9, price * 0.95, price * 1.05, price]
+    else:  # 1W
+        prices = [price * 0.95, price * 0.97, price * 0.96, price * 0.98, price]
+
+    return {"prices": prices}

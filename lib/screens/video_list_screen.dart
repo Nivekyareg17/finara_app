@@ -48,7 +48,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
     }
   }
 
-  //verifica si es embed
+  //verifica si es valido
   bool isValidYoutubeUrl(String url) {
     return url.contains("youtube.com") || url.contains("youtu.be");
   }

@@ -15,4 +15,17 @@ class StockService {
       throw Exception("Error al cargar acciones");
     }
   }
+
+  Future<List<double>> getHistory(String symbol, String range) async {
+    final response = await http.get(
+      Uri.parse(
+          "https://finara-api.onrender.com/api/stocks/history?symbol=$symbol&range=$range"),
+    );
+
+    final data = json.decode(response.body);
+
+    return List<double>.from(
+      data["prices"].map((e) => (e as num).toDouble()),
+    );
+  }
 }
