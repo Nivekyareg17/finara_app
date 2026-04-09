@@ -1,69 +1,118 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import '../screens/detalle_lectura_screen.dart';
+import '../screens/lecturas_screen.dart';
 
-
-/// Widget que muestra el carrusel de contenido educativo (Quick Wins)
 class FinaraQuickWins extends StatelessWidget {
   const FinaraQuickWins({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        /// Título de sección
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            'QUICK WINS',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+    final apiService = ApiService();
+
+    return FutureBuilder(
+      future: apiService.obtenerLecturas(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text("Error al cargar lecturas"),
+          );
+        }
+
+        final lecturas = snapshot.data;
+
+        if (lecturas == null || lecturas.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text("No hay lecturas"),
+          );
+        }
+
+        final primeras = lecturas.take(3).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// TÍTULO + BOTÓN
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'LECTURAS',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LecturasScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text("Ver más"),
+                  )
+                ],
+              ),
             ),
-          ),
-        ),
 
-        const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-        /// Carrusel horizontal
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: CarouselView(
-            itemExtent: 300,
-            shrinkExtent: 200,
-            children: const [
-              QuickWinCard(
-                categoria: "INVESTING BASICS",
-                titulo: "Mastering Bull Markets",
-                tiempo: "5 min read",
+            /// CARRUSEL DINÁMICO
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: primeras.map((lectura) {
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                DetalleLecturaScreen(lectura: lectura),
+                          ),
+                        );
+                      },
+                      child: SizedBox(
+                        width: 280,
+                        child: LecturaCard(
+                          titulo: lectura['titulo'],
+                          tiempo: lectura['tiempo_lectura'],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-              QuickWinCard(
-                categoria: "AI ASSISTANT",
-                titulo: "Optimizing Portfolios",
-                tiempo: "3 min read",
-              ),
-              QuickWinCard(
-                categoria: "FINANCE",
-                titulo: "Risk Management",
-                tiempo: "8 min read",
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-/// Tarjeta individual dentro del carrusel
-class QuickWinCard extends StatelessWidget {
-  final String categoria;
+/// TARJETA (igual estilo que la tuya)
+class LecturaCard extends StatelessWidget {
   final String titulo;
   final String tiempo;
 
-  const QuickWinCard({
+  const LecturaCard({
     super.key,
-    required this.categoria,
     required this.titulo,
     required this.tiempo,
   });
@@ -76,23 +125,10 @@ class QuickWinCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
       ),
       padding: const EdgeInsets.all(20),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Categoría
-          Text(
-            categoria,
-            style: const TextStyle(
-              color: Colors.greenAccent,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          /// Título principal
+          /// Título
           Text(
             titulo,
             maxLines: 2,
@@ -106,15 +142,13 @@ class QuickWinCard extends StatelessWidget {
 
           const Spacer(),
 
-          /// Footer (tiempo + botón)
+          /// Footer
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              /// Tiempo estimado
               Row(
                 children: [
-                  const Icon(Icons.access_time,
-                      color: Colors.white, size: 12),
+                  const Icon(Icons.access_time, color: Colors.white, size: 12),
                   const SizedBox(width: 4),
                   Text(
                     tiempo,
@@ -125,17 +159,15 @@ class QuickWinCard extends StatelessWidget {
                   ),
                 ],
               ),
-
-              /// Botón de acción
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: const Text(
-                  "CONTINUE",
+                  "LEER",
                   style: TextStyle(
                     color: Color(0xFF064131),
                     fontSize: 10,
