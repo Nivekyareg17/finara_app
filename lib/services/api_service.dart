@@ -264,4 +264,15 @@ class ApiService {
       throw Exception("Error al cargar videos");
     }
   }
+
+  Future<List<dynamic>> obtenerLecturas() async {
+    final response = await http
+        .get(Uri.parse("https://finara-api.onrender.com/api/lecturas/"));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar lecturas");
+    }
+  }
 }
