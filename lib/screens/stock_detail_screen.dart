@@ -29,7 +29,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 Precio
+            // Precio
             Text(
               "\$${stock.price.toStringAsFixed(2)}",
               style: const TextStyle(
@@ -40,7 +40,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
             const SizedBox(height: 8),
 
-            // 🔹 Cambio
+            // Cambio
             Row(
               children: [
                 Icon(
@@ -61,7 +61,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
             const SizedBox(height: 20),
 
-            // 🔹 BOTONES DE RANGO
+            // BOTONES DE RANGO
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: ["1D", "1W", "1M"].map((range) {
@@ -94,7 +94,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
             const SizedBox(height: 20),
 
-            // 🔹 GRÁFICA
+            // GRÁFICA
             FutureBuilder<List<double>>(
               future: StockService()
                   .getHistory(stock.symbol, selectedRange),
@@ -134,7 +134,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
             const SizedBox(height: 30),
 
-            // 🔹 INFO EXTRA
+            // INFO EXTRA
             const Text(
               "Información",
               style: TextStyle(
