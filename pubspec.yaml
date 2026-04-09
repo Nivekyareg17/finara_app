@@ -104,4 +104,4 @@ dependency_overrides:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/Logo_finara.png"
