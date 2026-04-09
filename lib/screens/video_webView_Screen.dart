@@ -9,11 +9,15 @@ class VideoWebViewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final url = "https://www.youtube.com/embed/$videoId";
+    final url = "https://www.youtube.com/watch?v=$videoId";
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Video"),
+        titleTextStyle: TextStyle(
+            color: Color.fromARGB(255, 10, 109, 82),
+            fontWeight: FontWeight.bold,
+            fontSize: 18),
       ),
       body: InAppWebView(
         initialUrlRequest: URLRequest(
