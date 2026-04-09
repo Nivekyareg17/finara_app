@@ -129,7 +129,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db), data = Depends(requ
         return {"message": "Usuario eliminado"}
 
     except Exception as e:
-        print("ERROR DELETE:", str(e))  # 👈 ESTO ES CLAVE
+        print("ERROR DELETE:", str(e))  # ESTO ES CLAVE
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -143,7 +143,7 @@ def make_admin(
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="Uusuario no encontrado")
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
     user.role_id = 1
     db.commit()

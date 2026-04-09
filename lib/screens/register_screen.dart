@@ -66,15 +66,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  Future<void> register() async {
+  Future<bool> register() async {
+    //FORZAR ACTUALIZACIÓN DE INPUTS
+    FocusScope.of(context).unfocus();
+
+    if (nameController.text.trim().isEmpty ||
+        emailController.text.trim().isEmpty ||
+        passwordController.text.trim().isEmpty ||
+        confirmPasswordController.text.trim().isEmpty) {
+      showCustomDialog("Todos los campos son obligatorios", isError: true);
+      return false;
+    }
+
     if (passwordController.text != confirmPasswordController.text) {
       showCustomDialog("Las contraseñas no coinciden", isError: true);
-      return;
+      return false;
+    }
+    if (passwordController.text.length < 6) {
+      showCustomDialog(
+        "La contraseña debe tener mínimo 6 caracteres",
+        isError: true,
+      );
+      return false;
+    }
+    if (!RegExp(r'[A-Za-z]').hasMatch(passwordController.text)) {
+      showCustomDialog(
+        "La contraseña debe contener al menos una letra",
+        isError: true,
+      );
+      return false;
+    }
+
+    if (!RegExp(r'[0-9]').hasMatch(passwordController.text)) {
+      showCustomDialog(
+        "La contraseña debe contener al menos un número",
+        isError: true,
+      );
+      return false;
     }
 
     if (!acceptedTerms) {
       showCustomDialog("Debes aceptar los términos", isError: true);
-      return;
+      return false;
     }
 
     final success = await ApiService.register(
@@ -83,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       passwordController.text,
     );
 
-    if (!mounted) return;
+    if (!mounted) return false;
 
     if (success) {
       showCustomDialog("Usuario creado");
@@ -92,8 +125,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (!mounted) return;
         Navigator.pop(context);
       });
+
+      return true; //IMPORTANTE
     } else {
       showCustomDialog("Error al registrar", isError: true);
+      return false; //IMPORTANTE
     }
   }
 
@@ -185,6 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
 
                 TextField(
+                  textInputAction: TextInputAction.next,
                   controller: nameController,
                   decoration: InputDecoration(
                     hintText: "Ingresa tu nombre completo",
@@ -211,6 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
 
                 TextField(
+                  textInputAction: TextInputAction.next,
                   controller: emailController,
                   decoration: InputDecoration(
                     hintText: "nombre@ejemplo.com",
@@ -237,6 +275,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
 
                 TextField(
+                  textInputAction: TextInputAction.next,
                   controller: passwordController,
                   obscureText: obscurePassword,
                   decoration: InputDecoration(
@@ -275,6 +314,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
 
                 TextField(
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => register(),
                   controller: confirmPasswordController,
                   obscureText: obscureConfirmPassword,
                   decoration: InputDecoration(
@@ -341,13 +382,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: acceptedTerms &&
-                            nameController.text.isNotEmpty &&
-                            emailController.text.isNotEmpty &&
-                            passwordController.text.isNotEmpty &&
-                            confirmPasswordController.text.isNotEmpty
-                        ? register
-                        : null,
+                    onPressed: () async {
+                      await register();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           acceptedTerms ? const Color(0xFF0D1B2A) : Colors.grey,

@@ -8,25 +8,31 @@ news_router = APIRouter(
     tags=["News API"]
 )
 
-API_KEY = os.getenv("FINNHUB_API_KEY")
+API_KEY = os.getenv("GNEWS_API_KEY")
 
 @news_router.get("/")
 def get_news():
-    url = f"https://finnhub.io/api/v1/news?category=general&token={API_KEY}"
+    url = f"https://gnews.io/api/v4/top-headlines?lang=es&topic=business&token={API_KEY}"
 
     response = requests.get(url)
     data = response.json()
 
+    # DEBUG (muy importante)
+    print(data)
+
     noticias = []
 
-    for item in data[:10]:
-        noticias.append({
-            "titulo": item.get("headline"),
-            "categoria": item.get("category"),
-            "imagen": item.get("image"),
-            "fecha": item.get("datetime"),
-            "fuente": item.get("source"),
-            "url": item.get("url")
-        })
+    if "articles" in data:
+        for item in data["articles"][:10]:
+            noticias.append({
+                "titulo": item.get("title"),
+                "categoria": "GENERAL",
+                "imagen": item.get("image"),
+                "fecha": item.get("publishedAt"),
+                "fuente": item.get("source", {}).get("name"),
+                "url": item.get("url")
+            })
+    else:
+        return {"error": data}
 
     return noticias

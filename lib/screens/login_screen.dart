@@ -13,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   // DIALOG CORREG
   void showCustomDialog(String message,
@@ -25,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (Navigator.canPop(dialogContext)) {
             Navigator.pop(dialogContext);
 
-            // 👇 aquí ejecuta la acción después de cerrar
+            //aquí ejecuta la acción después de cerrar
             if (onClose != null) onClose();
           }
         });
@@ -140,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // password
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: "Password",
                     filled: true,
@@ -150,6 +151,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
                 ),
 
@@ -212,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 10),
 
-                //  BOTÓN LOGIN CORREG
+                //BOTÓN LOGIN CORREG
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -224,6 +237,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     onPressed: () async {
+                      //FUERZA A ACTUALIZAR(EYE)
+                      FocusScope.of(context).unfocus();
+
                       final auth = context.read<AuthProvider>();
 
                       final success = await auth.login(

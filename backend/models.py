@@ -75,3 +75,11 @@ class Video(Base):
     category_id = Column(Integer, ForeignKey("video_categories.id", ondelete="CASCADE"))
     category = relationship("VideoCategory", back_populates="videos")
 
+
+class Lectura(Base):
+    __tablename__ = "lecturas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String)
+    contenido = Column(String)
+    tiempo_lectura = Column(String)

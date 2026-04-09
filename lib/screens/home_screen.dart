@@ -1,3 +1,4 @@
+import 'package:finara_app_v1/screens/stock_screen.dart';
 import 'package:flutter/material.dart';
 import '../widgets/QuickActionTile.dart';
 import '../widgets/quick_wins.dart';
@@ -39,8 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
               "assets/images/Logo_finara.png",
               width: 30,
               height: 30,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.account_balance, color: primaryColor),
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.account_balance,
+                  color: Color.fromRGBO(6, 78, 59, 1)),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -119,11 +121,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
           //Vista de mercado
           QuickActionTile(
-            title: "Market Overview",
-            subtitle: "Global trends and insights",
-            icon: Icons.bar_chart_rounded,
-            iconColor: Colors.blue,
-            onTap: () => Navigator.pushReplacementNamed(context, "/news"),
+            title: "Stock Market",
+            subtitle: "View live stock prices",
+            icon: Icons.show_chart,
+            iconColor: Colors.green,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StocksScreen(),
+                ),
+              );
+            },
           ),
 
           // Ruta de aprendizaje
@@ -141,8 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       //NAVBAR GLOBAL
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),
-
     );
   }
-
 }

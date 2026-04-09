@@ -2,7 +2,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-
 class ApiService {
   static const String baseUrl = "https://finara-api.onrender.com";
 
@@ -38,11 +37,26 @@ class ApiService {
       body: jsonEncode({"name": name, "email": email, "password": password}),
     );
 
-    if (response.statusCode == 200) {
+    print("REGISTER STATUS: ${response.statusCode}");
+    print("REGISTER BODY: ${response.body}");
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return true;
     } else {
-      print("Error register: ${response.body}");
-      return false;
+      try {
+        final data = jsonDecode(response.body);
+
+        final detail = data["detail"];
+
+        if (detail is List && detail.isNotEmpty) {
+          throw Exception(detail[0]["msg"]);
+        } else {
+          throw Exception("Error desconocido");
+        }
+      } catch (e) {
+        //si no es JSON válido
+        throw Exception(response.body);
+      }
     }
   }
 
@@ -166,7 +180,7 @@ class ApiService {
               "new_password": newPassword,
             }),
           )
-          .timeout(const Duration(seconds: 60)); // 👈 importante
+          .timeout(const Duration(seconds: 60));
 
       print("RESET STATUS: ${response.statusCode}");
       print("RESET BODY: ${response.body}");
@@ -248,13 +262,23 @@ class ApiService {
 
   // Obtener videos por categoría
   static Future<List<dynamic>> getVideos(int categoryId) async {
-    final response =
-        await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
+    final response = await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
       throw Exception("Error al cargar videos");
+    }
+  }
+
+  Future<List<dynamic>> obtenerLecturas() async {
+    final response = await http
+        .get(Uri.parse("https://finara-api.onrender.com/api/lecturas/"));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar lecturas");
     }
   }
 }
