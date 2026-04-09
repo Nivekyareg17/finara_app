@@ -17,6 +17,7 @@ class NewsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark; 
     // Datos de ejemplo que vendrían de tu API
     final newsService = NewsService();
 
@@ -77,6 +78,7 @@ class NewsScreen extends StatelessWidget {
                               imagen: noticia.imagen,
                               url: noticia.url,
                             ),
+                            isDark,
                           ));
                     },
                   );
@@ -94,94 +96,24 @@ class NewsScreen extends StatelessWidget {
 
   //WIDGETS DE APOYO
 
-  // 1. Barra de Cotizaciones Superior (Ticker)
+  // 1. Build de lista de news (Ticker)
   Widget _buildStockTicker() {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildTickerItem("BTC", "+64,231.50", "+1.2%", Colors.greenAccent),
-            _buildDivider(),
-            _buildTickerItem("S&P 500", "-0.45%", "", Colors.redAccent,
-                isIndex: true),
-            _buildDivider(),
-            _buildTickerItem("ETH", "+3,450.2", "+2.1%", Colors.greenAccent),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildTickerItem(
-      String symbol, String price, String change, Color color,
-      {bool isIndex = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(symbol,
-                  style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold)),
-              if (change.isNotEmpty) ...[
-                SizedBox(width: 4),
-                Text(change,
-                    style: TextStyle(
-                        color: color,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold)),
-              ],
-            ],
-          ),
-          SizedBox(height: 2),
-          Text(price,
-              style: TextStyle(
-                  color: color, fontSize: 11, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildDivider() {
-    return Container(
-        height: 30,
-        width: 1,
-        color: Colors.white24,
-        margin: EdgeInsets.symmetric(horizontal: 4));
-  }
-
-  // 2. Encabezado de Sección y Botón de Filtros
-  Widget _buildSectionHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text("ÚLTIMAS NOTICIAS",
-            style: TextStyle(
-                color: Colors.white54,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.0)),
-        TextButton.icon(
-          onPressed: () => print("Filtros"),
-          icon: Icon(Icons.filter_list, color: Colors.white54, size: 16),
-          label: Text("Filtros",
-              style: TextStyle(color: Colors.white54, fontSize: 12)),
-        ),
-      ],
-    );
-  }
 
   // 3. Tarjeta de Noticia Principal
-  Widget _buildNewsCard(NoticiaAPI noticia) {
+  Widget _buildNewsCard(NoticiaAPI noticia, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-          color: Color(0xFF1E1E1E), borderRadius: BorderRadius.circular(16)),
+        color: isDark
+    ? const Color.fromARGB(255, 32, 32, 32)
+    : Color.fromARGB(255, 128, 127, 127),
+    borderRadius: BorderRadius.circular(16),
+    ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -210,25 +142,9 @@ class NewsScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: noticia.categoria == "CRIPTO"
-                            ? Color(0xFF673AB7).withOpacity(0.2)
-                            : Color(0xFF00C853).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(noticia.categoria,
-                          style: TextStyle(
-                              color: noticia.categoria == "CRIPTO"
-                                  ? Color(0xFFBB86FC)
-                                  : Color(0xFF00C853),
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold)),
-                    ),
                     SizedBox(width: 8),
                     Text(noticia.tiempoHace,
-                        style: TextStyle(color: Colors.white54, fontSize: 11)),
+                        style: TextStyle(color: const Color.fromARGB(221, 255, 255, 255), fontSize: 11)),
                   ],
                 ),
                 SizedBox(height: 12),
@@ -242,7 +158,7 @@ class NewsScreen extends StatelessWidget {
                 Row(
                   children: [
                     Icon(Icons.access_time_outlined,
-                        color: Colors.white54, size: 14),
+                        color: const Color.fromARGB(137, 56, 55, 55), size: 14),
                     SizedBox(width: 6),
                     Text(noticia.tiempoLectura,
                         style: TextStyle(color: Colors.white54, fontSize: 11)),
