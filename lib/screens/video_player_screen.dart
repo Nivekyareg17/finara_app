@@ -1,116 +1,111 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'video_webview_screen.dart';
+import '../widgets/custom_bottom_nav.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
-  final String url;
+  final String videoUrl;
 
-  const VideoPlayerScreen({super.key, required this.url});
+  const VideoPlayerScreen({super.key, required this.videoUrl});
 
   @override
- State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late YoutubePlayerController controller;
+  late YoutubePlayerController _controller;
   bool hasError = false;
-
-  String getVideoId(String url) {
-    try {
-      final uri = Uri.parse(url);
-
-      if (uri.queryParameters['v'] != null) {
-        return uri.queryParameters['v']!;
-      }
-
-      if (uri.host.contains('youtu.be')) {
-        return uri.pathSegments.isNotEmpty ? uri.pathSegments[0] : '';
-      }
-
-      if (uri.pathSegments.contains('embed')) {
-        return uri.pathSegments.last;
-      }
-
-      return '';
-    } catch (e) {
-      return '';
-    }
-  }
-
-  Future<void> openYoutube() async {
-    final Uri uri = Uri.parse(widget.url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
+  late String videoId;
 
   @override
   void initState() {
     super.initState();
 
-    final id = getVideoId(widget.url);
+    videoId = getYoutubeId(widget.videoUrl);
 
-    if (id.isEmpty) {
+    print("URL ORIGINAL: ${widget.videoUrl}");
+    print("VIDEO ID: $videoId");
+
+    if (videoId.isEmpty) {
       hasError = true;
-      return;
+    } else {
+      _controller = YoutubePlayerController(
+        params: const YoutubePlayerParams(
+          showControls: true,
+          showFullscreenButton: true,
+        ),
+      );
+
+      _controller.loadVideoById(videoId: videoId);
+
+      // Detectar error
+      _controller.listen((event) {
+        if (event.playerState == PlayerState.unknown) {
+          setState(() {
+            hasError = true;
+          });
+        }
+      });
     }
-
-    controller = YoutubePlayerController(
-      params: const YoutubePlayerParams(
-        showControls: true,
-        showFullscreenButton: true,
-      ),
-    );
-
-    controller.loadVideoById(videoId: id);
-
-    //Detectar errores automáticamente
-    controller.listen((event) {
-      if (event.playerState == PlayerState.unknown) {
-        setState(() {
-          hasError = true;
-        });
-      }
-    });
   }
 
-  @override
-  void dispose() {
-    if (!hasError) controller.close();
-    super.dispose();
+  String getYoutubeId(String url) {
+    final uri = Uri.parse(url);
+
+    if (uri.host.contains('youtu.be')) {
+      return uri.pathSegments.first;
+    }
+
+    if (uri.queryParameters.containsKey('v')) {
+      return uri.queryParameters['v']!;
+    }
+
+    return '';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Reproduciendo")),
+      appBar: AppBar(
+        title: const Text("Reproductor"),
+        titleTextStyle: TextStyle(
+            color: Color.fromARGB(255, 10, 109, 82),
+            fontWeight: FontWeight.bold,
+            fontSize: 18),
+      ),
       body: Center(
         child: hasError
-            ? _errorUI()
-            : AspectRatio(
-                aspectRatio: 16 / 9,
-                child: YoutubePlayer(controller: controller),
-              ),
+            ? _errorUI(context)
+            : YoutubePlayer(controller: _controller),
+      ),
+      bottomNavigationBar: const CustomBottomNav(
+        selectedIndex: 3,
       ),
     );
   }
 
-  //UI de error
-  Widget _errorUI() {
+  Widget _errorUI(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.error_outline, size: 60, color: Colors.grey),
+        const Icon(Icons.error_outline, size: 50, color: Colors.red),
         const SizedBox(height: 10),
         const Text(
           "Este video no se puede reproducir aquí",
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
         ),
-        const SizedBox(height: 15),
-        ElevatedButton.icon(
-          onPressed: openYoutube,
-          icon: const Icon(Icons.open_in_new),
-          label: const Text("Ver en YouTube"),
-        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => VideoWebViewScreen(videoId: videoId),
+              ),
+            );
+          },
+          child: const Text("Ver en navegador"),
+        )
       ],
     );
   }

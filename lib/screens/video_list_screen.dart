@@ -74,7 +74,10 @@ class _VideoListScreenState extends State<VideoListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Videos"),
-        
+        titleTextStyle: TextStyle(
+            color: Color.fromARGB(255, 10, 109, 82),
+            fontWeight: FontWeight.bold,
+            fontSize: 18),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -104,7 +107,8 @@ class _VideoListScreenState extends State<VideoListScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => VideoPlayerScreen(url: video["url"]),
+                          builder: (_) =>
+                              VideoPlayerScreen(videoUrl: video["url"]),
                         ),
                       );
                     },
@@ -142,10 +146,9 @@ class _VideoListScreenState extends State<VideoListScreen> {
                 );
               },
             ),
-           bottomNavigationBar: const CustomBottomNav(
+      bottomNavigationBar: const CustomBottomNav(
         selectedIndex: 3,
-      ), 
+      ),
     );
-    
   }
 }
