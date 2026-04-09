@@ -4,7 +4,7 @@ import '../model/chat_message.dart';
 
 class AIService {
 
-  final String _urlBase = 'http://192.168.1.13:8000/ai/consultar';
+  final String _urlBase = 'https://daiko-ai.onrender.com/ai/consultar';
 
   Future<ChatMessage> sendMessageToDaiko(String prompt) async {
     try {
