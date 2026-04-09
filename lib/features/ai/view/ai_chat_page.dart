@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:animated_text_kit/animated_text_kit.dart'; // Librería para la animación
 import '../model/chat_message.dart';
 import '../service/ai_service.dart';
 import '../../../widgets/custom_bottom_nav.dart';
@@ -66,16 +67,14 @@ class _AIChatPageState extends State<AIChatPage> {
 
     return Scaffold(
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 2),
-      backgroundColor:
-          isDark ? const Color(0xFF0F172A) : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
       appBar: _buildAppBar(isDark),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               reverse: true,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
@@ -88,8 +87,7 @@ class _AIChatPageState extends State<AIChatPage> {
           if (_isLoading)
             LinearProgressIndicator(
               color: primaryGreen,
-              backgroundColor:
-                  isDark ? Colors.white10 : const Color(0xFFECFDF5),
+              backgroundColor: isDark ? Colors.white10 : const Color(0xFFECFDF5),
             ),
           _buildInputSection(isDark),
         ],
@@ -111,7 +109,7 @@ class _AIChatPageState extends State<AIChatPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 "DAIKO AI",
                 style: TextStyle(
                   color: Color.fromARGB(255, 10, 109, 82),
@@ -175,8 +173,7 @@ class _AIChatPageState extends State<AIChatPage> {
         child: Text(
           msg.text,
           style: TextStyle(
-            color:
-                isDark ? Colors.white70 : const Color(0xFF334155),
+            color: isDark ? Colors.white70 : const Color(0xFF334155),
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -185,8 +182,7 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildDaikoMessage(
-      ChatMessage msg, bool isDark, Color aiBubbleColor) {
+  Widget _buildDaikoMessage(ChatMessage msg, bool isDark, Color aiBubbleColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Row(
@@ -211,14 +207,24 @@ class _AIChatPageState extends State<AIChatPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    msg.text,
+                  // INTEGRACIÓN DE LA ANIMACIÓN TIPO MÁQUINA DE ESCRIBIR
+                  DefaultTextStyle(
                     style: TextStyle(
-                      color:
-                          isDark ? Colors.white : const Color(0xFF1E293B),
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
                       fontSize: 14,
                       height: 1.5,
                       fontWeight: FontWeight.w500,
+                    ),
+                    child: AnimatedTextKit(
+                      animatedTexts: [
+                        TypewriterAnimatedText(
+                          msg.text,
+                          speed: const Duration(milliseconds: 30), // Velocidad de escritura
+                        ),
+                      ],
+                      totalRepeatCount: 1, // Solo se anima una vez
+                      displayFullTextOnTap: true, // Muestra todo si el usuario toca la burbuja
+                      stopPauseOnTap: true,
                     ),
                   ),
                   if (msg.type == MessageType.analysis)
@@ -251,8 +257,7 @@ class _AIChatPageState extends State<AIChatPage> {
           )
         ],
       ),
-      child: Icon(Icons.auto_awesome,
-          color: Colors.white, size: iconSize),
+      child: Icon(Icons.auto_awesome, color: Colors.white, size: iconSize),
     );
   }
 
@@ -261,9 +266,7 @@ class _AIChatPageState extends State<AIChatPage> {
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF0F172A)
-            : Colors.white.withOpacity(0.6),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white.withOpacity(0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: primaryGreen.withOpacity(0.2),
@@ -273,13 +276,11 @@ class _AIChatPageState extends State<AIChatPage> {
         children: [
           Row(
             children: [
-              _buildMetric(
-                  "TENDENCIA", msg.trend ?? "Bullish",
+              _buildMetric("TENDENCIA", msg.trend ?? "Bullish",
                   Icons.trending_up, primaryGreen, isDark),
               const SizedBox(width: 12),
-              _buildMetric(
-                  "RSI LEVEL", msg.rsiLevel ?? "62.4",
-                  Icons.speed, Colors.amber, isDark),
+              _buildMetric("RSI LEVEL", msg.rsiLevel ?? "62.4", Icons.speed,
+                  Colors.amber, isDark),
             ],
           ),
         ],
@@ -287,15 +288,13 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildMetric(String label, String value, IconData icon,
-      Color color, bool isDark) {
+  Widget _buildMetric(
+      String label, String value, IconData icon, Color color, bool isDark) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isDark
-              ? const Color(0xFF1E293B)
-              : Colors.white,
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
@@ -308,9 +307,7 @@ class _AIChatPageState extends State<AIChatPage> {
                 style: TextStyle(
                   fontSize: 8,
                   fontWeight: FontWeight.w800,
-                  color: isDark
-                      ? Colors.white54
-                      : const Color(0xFF64748B),
+                  color: isDark ? Colors.white54 : const Color(0xFF64748B),
                 )),
             const SizedBox(height: 4),
             Row(
@@ -321,9 +318,7 @@ class _AIChatPageState extends State<AIChatPage> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: isDark
-                          ? Colors.white
-                          : const Color(0xFF0F172A),
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     )),
               ],
             ),
@@ -352,16 +347,12 @@ class _AIChatPageState extends State<AIChatPage> {
               Expanded(
                 child: TextField(
                   controller: _controller,
-                  style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
                   decoration: InputDecoration(
-                    prefixIcon:
-                        Icon(Icons.add, color: primaryGreen),
+                    prefixIcon: Icon(Icons.add, color: primaryGreen),
                     hintText: "Ask DAIKO anything...",
                     hintStyle: TextStyle(
-                        color: isDark
-                            ? Colors.white54
-                            : Colors.grey),
+                        color: isDark ? Colors.white54 : Colors.grey),
                     filled: true,
                     fillColor: isDark
                         ? const Color(0xFF1E293B)
@@ -389,8 +380,8 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
                 child: IconButton(
                     onPressed: _sendMessage,
-                    icon: const Icon(Icons.mic,
-                        color: Colors.white)),
+                    // CAMBIADO: Ahora muestra el icono de ENVIAR en lugar de micrófono
+                    icon: const Icon(Icons.send, color: Colors.white)),
               ),
             ],
           ),
@@ -399,15 +390,11 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildQuickAction(
-      String label, IconData icon, bool isDark) {
+  Widget _buildQuickAction(String label, IconData icon, bool isDark) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF1E293B)
-            : const Color(0xFFF8FAFC),
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
@@ -421,9 +408,7 @@ class _AIChatPageState extends State<AIChatPage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isDark
-                    ? Colors.white
-                    : const Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               )),
         ],
       ),
