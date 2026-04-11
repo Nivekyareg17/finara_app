@@ -21,43 +21,38 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-Widget build(BuildContext context) {
-  return MultiProvider(
-    providers: [
-      ChangeNotifierProvider(
-        create: (_) => AuthProvider(),
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider()..loadToken(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(),
+        ),
+      ],
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            initialRoute: "/",
+            routes: {
+              "/": (context) => const SplashScreen(),
+              "/login": (context) => const LoginScreen(),
+              "/register": (context) => const RegisterScreen(),
+              "/home": (context) => HomeScreen(),
+              '/daiko_ai': (context) => const AIChatPage(),
+              "/news": (context) => const NewsScreen(),
+              "/profile": (context) => const ProfileScreen(),
+              "/video": (context) => const VideoScreen(),
+              "/admin": (context) => const AdminScreen(),
+            },
+          );
+        },
       ),
-      ChangeNotifierProvider(
-        create: (_) => ThemeProvider(),
-      ),
-    ],
-    child: Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: themeProvider.themeMode,
-
-          initialRoute: "/",
-
-          routes: {
-            "/": (context) => const SplashScreen(),
-            "/login": (context) => const LoginScreen(),
-            "/register": (context) => const RegisterScreen(),
-            "/home": (context) => HomeScreen(),
-            '/daiko_ai': (context) => const AIChatPage(),
-            "/news": (context) => const NewsScreen(),
-            "/profile": (context) => const ProfileScreen(),
-            "/video": (context) => const VideoScreen(),
-            "/admin": (context) => const AdminScreen(),
-            
-          },
-        );
-      },
-    ),
-  );
+    );
+  }
 }
-}
-

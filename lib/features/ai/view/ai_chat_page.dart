@@ -3,6 +3,8 @@ import 'package:animated_text_kit/animated_text_kit.dart'; // Librería para la 
 import '../model/chat_message.dart';
 import '../service/ai_service.dart';
 import '../../../widgets/custom_bottom_nav.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/auth_provider.dart';
 
 class AIChatPage extends StatefulWidget {
   const AIChatPage({super.key});
@@ -21,41 +23,44 @@ class _AIChatPageState extends State<AIChatPage> {
   final Color accentGreen = const Color(0xFF059669);
 
   void _sendMessage() async {
-    if (_controller.text.isEmpty) return;
+  if (_controller.text.isEmpty) return;
 
-    final userMsg = ChatMessage(
-      text: _controller.text,
-      sender: MessageSender.user,
-      timestamp: DateTime.now(),
-    );
+  // 1. OBTENEMOS EL TOKEN DEL PROVIDER
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final String? userToken = authProvider.token;
 
-    if (!mounted) return;
-
-    setState(() {
-      _messages.insert(0, userMsg);
-      _isLoading = true;
-    });
-
-    _controller.clear();
-
-    try {
-      final response = await _aiService.sendMessageToDaiko(userMsg.text);
-
-      if (!mounted) return;
-
-      setState(() {
-        _messages.insert(0, response);
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  if (userToken == null) {
+    print("DEBUG: No hay token en el Provider");
+    return;
   }
 
+  final userMsg = ChatMessage(
+    text: _controller.text,
+    sender: MessageSender.user,
+    timestamp: DateTime.now(),
+  );
+
+  setState(() {
+    _messages.insert(0, userMsg);
+    _isLoading = true;
+  });
+
+  _controller.clear();
+
+  try {
+    // 2. PASAMOS EL TOKEN REAL AL SERVICIO
+    final response = await _aiService.sendMessageToDaiko(userMsg.text, userToken);
+
+    if (!mounted) return;
+    setState(() {
+      _messages.insert(0, response);
+      _isLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() { _isLoading = false; });
+  }
+}
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
