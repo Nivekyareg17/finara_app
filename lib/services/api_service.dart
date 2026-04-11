@@ -76,12 +76,13 @@ class ApiService {
   }
 
   // CREAR transacción
-  static Future<bool> createTransaction(
-    String token,
-    String type,
-    double amount,
-    String description,
-  ) async {
+ static Future<bool> createTransaction(
+  String token,
+  String type,
+  double amount,
+  String description,
+  String category,
+) async {
     final url = Uri.parse("$baseUrl/transactions/");
 
     final response = await http.post(
@@ -94,6 +95,7 @@ class ApiService {
         "type": type,
         "amount": amount,
         "description": description,
+        "category": category,
       }),
     );
 
@@ -129,6 +131,8 @@ class ApiService {
     String type,
     double amount,
     String description,
+    String category,
+    
   ) async {
     final url = Uri.parse("$baseUrl/transactions/$id");
 
@@ -142,6 +146,8 @@ class ApiService {
         "type": type,
         "amount": amount,
         "description": description,
+        "category": category,
+        
       }),
     );
 

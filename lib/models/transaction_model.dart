@@ -1,18 +1,23 @@
 class TransactionModel {
-  int? id; // Opcional para que la base de datos lo autogenere
-  String type; // "gasto" o "ingreso"
+  int? id;
+  String type;
   double amount;
   String description;
-  String category; // <--- NUEVO
-  String date;     // <--- NUEVO
-  String? imagePath; // <--- NUEVO (para el comprobante)
+
+  // 🔥 NUEVO SISTEMA
+  String categoryId;
+  String categoryName;
+
+  String date;
+  String? imagePath;
 
   TransactionModel({
     this.id,
     required this.type,
     required this.amount,
     required this.description,
-    required this.category,
+    required this.categoryId,
+    required this.categoryName,
     required this.date,
     this.imagePath,
   });
@@ -22,7 +27,8 @@ class TransactionModel {
         "type": type,
         "amount": amount,
         "description": description,
-        "category": category,
+        "categoryId": categoryId,
+        "categoryName": categoryName,
         "date": date,
         "imagePath": imagePath,
       };
@@ -33,7 +39,13 @@ class TransactionModel {
       type: map["type"],
       amount: (map["amount"] as num).toDouble(),
       description: map["description"],
-      category: map["category"] ?? "General",
+
+      // 🔥 ADAPTACIÓN INTELIGENTE (para que no rompa nada)
+      categoryId: map["categoryId"]?.toString() ?? "0",
+      categoryName: map["categoryName"] ??
+          map["category"] ?? // compatibilidad vieja
+          "General",
+
       date: map["date"] ?? "",
       imagePath: map["imagePath"],
     );
