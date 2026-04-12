@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'video_webview_screen.dart';
 import '../widgets/custom_bottom_nav.dart';
+import '../widgets/translate_widget.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
@@ -67,7 +68,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Reproductor"),
+        title: const TranslatedText("Reproductor"),
         titleTextStyle: TextStyle(
             color: Color.fromARGB(255, 10, 109, 82),
             fontWeight: FontWeight.bold,
@@ -90,7 +91,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       children: [
         const Icon(Icons.error_outline, size: 50, color: Colors.red),
         const SizedBox(height: 10),
-        const Text(
+        const TranslatedText(
           "Este video no se puede reproducir aquí",
           textAlign: TextAlign.center,
         ),
@@ -104,9 +105,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
               ),
             );
           },
-          child: const Text("Ver en navegador"),
+          child: const TranslatedText("Ver en navegador"),
         )
       ],
     );
   }
 }
+

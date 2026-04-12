@@ -1,6 +1,7 @@
 import 'package:finara_app_v1/screens/detalle_lectura_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../widgets/translate_widget.dart';
 
 class LecturasScreen extends StatelessWidget {
   LecturasScreen({super.key});
@@ -11,7 +12,7 @@ class LecturasScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Lecturas"),
+        title: const TranslatedText("Lecturas"),
       ),
       body: FutureBuilder(
         future: apiService.obtenerLecturas(),
@@ -21,13 +22,13 @@ class LecturasScreen extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return const Center(child: Text("Error al cargar lecturas"));
+            return const Center(child: TranslatedText("Error al cargar lecturas"));
           }
 
           final lecturas = snapshot.data;
 
           if (lecturas == null || lecturas.isEmpty) {
-            return const Center(child: Text("No hay lecturas"));
+            return const Center(child: TranslatedText("No hay lecturas"));
           }
 
           return ListView.builder(
@@ -38,8 +39,8 @@ class LecturasScreen extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 child: ListTile(
-                  title: Text(lectura['titulo']),
-                  subtitle: Text(lectura['tiempo_lectura']),
+                  title: TranslatedText(lectura['titulo']),
+                  subtitle: TranslatedText(lectura['tiempo_lectura']),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     Navigator.push(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
-
+import '../widgets/translate_widget.dart';
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
 
@@ -49,7 +49,7 @@ class _AdminScreenState extends State<AdminScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Panel"),
+        title: const TranslatedText("Admin Panel"),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -57,16 +57,16 @@ class _AdminScreenState extends State<AdminScreen> {
               final confirm = await showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: const Text("Cerrar sesión"),
-                  content: const Text("¿Seguro que quieres salir?"),
+                  title: const TranslatedText("Cerrar sesión"),
+                  content: const TranslatedText("¿Seguro que quieres salir?"),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text("Cancelar"),
+                      child: const TranslatedText("Cancelar"),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text("Salir"),
+                      child: const TranslatedText("Salir"),
                     ),
                   ],
                 ),
@@ -91,7 +91,7 @@ class _AdminScreenState extends State<AdminScreen> {
 
           return ListTile(
             title: Text(user["name"]),
-            subtitle: Text("${user["email"]} - ${user["role"]}"),
+            subtitle: TranslatedText("${user["email"]} - ${user["role"]}"),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -103,16 +103,16 @@ class _AdminScreenState extends State<AdminScreen> {
                       final confirm = await showDialog(
                         context: context,
                         builder: (_) => AlertDialog(
-                          title: const Text("Eliminar usuario"),
-                          content: const Text("¿Estás seguro?"),
+                          title: const TranslatedText("Eliminar usuario"),
+                          content: const TranslatedText("¿Estás seguro?"),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancelar"),
+                              child: const TranslatedText("Cancelar"),
                             ),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Eliminar"),
+                              child: const TranslatedText("Eliminar"),
                             ),
                           ],
                         ),

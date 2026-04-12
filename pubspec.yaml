@@ -45,10 +45,3 @@ flutter:
 
 dependency_overrides:
   flutter_inappwebview: ^6.0.0
-#
-#
-#
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/images/Logo_finara.png"

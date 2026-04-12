@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-/// Tarjeta clickeable para acciones rápidas
+// 1. Importamos el widget traductor
+import 'translate_widget.dart'; 
 
 class QuickActionTile extends StatelessWidget {
   final String title, subtitle;
@@ -34,7 +34,6 @@ class QuickActionTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              /// Icono
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -46,19 +45,20 @@ class QuickActionTile extends StatelessWidget {
 
               const SizedBox(width: 15),
 
-              /// Texto
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    // 2. CAMBIO: Título de la acción traducido
+                    TranslatedText(
                       title,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
-                    Text(
+                    // 3. CAMBIO: Subtítulo traducido (ej: "Asesoría experta" -> "Expert advice")
+                    TranslatedText(
                       subtitle,
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
@@ -66,7 +66,6 @@ class QuickActionTile extends StatelessWidget {
                 ),
               ),
 
-              /// Flecha
               const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
             ],
           ),

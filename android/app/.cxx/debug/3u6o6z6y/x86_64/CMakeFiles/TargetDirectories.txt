@@ -1,0 +1,2 @@
+C:/Users/gueva/Finara/finara_app/android/app/.cxx/debug/3u6o6z6y/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/gueva/Finara/finara_app/android/app/.cxx/debug/3u6o6z6y/x86_64/CMakeFiles/rebuild_cache.dir

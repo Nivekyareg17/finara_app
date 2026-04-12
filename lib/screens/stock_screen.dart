@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/stock_model.dart';
 import '../services/stock_service.dart';
 import 'stock_detail_screen.dart';
+import '../widgets/translate_widget.dart';
 
 class StocksScreen extends StatefulWidget {
   const StocksScreen({super.key});
@@ -27,7 +28,7 @@ class _StocksScreenState extends State<StocksScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Stock Market"),
+        title: const TranslatedText("Stock Market"),
       ),
 
       body: FutureBuilder<List<Stock>>(
@@ -86,14 +87,14 @@ class _StocksScreenState extends State<StocksScreen> {
                           crossAxisAlignment:
                               CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            TranslatedText(
                               stock.symbol,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const Text(
+                            const TranslatedText(
                               "Stock",
                               style: TextStyle(color: Colors.grey),
                             ),
@@ -101,7 +102,7 @@ class _StocksScreenState extends State<StocksScreen> {
                         ),
 
                         // Precio
-                        Text(
+                        TranslatedText(
                           "\$${stock.price.toStringAsFixed(2)}",
                           style: const TextStyle(fontSize: 16),
                         ),
@@ -118,7 +119,7 @@ class _StocksScreenState extends State<StocksScreen> {
                               size: 16,
                             ),
                             const SizedBox(width: 5),
-                            Text(
+                            TranslatedText(
                               "${stock.percent.toStringAsFixed(2)}%",
                               style: TextStyle(
                                 color: isUp

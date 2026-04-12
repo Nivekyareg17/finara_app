@@ -1,7 +1,7 @@
 import 'package:finara_app_v1/screens/video_webView_Screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-
+import '../widgets/translate_widget.dart';
 import '../widgets/custom_bottom_nav.dart';
 
 class VideoListScreen extends StatefulWidget {
@@ -74,7 +74,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Videos"),
+        title: const TranslatedText("Videos"),
         titleTextStyle: TextStyle(
             color: Color.fromARGB(255, 10, 109, 82),
             fontWeight: FontWeight.bold,
@@ -102,7 +102,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
 
                       if (videoId.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Video no válido")),
+                          const SnackBar(content: TranslatedText("Video no válido")),
                         );
                         return;
                       }
@@ -131,7 +131,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
                         //Título
                         Padding(
                           padding: const EdgeInsets.all(10),
-                          child: Text(
+                          child: TranslatedText(
                             video["title"],
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,

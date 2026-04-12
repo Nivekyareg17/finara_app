@@ -1,4 +1,5 @@
 import 'package:finara_app_v1/providers/auth_provider.dart';
+import 'package:finara_app_v1/widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:finara_app_v1/providers/theme_provider.dart';
@@ -6,9 +7,9 @@ import '../models/transaction_model.dart';
 import '../services/api_service.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'package:finara_app_v1/models/category_model.dart';
-import 'package:finara_app_v1/models/transaction_model.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:finara_app_v1/providers/languaje_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -142,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(width: 8),
             Text("Profile",
                 style: TextStyle(
-                    color:Color.fromARGB(255, 10, 109, 82),
+                    color: Color.fromARGB(255, 10, 109, 82),
                     fontWeight: FontWeight.bold,
                     fontSize: 18)),
           ],
@@ -157,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               decoration: BoxDecoration(color: Color(0xFF064E3B)),
               child: Align(
                 alignment: Alignment.bottomLeft,
-                child: Text(
+                child: TranslatedText(
                   "Opciones",
                   style: TextStyle(color: Colors.white, fontSize: 20),
                 ),
@@ -173,11 +174,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 themeProvider.toggleTheme();
               },
             ),
+            Consumer<LanguageProvider>(
+              builder: (context, langProvider, child) {
+                return ListTile(
+                  leading:
+                      const Icon(Icons.translate, color: Color(0xFF00C853)),
+                  title: const TranslatedText("Idioma de la App"),
+                  // Muestra el nombre real del idioma (ej: Japonés)
+                  subtitle: Text("Actual: ${langProvider.currentLanguageName}"),
+                  onTap: () {
+                    // Al tocarlo, se abre la lista de los 50 desde abajo
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor:
+                          Theme.of(context).scaffoldBackgroundColor,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (context) {
+                        return Column(
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: TranslatedText(
+                                "Selecciona Idioma",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 18),
+                              ),
+                            ),
+                            const Divider(),
+                            Expanded(
+                              child: ListView.builder(
+                                itemCount:
+                                    langProvider.supportedLanguages.length,
+                                itemBuilder: (context, index) {
+                                  // Sacamos el código (es, en, ru...) y el nombre (Español, English...)
+                                  String key = langProvider
+                                      .supportedLanguages.keys
+                                      .elementAt(index);
+                                  String name =
+                                      langProvider.supportedLanguages[key]!;
 
+                                  return ListTile(
+                                    title: Text(name),
+                                    // Ponemos un check verde al idioma que está seleccionado
+                                    trailing:
+                                        langProvider.currentLanguage == key
+                                            ? const Icon(Icons.check,
+                                                color: Colors.green)
+                                            : null,
+                                    onTap: () {
+                                      langProvider.setLanguage(
+                                          key); // Cambia el idioma global
+                                      Navigator.pop(context); // Cierra la lista
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
             //LOGOUT
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Cerrar sesión"),
+              title: const TranslatedText("Cerrar sesión"),
               onTap: () async {
                 Navigator.pop(context);
 
@@ -270,14 +337,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                const TranslatedText(
                   "Movimientos",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 TextButton.icon(
                   onPressed: () => showForm(),
                   icon: const Icon(Icons.add, color: Color(0xFF00C853)),
-                  label: const Text("Agregar",
+                  label: const TranslatedText("Agregar",
                       style: TextStyle(color: Color(0xFF00C853))),
                 ),
               ],
@@ -389,13 +456,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void showForm({TransactionModel? edit}) {
-   
-
     final dateController = TextEditingController(
         text: edit != null
             ? "10/27/2023"
             : "${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}");
-            
 
     final desc = TextEditingController(text: edit?.description);
     final amount =
@@ -404,18 +468,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     List<String> categoriasGasto = ["Mercado", "Ahorro", "Gastos Adicionales"];
     List<String> categoriasIngreso = ["Pago del Trabajo", "Ahorro", "Regalo"];
 
+    String selectedCategory = categoriasGasto.contains(edit?.description)
+        ? edit!.description
+        : "Mercado";
 
-    String selectedCategory =
-        categoriasGasto.contains(edit?.description) ? edit!.description : "Mercado";
-
-     if (edit != null) {
-    if (type == "gasto" && !categoriasGasto.contains(edit.description)) {
-       categoriasGasto.add(edit.description);
-    } else if (type == "ingreso" && !categoriasIngreso.contains(edit.description)) {
-       categoriasIngreso.add(edit.description);
+    if (edit != null) {
+      if (type == "gasto" && !categoriasGasto.contains(edit.description)) {
+        categoriasGasto.add(edit.description);
+      } else if (type == "ingreso" &&
+          !categoriasIngreso.contains(edit.description)) {
+        categoriasIngreso.add(edit.description);
+      }
     }
-  }
-
 
     showModalBottomSheet(
       context: context,
@@ -501,9 +565,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 35),
 
                           // CAMPO MONTO
-                        
+
                           const Center(
-                            child: Text(
+                            child: TranslatedText(
                               "Ingresar monto",
                               style: TextStyle(color: Colors.grey),
                             ),
@@ -514,7 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             textAlign: TextAlign.center,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(), 
+                              CurrencyInputFormatter(),
                             ],
                             style: const TextStyle(
                               fontSize: 45,
@@ -522,7 +586,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Color(0xFF064E3B),
                             ),
                             decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.attach_money, size: 35, color: Color(0xFF064E3B)),
+                              prefixIcon: Icon(Icons.attach_money,
+                                  size: 35, color: Color(0xFF064E3B)),
                               hintText: "0.00",
                               border: InputBorder.none,
                             ),
@@ -531,8 +596,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 25),
 
                           // SELECTOR CATEGORÍA
-                          const Text("Categoría",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                          const TranslatedText("Categoría",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey)),
                           const SizedBox(height: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -546,85 +613,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               isExpanded: true,
                               underline: const SizedBox(),
                               icon: const Icon(Icons.keyboard_arrow_down),
-                             items: [
-  // Usamos las variables que definiste arriba, no listas estáticas
-  ...(type == "gasto" ? categoriasGasto : categoriasIngreso)
-      .map((cat) => DropdownMenuItem(
-            value: cat,
-            child: Row(
-              children: [
-                Icon(_getCategoryData(cat)['icon'],
-                    color: _getCategoryData(cat)['color'], size: 20),
-                const SizedBox(width: 12),
-                Text(cat),
-              ],
-            ),
-          )),
-  const DropdownMenuItem(
-    value: "add_new",
-    child: Row(
-      children: [
-        Icon(Icons.add, color: Colors.green),
-        SizedBox(width: 12),
-        Text("Agregar categoría"),
-      ],
-    ),
-  ),
-],
+                              items: [
+                                // Usamos las variables que definiste arriba, no listas estáticas
+                                ...(type == "gasto"
+                                        ? categoriasGasto
+                                        : categoriasIngreso)
+                                    .map((cat) => DropdownMenuItem(
+                                          value: cat,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                  _getCategoryData(cat)['icon'],
+                                                  color: _getCategoryData(
+                                                      cat)['color'],
+                                                  size: 20),
+                                              const SizedBox(width: 12),
+                                              Text(cat),
+                                            ],
+                                          ),
+                                        )),
+                                const DropdownMenuItem(
+                                  value: "add_new",
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.add, color: Colors.green),
+                                      SizedBox(width: 12),
+                                      TranslatedText("Agregar categoría"),
+                                    ],
+                                  ),
+                                ),
+                              ],
                               onChanged: (v) async {
-  if (v == "add_new") {
-    String? nueva = await _mostrarDialogoNuevaCategoria();
-    if (nueva != null && nueva.isNotEmpty) {
-      setStateDialog(() {
-        // 1. IMPORTANTE: Agregarla a la lista para que el Dropdown la reconozca
-        if (type == "gasto") {
-          categoriasGasto.add(nueva);
-        } else {
-          categoriasIngreso.add(nueva);
-        }
-        // 2. Ahora sí la puedes seleccionar sin que explote
-        selectedCategory = nueva;
-      });
-    }
-  } else {
-    setStateDialog(() {
-      selectedCategory = v!;
-    });
-  }
-},
+                                if (v == "add_new") {
+                                  String? nueva =
+                                      await _mostrarDialogoNuevaCategoria();
+                                  if (nueva != null && nueva.isNotEmpty) {
+                                    setStateDialog(() {
+                                      // 1. IMPORTANTE: Agregarla a la lista para que el Dropdown la reconozca
+                                      if (type == "gasto") {
+                                        categoriasGasto.add(nueva);
+                                      } else {
+                                        categoriasIngreso.add(nueva);
+                                      }
+                                      // 2. Ahora sí la puedes seleccionar sin que explote
+                                      selectedCategory = nueva;
+                                    });
+                                  }
+                                } else {
+                                  setStateDialog(() {
+                                    selectedCategory = v!;
+                                  });
+                                }
+                              },
                             ),
                           ),
 
                           const SizedBox(height: 25),
 
                           // --- AQUÍ REGRESA LA FECHA ---
-                          const Text("Fecha",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                          const TranslatedText("Fecha",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey)),
                           const SizedBox(height: 10),
                           InkWell(
                             onTap: () async {
                               DateTime? picked = await showDatePicker(
                                 context: context,
                                 initialDate: edit != null
-                                    ? DateFormat("MM/dd/yyyy").parse(dateController.text)
+                                    ? DateFormat("MM/dd/yyyy")
+                                        .parse(dateController.text)
                                     : DateTime.now(),
                                 firstDate: DateTime(2000),
                                 lastDate: DateTime(2101),
                               );
                               if (picked != null) {
-                                setStateDialog(() => dateController.text = DateFormat("MM/dd/yyyy").format(picked));
+                                setStateDialog(() => dateController.text =
+                                    DateFormat("MM/dd/yyyy").format(picked));
                               }
                             },
                             child: Container(
                               padding: const EdgeInsets.all(15),
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.black12 : Colors.grey[50],
+                                color:
+                                    isDark ? Colors.black12 : Colors.grey[50],
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(color: Colors.grey[200]!),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today, color: Colors.green, size: 20),
+                                  const Icon(Icons.calendar_today,
+                                      color: Colors.green, size: 20),
                                   const SizedBox(width: 12),
                                   Text("${dateController.text}"),
                                 ],
@@ -635,112 +714,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 25),
 
                           // --- AQUÍ REGRESA LA DESCRIPCIÓN (NOTAS) ---
-                          const Text("Notas (Opcional)",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                          const TranslatedText("Notas (Opcional)",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey)),
                           const SizedBox(height: 10),
                           TextField(
                             controller: desc,
                             decoration: InputDecoration(
                               hintText: "Escribe una nota...",
                               filled: true,
-                              fillColor: isDark ? Colors.black12 : Colors.grey[50],
+                              fillColor:
+                                  isDark ? Colors.black12 : Colors.grey[50],
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide(color: Colors.grey[200]!),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[200]!),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide(color: Colors.grey[200]!),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[200]!),
                               ),
                             ),
                           ),
                           const SizedBox(height: 35),
                           // BOTÓN GUARDAR
-                            
-                        // ... (SizedBox después del TextField de Notas)
-const SizedBox(height: 30),
 
-SizedBox(
-width: double.infinity, 
-  height: 55,
-  child: ElevatedButton(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF00C853),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 0,
-    ),
-    onPressed: isLoadingDialog 
-        ? null
-        : () async {
-            // 1. Validar que el monto no esté vacío o sea 0
-            String cleanText = amount.text.replaceAll(RegExp(r'[^0-9.]'), '');
-            double montoFinal = double.tryParse(cleanText) ?? 0.0;
-            DateTime fechaFinal = DateFormat("MM/dd/yyyy").parse(dateController.text);  
-            int categoryId = categoriasGasto.contains(selectedCategory) ? categoriasGasto.indexOf(selectedCategory) + 1 : 0; // ID simulado basado en la posición 
-            int typeInt = type == "Gasto" ? 1 : 2; // 1 para ingreso, 2 para gasto
-            
+                          // ... (SizedBox después del TextField de Notas)
+                          const SizedBox(height: 30),
 
-            if (montoFinal <= 0) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Por favor ingresa un monto válido")),
-              );
-              return;
-            }
+                          SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF00C853),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15)),
+                                elevation: 0,
+                              ),
+                              onPressed: isLoadingDialog
+                                  ? null
+                                  : () async {
+                                      // 1. Validar que el monto no esté vacío o sea 0
+                                      String cleanText = amount.text
+                                          .replaceAll(RegExp(r'[^0-9.]'), '');
+                                      double montoFinal =
+                                          double.tryParse(cleanText) ?? 0.0;
+                                      DateTime fechaFinal =
+                                          DateFormat("MM/dd/yyyy")
+                                              .parse(dateController.text);
+                                      int categoryId = categoriasGasto
+                                              .contains(selectedCategory)
+                                          ? categoriasGasto
+                                                  .indexOf(selectedCategory) +
+                                              1
+                                          : 0; // ID simulado basado en la posición
+                                      int typeInt = type == "Gasto"
+                                          ? 1
+                                          : 2; // 1 para ingreso, 2 para gasto
 
-            setStateDialog(() => isLoadingDialog = true);
+                                      if (montoFinal <= 0) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: TranslatedText(
+                                                  "Por favor ingresa un monto válido")),
+                                        );
+                                        return;
+                                      }
 
-            final auth = context.read<AuthProvider>();
-            
-            bool success;
-            if (edit == null) {
-              // ES NUEVO
-              success = await ApiService.createTransaction(
-                auth.token!,
-                montoFinal.toString(),
-                typeInt.toDouble(),
-                selectedCategory,
-                desc.text,
-              );
-            } else {
-              // ES EDICIÓN
-              success = await ApiService.updateTransaction(
-                auth.token!,
-                edit.id!,
-                montoFinal.toString(),
-                typeInt.toDouble(),
-                selectedCategory,
-                desc.text,
-              );
-            }
+                                      setStateDialog(
+                                          () => isLoadingDialog = true);
 
-            if (success) {
-              if (!mounted) return;
-              Navigator.pop(context); // Cierra el formulario
-              loadTransactions(); // Recarga la lista principal
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(edit == null ? "Creado con éxito" : "Actualizado con éxito")),
-              );
-            } else {
-              setStateDialog(() => isLoadingDialog = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Error al guardar en el servidor")),
-              );
-            }
-          },
-    child: isLoadingDialog
-        ? const CircularProgressIndicator(color: Colors.white)
-        : Text(
-            edit == null ? "Guardar Movimiento" : "Actualizar Movimiento",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-  ),
-),
-                             // DropdownButton
-                        
+                                      final auth = context.read<AuthProvider>();
+
+                                      bool success;
+                                      if (edit == null) {
+                                        // ES NUEVO
+                                        success =
+                                            await ApiService.createTransaction(
+                                          auth.token!,
+                                          montoFinal.toString(),
+                                          typeInt.toDouble(),
+                                          selectedCategory,
+                                          desc.text,
+                                        );
+                                      } else {
+                                        // ES EDICIÓN
+                                        success =
+                                            await ApiService.updateTransaction(
+                                          auth.token!,
+                                          edit.id!,
+                                          montoFinal.toString(),
+                                          typeInt.toDouble(),
+                                          selectedCategory,
+                                          desc.text,
+                                        );
+                                      }
+
+                                      if (success) {
+                                        if (!mounted) return;
+                                        Navigator.pop(
+                                            context); // Cierra el formulario
+                                        loadTransactions(); // Recarga la lista principal
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(edit == null
+                                                  ? "Creado con éxito"
+                                                  : "Actualizado con éxito")),
+                                        );
+                                      } else {
+                                        setStateDialog(
+                                            () => isLoadingDialog = false);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: TranslatedText(
+                                                  "Error al guardar en el servidor")),
+                                        );
+                                      }
+                                    },
+                              child: isLoadingDialog
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white)
+                                  : TranslatedText(
+                                      edit == null
+                                          ? "Guardar Movimiento"
+                                          : "Actualizar Movimiento",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          // DropdownButton
                         ], // Cierre de children
                       ),
                     ),
@@ -801,12 +913,12 @@ width: double.infinity,
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text("Confirmar"),
+              title: const TranslatedText("Confirmar"),
               content: Text("¿Eliminar '${t.description}'?"),
               actions: [
                 TextButton(
                   onPressed: isDeleting ? null : () => Navigator.pop(context),
-                  child: const Text("Cancelar"),
+                  child: const TranslatedText("Cancelar"),
                 ),
                 TextButton(
                   onPressed: isDeleting
@@ -835,7 +947,7 @@ width: double.infinity,
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text(
+                      : const TranslatedText(
                           "Eliminar",
                           style: TextStyle(color: Colors.red),
                         ),
@@ -854,7 +966,7 @@ width: double.infinity,
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Nueva categoría"),
+        title: const TranslatedText("Nueva categoría"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -864,13 +976,13 @@ width: double.infinity,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
+            child: const TranslatedText("Cancelar"),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context, controller.text);
             },
-            child: const Text("Guardar"),
+            child: const TranslatedText("Guardar"),
           ),
         ],
       ),
