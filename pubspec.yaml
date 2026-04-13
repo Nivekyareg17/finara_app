@@ -1,5 +1,5 @@
 name: finara_app_v1
-description: "A new Flutter project."
+description: "Finara App"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -10,16 +10,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.18.1
-  provider: ^6.1.2
+
   http: ^1.2.1
+  provider: ^6.1.2
+
   flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.5.4
+
   url_launcher: ^6.2.5
+  intl: ^0.18.1
+
   youtube_player_iframe: ^5.0.0
   flutter_inappwebview: ^6.0.0
+
   fl_chart: ^0.68.0
   cupertino_icons: ^1.0.8
-  shared_preferences: ^2.5.4
   animated_text_kit: ^4.2.2
   
   # --- LIBRERÍAS DE TRADUCCIÓN (GOOGLE ML KIT) ---
@@ -29,14 +34,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
   flutter_lints: ^6.0.0
-
-# Configuración de los iconos de la app
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/images/logo.png"
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -50,5 +49,5 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/icon/app_icon.png"
-  adaptive_icon_background: "#064131" # El verde oscuro de Finara
+  adaptive_icon_background: "#064131"
   adaptive_icon_foreground: "assets/images/Logo_finara.png"
