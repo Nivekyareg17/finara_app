@@ -23,44 +23,46 @@ class _AIChatPageState extends State<AIChatPage> {
   final Color accentGreen = const Color(0xFF059669);
 
   void _sendMessage() async {
-  if (_controller.text.isEmpty) return;
+    if (_controller.text.isEmpty) return;
 
-  // 1. OBTENEMOS EL TOKEN DEL PROVIDER
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-  final String? userToken = authProvider.token;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final String? userToken = authProvider.token;
 
-  if (userToken == null) {
-    print("DEBUG: No hay token en el Provider");
-    return;
-  }
+    if (userToken == null) return;
 
-  final userMsg = ChatMessage(
-    text: _controller.text,
-    sender: MessageSender.user,
-    timestamp: DateTime.now(),
-  );
+    final userMsg = ChatMessage(
+      text: _controller.text,
+      sender: MessageSender.user,
+      timestamp: DateTime.now(),
+    );
 
-  setState(() {
-    _messages.insert(0, userMsg);
-    _isLoading = true;
-  });
-
-  _controller.clear();
-
-  try {
-    // 2. PASAMOS EL TOKEN REAL AL SERVICIO
-    final response = await _aiService.sendMessageToDaiko(userMsg.text, userToken);
-
-    if (!mounted) return;
     setState(() {
-      _messages.insert(0, response);
-      _isLoading = false;
+      _messages.insert(0, userMsg);
+      _isLoading = true;
     });
-  } catch (e) {
-    if (!mounted) return;
-    setState(() { _isLoading = false; });
+
+    _controller.clear();
+
+    try {
+      // CAMBIO AQUÍ: Enviamos el historial actual (_messages) como tercer argumento
+      final response = await _aiService.sendMessageToDaiko(
+        userMsg.text, 
+        userToken, 
+        _messages // <--- Daiko ahora podrá recordar lo que dijeron antes
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _messages.insert(0, response);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -83,16 +85,25 @@ class _AIChatPageState extends State<AIChatPage> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
-                return msg.sender == MessageSender.user
-                    ? _buildUserMessage(msg, isDark, userBubbleColor)
-                    : _buildDaikoMessage(msg, isDark, aiBubbleColor);
+
+                return Container(
+                  // Usamos el timestamp para que la Key sea única y no se reinicie la animación
+                  key: ValueKey(msg.timestamp.millisecondsSinceEpoch),
+                  child: msg.sender == MessageSender.user
+                      ? _buildUserMessage(msg, isDark, userBubbleColor)
+                      // AQUÍ ESTÁ EL CAMBIO: Pasamos 4 argumentos.
+                      // index == 0 es el 'isLast' porque la lista está en 'reverse: true'
+                      : _buildDaikoMessage(
+                          msg, isDark, aiBubbleColor, index == 0),
+                );
               },
             ),
           ),
           if (_isLoading)
             LinearProgressIndicator(
               color: primaryGreen,
-              backgroundColor: isDark ? Colors.white10 : const Color(0xFFECFDF5),
+              backgroundColor:
+                  isDark ? Colors.white10 : const Color(0xFFECFDF5),
             ),
           _buildInputSection(isDark),
         ],
@@ -187,7 +198,12 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildDaikoMessage(ChatMessage msg, bool isDark, Color aiBubbleColor) {
+  Widget _buildDaikoMessage(
+    ChatMessage msg,
+    bool isDark,
+    Color aiBubbleColor,
+    bool isLast
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Row(
@@ -220,17 +236,30 @@ class _AIChatPageState extends State<AIChatPage> {
                       height: 1.5,
                       fontWeight: FontWeight.w500,
                     ),
-                    child: AnimatedTextKit(
-                      animatedTexts: [
-                        TypewriterAnimatedText(
-                          msg.text,
-                          speed: const Duration(milliseconds: 30), // Velocidad de escritura
-                        ),
-                      ],
-                      totalRepeatCount: 1, // Solo se anima una vez
-                      displayFullTextOnTap: true, // Muestra todo si el usuario toca la burbuja
-                      stopPauseOnTap: true,
-                    ),
+                    // Dentro de _buildDaikoMessage
+                    child: isLast
+                        ? AnimatedTextKit(
+                            animatedTexts: [
+                              TypewriterAnimatedText(
+                                msg.text,
+                                speed: const Duration(milliseconds: 30),
+                              ),
+                            ],
+                            totalRepeatCount: 1,
+                            displayFullTextOnTap: true,
+                          )
+                        : Text(
+                            // Si no es el último, mostramos el texto plano de inmediato
+                            msg.text,
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1E293B),
+                              fontSize: 14,
+                              height: 1.5,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                   ),
                   if (msg.type == MessageType.analysis)
                     _buildAnalysisCard(msg, isDark),
@@ -356,8 +385,8 @@ class _AIChatPageState extends State<AIChatPage> {
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.add, color: primaryGreen),
                     hintText: "Ask DAIKO anything...",
-                    hintStyle: TextStyle(
-                        color: isDark ? Colors.white54 : Colors.grey),
+                    hintStyle:
+                        TextStyle(color: isDark ? Colors.white54 : Colors.grey),
                     filled: true,
                     fillColor: isDark
                         ? const Color(0xFF1E293B)

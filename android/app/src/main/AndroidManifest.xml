@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="finara_app_v1"
+        android:label="finara"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

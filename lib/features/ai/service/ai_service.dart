@@ -3,25 +3,45 @@ import 'package:http/http.dart' as http;
 import '../model/chat_message.dart';
 
 class AIService {
+  // Asegúrate de que la URL sea exactamente esta
   final String _urlBase = 'https://daiko-ai.onrender.com/ai/consultar';
 
-  Future<ChatMessage> sendMessageToDaiko(String prompt, String token) async {
-    print("--- DEBUG FLUTTER SERVICE ---");
-    print("URL: $_urlBase");
-    print("TOKEN ENVIADO: Bearer ${token.substring(0, 5)}..."); // Solo el inicio por seguridad
+  Future<ChatMessage> sendMessageToDaiko(
+    String prompt, 
+    String token, 
+    List<ChatMessage> history // <--- Agregamos el historial
+  ) async {
+    
+    // MOCK DATA: Para que Daiko analice algo aunque falle el registro real
+    final List<Map<String, dynamic>> mockGastos = [
+      {"item": "Gasolina Kia Picanto", "valor": 85000, "cat": "Transporte"},
+      {"item": "Goyurt", "valor": 14000, "cat": "Gasto Hormiga"},
+      {"item": "Netflix", "valor": 45000, "cat": "Suscripciones"},
+    ];
 
     try {
-      final url = Uri.parse('$_urlBase?pregunta=${Uri.encodeComponent(prompt)}');
-      final response = await http.get(
-        url,
+      // 1. Preparamos el historial (Role model para la IA, user para ti)
+      final lastMessages = history.take(5).map((m) => {
+        "role": m.sender == MessageSender.user ? "user" : "model",
+        "content": m.text
+      }).toList();
+
+      // 2. CAMBIO CLAVE: Usamos http.post y enviamos JSON
+      final response = await http.post(
+        Uri.parse(_urlBase),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
         },
-      );
+        body: jsonEncode({
+          "pregunta": prompt,
+          "historial": lastMessages,
+          "contexto_gastos": mockGastos,
+          "user_name": "Kevin"
+        }),
+      ).timeout(const Duration(seconds: 20)); // Tiempo de espera para Render
 
-      print("DEBUG SERVER RESPONSE: ${response.statusCode}");
-      print("DEBUG SERVER BODY: ${response.body}");
+      print("DEBUG STATUS: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -31,18 +51,16 @@ class AIService {
           timestamp: DateTime.now(),
         );
       } else {
-        // Si el servidor responde con error (401, 500, etc), lo capturamos aquí
         return ChatMessage(
-          text: "Error ${response.statusCode}: ${response.body}",
+          text: "Error del servidor (${response.statusCode}): ${response.body}",
           sender: MessageSender.daiko,
           timestamp: DateTime.now(),
         );
       }
     } catch (e) {
       print("DEBUG FATAL ERROR: $e");
-      // ESTE ES EL RETURN QUE TE FALTABA PARA QUITAR EL ERROR ROJO
       return ChatMessage(
-        text: "Error de conexión: No se pudo contactar al servidor.",
+        text: "Error de conexión: Verifica que Render esté encendido, Kevin.",
         sender: MessageSender.daiko,
         timestamp: DateTime.now(),
       );
