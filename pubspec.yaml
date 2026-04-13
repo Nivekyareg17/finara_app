@@ -25,15 +25,11 @@ dependencies:
 
   fl_chart: ^0.68.0
   cupertino_icons: ^1.0.8
-  shared_preferences: ^2.5.4
-  # LA LIBRERÍA DE ANIMACIÓN VA AQUÍ:
   animated_text_kit: ^4.2.2
   
   # --- LIBRERÍAS DE TRADUCCIÓN (GOOGLE ML KIT) ---
   google_mlkit_translation: ^0.12.0
   google_mlkit_language_id: ^0.10.0
-
-  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
@@ -48,10 +44,10 @@ flutter:
 
 dependency_overrides:
   flutter_inappwebview: ^6.0.0
-#
-#
-#
-flutter_icons:
-  android: true
+
+flutter_launcher_icons:
+  android: "launcher_icon"
   ios: true
-  image_path: "assets/images/Logo_finara.png"
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#064131"
+  adaptive_icon_foreground: "assets/images/Logo_finara.png"
