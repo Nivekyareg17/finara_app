@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../widgets/translate_widget.dart';
 class TermsScreen extends StatelessWidget {
   const TermsScreen({super.key});
 
@@ -7,12 +7,12 @@ class TermsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Términos y Condiciones"),
+        title: const TranslatedText("Términos y Condiciones"),
       ),
       body: const Padding(
         padding: EdgeInsets.all(20),
         child: SingleChildScrollView(
-          child: Text(
+          child: TranslatedText(
             "Términos y Condiciones – Finara\n\n"
             "1. Uso de la aplicación\n"
             "Finara es una herramienta de gestión financiera personal. El usuario es responsable del uso que haga de la información registrada dentro de la app.\n\n"

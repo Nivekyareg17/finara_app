@@ -1,6 +1,7 @@
 import 'package:finara_app_v1/screens/terms_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../widgets/translate_widget.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -174,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
+                    const TranslatedText(
                       "Finara",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -209,7 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 30),
 
                 //nombre
-                const Text(
+                const TranslatedText(
                   "NOMBRE COMPLETO",
                   style: TextStyle(
                     fontSize: 12,
@@ -236,7 +237,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 //email
-                const Text(
+                const TranslatedText(
                   "CORREO ELECTRÓNICO",
                   style: TextStyle(
                     fontSize: 12,
@@ -263,7 +264,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 //password
-                const Text(
+                const TranslatedText(
                   "CONTRASEÑA",
                   style: TextStyle(
                     fontSize: 12,
@@ -302,7 +303,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 20),
 
-                const Text(
+                const TranslatedText(
                   "CONFIRMAR CONTRASEÑA",
                   style: TextStyle(
                     fontSize: 12,
@@ -392,7 +393,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
+                    child: const TranslatedText(
                       "Crear Cuenta",
                       style: TextStyle(
                           fontSize: 16,
@@ -409,7 +410,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(child: Divider()),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text("O REGÍSTRATE CON"),
+                      child: TranslatedText("O REGÍSTRATE CON"),
                     ),
                     Expanded(child: Divider()),
                   ],
@@ -424,7 +425,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () {},
                         icon: const Icon(Icons.g_mobiledata),
-                        label: const Text("Google"),
+                        label: const TranslatedText("Google"),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -432,7 +433,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () {},
                         icon: const Icon(Icons.apple),
-                        label: const Text("Apple"),
+                        label: const TranslatedText("Apple"),
                       ),
                     ),
                   ],
@@ -466,3 +467,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+

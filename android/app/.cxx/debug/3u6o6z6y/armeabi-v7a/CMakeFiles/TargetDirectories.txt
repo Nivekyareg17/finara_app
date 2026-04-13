@@ -1,0 +1,2 @@
+C:/Users/gueva/Finara/finara_app/android/app/.cxx/debug/3u6o6z6y/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/gueva/Finara/finara_app/android/app/.cxx/debug/3u6o6z6y/armeabi-v7a/CMakeFiles/rebuild_cache.dir

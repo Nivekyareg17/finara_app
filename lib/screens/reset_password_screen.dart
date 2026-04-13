@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-
+import '../widgets/translate_widget.dart';
 class ResetPasswordScreen extends StatefulWidget {
   final String token;
 
@@ -26,12 +26,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Contraseña actualizada")),
+        const SnackBar(content: TranslatedText("Contraseña actualizada")),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al cambiar contraseña")),
+        const SnackBar(content: TranslatedText("Error al cambiar contraseña")),
       );
     }
   }
@@ -39,7 +39,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Nueva contraseña")),
+      appBar: AppBar(title: const TranslatedText("Nueva contraseña")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -56,7 +56,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               onPressed: isLoading ? null : resetPassword,
               child: isLoading
                   ? const CircularProgressIndicator()
-                  : const Text("Actualizar"),
+                  : const TranslatedText("Actualizar"),
             ),
           ],
         ),

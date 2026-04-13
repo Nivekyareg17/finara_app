@@ -2,6 +2,7 @@ import 'package:finara_app_v1/services/api_service.dart';
 import 'package:flutter/material.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'video_list_screen.dart';
+import '../widgets/translate_widget.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -52,7 +53,7 @@ class _VideoScreenState extends State<VideoScreen> {
                   color: Colors.white, size: 18),
             ),
             const SizedBox(width: 8),
-            const Text(
+            const TranslatedText(
               "Learn",
               style: TextStyle(
                 color: Color(0xFF0A6D52),
@@ -124,7 +125,7 @@ class _VideoScreenState extends State<VideoScreen> {
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                TranslatedText(
                                   category["title"],
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -132,7 +133,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                TranslatedText(
                                   category["description"],
                                   style: TextStyle(
                                     color: Colors.grey[600],

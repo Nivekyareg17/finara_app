@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+// 1. IMPORTANTE: Importa tu widget de traducción
+import 'translate_widget.dart'; 
 
-/// Tarjeta que muestra métricas (ej: lecciones completadas)
 class StatCard extends StatelessWidget {
   final String title, count, unit;
   final IconData icon;
@@ -31,12 +32,12 @@ class StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Título + icono
           Row(
             children: [
               Icon(icon, color: accentColor, size: 18),
               const SizedBox(width: 8),
-              Text(
+              // 2. CAMBIO: Título traducido
+              TranslatedText(
                 title,
                 style: const TextStyle(
                   fontSize: 10,
@@ -49,11 +50,11 @@ class StatCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          /// Valor principal
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
+              // 3. NOTA: El número se queda como Text normal (los números no se traducen)
               Text(
                 count,
                 style: TextStyle(
@@ -63,7 +64,11 @@ class StatCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              Text(unit, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              // 4. CAMBIO: Unidad traducida (ej: "Lecciones" -> "Lessons")
+              TranslatedText(
+                unit, 
+                style: const TextStyle(fontSize: 12, color: Colors.grey)
+              ),
             ],
           ),
         ],

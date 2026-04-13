@@ -2,6 +2,7 @@ import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:finara_app_v1/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../widgets/translate_widget.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -103,14 +104,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 15),
 
-                const Text(
+                const TranslatedText(
                   "Finara",
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
 
                 const SizedBox(height: 5),
 
-                const Text(
+                const TranslatedText(
                   "ELEVATE YOUR WEALTH",
                   style: TextStyle(
                     letterSpacing: 2,
@@ -178,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: const Text("Recuperar contraseña"),
+                            title: const TranslatedText("Recuperar contraseña"),
                             content: TextField(
                               controller: emailController,
                               decoration: const InputDecoration(
@@ -188,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: const Text("Cancelar"),
+                                child: const TranslatedText("Cancelar"),
                               ),
                               ElevatedButton(
                                 onPressed: () async {
@@ -206,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     isError: !success,
                                   );
                                 },
-                                child: const Text("Enviar"),
+                                child: const TranslatedText("Enviar"),
                               ),
                             ],
                           );
@@ -267,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       }
                     },
-                    child: const Text(
+                    child: const TranslatedText(
                       "Sign In",
                       style: TextStyle(
                         fontSize: 16,
@@ -282,12 +283,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account? "),
+                    const TranslatedText("Don't have an account? "),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, "/register");
                       },
-                      child: const Text(
+                      child: const TranslatedText(
                         "Create an Account",
                         style: TextStyle(
                           color: Color(0xFF18B47A),
@@ -299,7 +300,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 25),
-                const Text("OR CONTINUE WITH"),
+                const TranslatedText("OR CONTINUE WITH"),
                 const SizedBox(height: 15),
 
                 Row(

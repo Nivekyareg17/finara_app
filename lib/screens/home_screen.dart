@@ -4,6 +4,7 @@ import '../widgets/QuickActionTile.dart';
 import '../widgets/quick_wins.dart';
 import '../widgets/statcard.dart';
 import '../widgets/custom_bottom_nav.dart';
+import '../widgets/translate_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,23 +18,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Detecta si el tema actual es oscuro
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Color principal de la app
-    const Color primaryColor = Color(0xFF064E3B);
-
     return Scaffold(
-      // Fondo dinámico según tema
-      backgroundColor:
-          isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
-
-      // APP BAR
+      backgroundColor: isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
       appBar: AppBar(
         backgroundColor: isDark ? Colors.black : Colors.white,
         elevation: 0,
-
-        //Logo + nombre
         title: Row(
           children: [
             Image.asset(
@@ -45,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Color.fromRGBO(6, 78, 59, 1)),
             ),
             const SizedBox(width: 12),
+            // El nombre de la marca suele quedarse igual, pero si quieres puedes usar TranslatedText
             const Text(
               "Finara",
               style: TextStyle(
@@ -55,13 +47,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-
-      //BODY
-      //Contenido principal con scroll
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
-          //ESTADÍSTICAS
+          // ESTADÍSTICAS (StatCard debe recibir Strings para traducir dentro o fuera)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
@@ -89,16 +78,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          //CARRUSEL
           const FinaraQuickWins(),
 
           const SizedBox(height: 25),
 
-          //ACCIONES RÁPIDAS
+          // TÍTULO DE SECCIÓN
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'QUICK ACTIONS',
+            child: TranslatedText(
+              'ACCIONES RÁPIDAS', // Cambiado de QUICK ACTIONS
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -110,19 +98,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 16),
 
-          //Acceso al chat IA
+          // ACCESO AL CHAT IA
           QuickActionTile(
-            title: "Ask Finara AI",
-            subtitle: "Expert advisory 24/7",
+            title: "Pregunta a Finara AI", // Traducido base
+            subtitle: "Asesoría experta 24/7", // Traducido base
             icon: Icons.chat_bubble_outline_rounded,
             iconColor: const Color(0xFF1E8449),
             onTap: () => Navigator.pushReplacementNamed(context, "/daiko_ai"),
           ),
 
-          //Vista de mercado
+          // VISTA DE MERCADO
           QuickActionTile(
-            title: "Stock Market",
-            subtitle: "View live stock prices",
+            title: "Mercado de Valores", // Traducido base
+            subtitle: "Ver precios en vivo", // Traducido base
             icon: Icons.show_chart,
             iconColor: Colors.green,
             onTap: () {
@@ -135,10 +123,10 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
 
-          // Ruta de aprendizaje
+          // RUTA DE APRENDIZAJE
           QuickActionTile(
-            title: "Learning Path",
-            subtitle: "3 modules to complete today",
+            title: "Ruta de Aprendizaje", // Traducido base
+            subtitle: "3 módulos para completar hoy", // Traducido base
             icon: Icons.school_outlined,
             iconColor: Colors.purple,
             onTap: () => Navigator.pushReplacementNamed(context, "/video"),
@@ -147,8 +135,6 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 80),
         ],
       ),
-
-      //NAVBAR GLOBAL
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),
     );
   }

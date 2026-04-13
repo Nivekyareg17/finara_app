@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../widgets/translate_widget.dart';
 class DetalleLecturaScreen extends StatelessWidget {
   final Map lectura;
 
@@ -11,13 +11,13 @@ class DetalleLecturaScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(lectura['titulo']),
+        title: TranslatedText(lectura['titulo']),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            Text(
+            TranslatedText(
               lectura['titulo'],
               style: const TextStyle(
                 fontSize: 22,
@@ -36,7 +36,7 @@ class DetalleLecturaScreen extends StatelessWidget {
 
             ...parrafos.map((p) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
+              child: TranslatedText(
                 p,
                 style: const TextStyle(fontSize: 16, height: 1.5),
               ),

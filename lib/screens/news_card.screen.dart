@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../models/news_model.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:finara_app_v1/services/translation_service.dart'; 
+import '../widgets/translate_widget.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
@@ -36,7 +38,7 @@ class NewsScreen extends StatelessWidget {
                   color: Colors.white, size: 18),
             ),
             SizedBox(width: 8),
-            Text(
+            TranslatedText(
               "Finara News",
               style: TextStyle(
                   color:Color.fromARGB(255, 10, 109, 82),
@@ -143,12 +145,12 @@ class NewsScreen extends StatelessWidget {
                 Row(
                   children: [
                     SizedBox(width: 8),
-                    Text(noticia.tiempoHace,
+                    TranslatedText(noticia.tiempoHace,
                         style: TextStyle(color: const Color.fromARGB(221, 255, 255, 255), fontSize: 11)),
                   ],
                 ),
                 SizedBox(height: 12),
-                Text(noticia.titulo,
+                TranslatedText(noticia.titulo,
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -160,7 +162,7 @@ class NewsScreen extends StatelessWidget {
                     Icon(Icons.access_time_outlined,
                         color: const Color.fromARGB(137, 56, 55, 55), size: 14),
                     SizedBox(width: 6),
-                    Text(noticia.tiempoLectura,
+                    TranslatedText(noticia.tiempoLectura,
                         style: TextStyle(color: Colors.white54, fontSize: 11)),
                     Spacer(),
                     IconButton(

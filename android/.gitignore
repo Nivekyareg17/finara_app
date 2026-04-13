@@ -1,14 +1,23 @@
-gradle-wrapper.jar
-/.gradle
-/captures/
-/gradlew
-/gradlew.bat
-/local.properties
-GeneratedPluginRegistrant.java
-.cxx/
+# Archivos de Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
 
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
-key.properties
-**/*.keystore
-**/*.jks
+# Archivos de Android
+.gradle/
+local.properties
+**/android/**/generated/
+**/android/app/src/main/res/generated/
+**/android/.cxx
+**/android/app/build.gradle
+
+# Archivos de iOS
+.pub-cache/
+.project
+DerivedData/
+
+# Otros
+.DS_Store
+*.log

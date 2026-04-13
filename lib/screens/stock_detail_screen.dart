@@ -1,7 +1,9 @@
+import 'package:finara_app_v1/widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/stock_model.dart';
 import '../services/stock_service.dart';
+
 
 class StockDetailScreen extends StatefulWidget {
   final Stock stock;
@@ -135,7 +137,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
             const SizedBox(height: 30),
 
             // INFO EXTRA
-            const Text(
+            const TranslatedText(
               "Información",
               style: TextStyle(
                 fontSize: 18,

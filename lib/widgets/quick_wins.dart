@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../screens/detalle_lectura_screen.dart';
 import '../screens/lecturas_screen.dart';
+import 'translate_widget.dart'; // 1. Importamos el traductor
 
 class FinaraQuickWins extends StatelessWidget {
   const FinaraQuickWins({super.key});
@@ -20,7 +21,8 @@ class FinaraQuickWins extends StatelessWidget {
         if (snapshot.hasError) {
           return const Padding(
             padding: EdgeInsets.all(16),
-            child: Text("Error al cargar lecturas"),
+            // 2. Traducción para el mensaje de error
+            child: TranslatedText("Error al cargar lecturas"),
           );
         }
 
@@ -29,7 +31,8 @@ class FinaraQuickWins extends StatelessWidget {
         if (lecturas == null || lecturas.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(16),
-            child: Text("No hay lecturas"),
+            // 3. Traducción para estado vacío
+            child: TranslatedText("No hay lecturas"),
           );
         }
 
@@ -38,13 +41,13 @@ class FinaraQuickWins extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// TÍTULO + BOTÓN
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  // 4. Traducción del título de sección
+                  const TranslatedText(
                     'LECTURAS',
                     style: TextStyle(
                       fontSize: 18,
@@ -61,7 +64,8 @@ class FinaraQuickWins extends StatelessWidget {
                         ),
                       );
                     },
-                    child: const Text("Ver más"),
+                    // 5. Traducción del botón "Ver más"
+                    child: const TranslatedText("Ver más"),
                   )
                 ],
               ),
@@ -69,7 +73,6 @@ class FinaraQuickWins extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            /// CARRUSEL DINÁMICO
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 200),
               child: ListView(
@@ -90,6 +93,7 @@ class FinaraQuickWins extends StatelessWidget {
                       child: SizedBox(
                         width: 280,
                         child: LecturaCard(
+                          // 6. Pasamos los datos dinámicos
                           titulo: lectura['titulo'],
                           tiempo: lectura['tiempo_lectura'],
                         ),
@@ -106,7 +110,6 @@ class FinaraQuickWins extends StatelessWidget {
   }
 }
 
-/// TARJETA (igual estilo que la tuya)
 class LecturaCard extends StatelessWidget {
   final String titulo;
   final String tiempo;
@@ -128,11 +131,9 @@ class LecturaCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Título
-          Text(
+          // 7. Traducción del Título de la lectura (Dinámico)
+          TranslatedText(
             titulo,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -142,7 +143,6 @@ class LecturaCard extends StatelessWidget {
 
           const Spacer(),
 
-          /// Footer
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -150,7 +150,8 @@ class LecturaCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.access_time, color: Colors.white, size: 12),
                   const SizedBox(width: 4),
-                  Text(
+                  // 8. Traducción del tiempo (ej: "5 min" -> "5 mins")
+                  TranslatedText(
                     tiempo,
                     style: const TextStyle(
                       color: Colors.white,
@@ -166,7 +167,8 @@ class LecturaCard extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Text(
+                // 9. Traducción de la etiqueta del botón de la tarjeta
+                child: const TranslatedText(
                   "LEER",
                   style: TextStyle(
                     color: Color(0xFF064131),
