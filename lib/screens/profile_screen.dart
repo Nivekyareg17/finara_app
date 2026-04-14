@@ -494,7 +494,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final amount =
         TextEditingController(text: edit != null ? edit.amount.toString() : "");
     String type = edit?.type ?? "gasto";
-    int selectedCategoryId = 0;
+    int? selectedCategoryId;
 
     showModalBottomSheet(
       context: context,
@@ -509,9 +509,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             final filteredCategories =
                 categories.where((c) => c.type == type).toList();
+
             if (filteredCategories.isNotEmpty) {
-              if (!filteredCategories
-                  .any((c) => int.parse(c.id) == selectedCategoryId)) {
+              if (selectedCategoryId == null ||
+                  !filteredCategories
+                      .any((c) => int.parse(c.id) == selectedCategoryId)) {
                 selectedCategoryId = int.parse(filteredCategories.first.id);
               }
             }
@@ -644,8 +646,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                   setStateDialog(() {
                                     if (categories.isNotEmpty) {
-                                      final nuevaCat =
-                                          categories.last;
+                                      final nuevaCat = categories.last;
                                       selectedCategoryId =
                                           int.parse(nuevaCat.id);
                                     }
@@ -781,7 +782,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       DateTime fechaFinal =
                                           DateFormat("MM/dd/yyyy")
                                               .parse(dateController.text);
-                                      int categoryId = selectedCategoryId;
+                                      if (selectedCategoryId == null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  "Selecciona una categoría")),
+                                        );
+                                        return;
+                                      }
+
+                                      int categoryId = selectedCategoryId!;
 
                                       if (montoFinal <= 0) {
                                         ScaffoldMessenger.of(context)
