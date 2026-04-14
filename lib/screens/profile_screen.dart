@@ -108,7 +108,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadCategories() async {
-    final data = await ApiService.getTransactionCategories();
+    final auth = context.read<AuthProvider>();
+    final data = await ApiService.getTransactionCategories(auth.token!);
 
     setState(() {
       categories = data.map((e) => CategoryModel.fromMap(e)).toList();
