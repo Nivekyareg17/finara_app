@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'video_list_screen.dart';
 import '../widgets/translate_widget.dart';
+import '../widgets/app_drawer.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -65,6 +66,7 @@ class _VideoScreenState extends State<VideoScreen> {
           ],
         ),
       ),
+      drawer: const AppDrawer(),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(

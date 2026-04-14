@@ -5,6 +5,7 @@ import '../widgets/custom_bottom_nav.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:finara_app_v1/services/translation_service.dart'; 
 import '../widgets/translate_widget.dart';
+import '../widgets/app_drawer.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
@@ -48,6 +49,7 @@ class NewsScreen extends StatelessWidget {
           ],
         ),
       ),
+      drawer: const AppDrawer(),
       body: Column(
         children: [
           _buildStockTicker(),

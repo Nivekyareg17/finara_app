@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../widgets/translate_widget.dart';
+import '../widgets/app_drawer.dart';
+
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
 
@@ -84,6 +86,7 @@ class _AdminScreenState extends State<AdminScreen> {
           ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: ListView.builder(
         itemCount: users.length,
         itemBuilder: (context, i) {

@@ -98,7 +98,7 @@ class _AIChatPageState extends State<AIChatPage> {
     final userBubbleColor = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
 
     return Scaffold(
-      // --- MENÚ LATERAL (DRAWER) ---
+      //MENÚ LATERAL (DRAWER
       drawer: Drawer(
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         child: Column(
@@ -149,11 +149,15 @@ class _AIChatPageState extends State<AIChatPage> {
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final session = snapshot.data![index];
+
+                      final sessionId = session['session_id']?.toString() ?? "";
+                      final shortId = sessionId.length > 8
+                          ? sessionId.substring(0, 8)
+                          : sessionId;
                       // Usamos el session_id para mostrar algo (puedes usar session_title si lo agregaste)
                       return ListTile(
                         leading: const Icon(Icons.history, size: 20),
-                        title: Text("Chat ${session['session_id'].toString().substring(0, 8)}...",
-                            style: const TextStyle(fontSize: 14)),
+                        title: Text("Chat $shortId..."),
                         onTap: () {
                           _cargarSesion(session['session_id'], userToken);
                           Navigator.pop(context);

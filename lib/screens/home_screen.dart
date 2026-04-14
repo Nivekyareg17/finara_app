@@ -7,6 +7,7 @@ import '../widgets/quick_wins.dart';
 import '../widgets/statcard.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/translate_widget.dart';
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -70,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          drawer: const AppDrawer(),
           body: ListView(
             padding: const EdgeInsets.symmetric(vertical: 20),
             children: [
