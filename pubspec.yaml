@@ -48,6 +48,6 @@ dependency_overrides:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/app_icon.png"
+  image_path: "assets/icon/Logo_finara.png"
   adaptive_icon_background: "#064131"
   adaptive_icon_foreground: "assets/images/Logo_finara.png"
