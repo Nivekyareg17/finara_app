@@ -4,7 +4,6 @@ class TransactionModel {
   double amount;
   String description;
 
-  // 🔥 NUEVO SISTEMA
   String categoryId;
   String categoryName;
 
@@ -39,13 +38,11 @@ class TransactionModel {
       type: map["type"],
       amount: (map["amount"] as num).toDouble(),
       description: map["description"],
-
-      // 🔥 ADAPTACIÓN INTELIGENTE (para que no rompa nada)
-      categoryId: map["categoryId"]?.toString() ?? "0",
-      categoryName: map["categoryName"] ??
-          map["category"] ?? // compatibilidad vieja
+      categoryId: (map["category_id"] ?? map["categoryId"])?.toString() ?? "0",
+      categoryName: map["category_name"] ??
+          map["categoryName"] ??
+          map["category"] ??
           "General",
-
       date: map["date"] ?? "",
       imagePath: map["imagePath"],
     );

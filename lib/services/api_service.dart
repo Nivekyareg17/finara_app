@@ -85,19 +85,26 @@ class ApiService {
   ) async {
     final url = Uri.parse("$baseUrl/transactions/");
 
+    final body = jsonEncode({
+      "type": type,
+      "amount": amount,
+      "description": description,
+      "category_id": categoryId,
+    });
+
+    print("CREATE BODY ENVIADO: $body");
+
     final response = await http.post(
       url,
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
       },
-      body: jsonEncode({
-        "type": type,
-        "amount": amount,
-        "description": description,
-        "category_id": categoryId,
-      }),
+      body: body,
     );
+
+    print("CREATE STATUS: ${response.statusCode}");
+    print("CREATE BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
   }
@@ -157,7 +164,6 @@ class ApiService {
 
     return response.statusCode == 200;
   }
-
 
   static Future<List<dynamic>> getTransactionCategories(String token) async {
     final response = await http.get(
