@@ -638,15 +638,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                 if (success) {
                                   await loadCategories();
-                                  setState(() {});
-                                  print(categories);
-                                  print(selectedCategoryId);
+
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 300));
+
                                   setStateDialog(() {
-                                    final nuevaCat = categories.firstWhere(
-                                      (c) => c.name == nueva && c.type == type,
-                                      orElse: () => categories.last,
-                                    );
-                                    selectedCategoryId = int.parse(nuevaCat.id);
+                                    if (categories.isNotEmpty) {
+                                      final nuevaCat =
+                                          categories.last;
+                                      selectedCategoryId =
+                                          int.parse(nuevaCat.id);
+                                    }
                                   });
                                 }
                               }
