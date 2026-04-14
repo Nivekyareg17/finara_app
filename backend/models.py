@@ -59,6 +59,8 @@ class Category(Base):
     type = Column(String)
 
     transactions = relationship("Transaction", back_populates="category")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
 
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"

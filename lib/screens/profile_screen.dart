@@ -107,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void loadCategories() async {
+  Future<void> loadCategories() async {
     final data = await ApiService.getTransactionCategories();
 
     setState(() {
@@ -622,6 +622,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: () async {
+                              String? nueva =
+                                  await _mostrarDialogoNuevaCategoria();
+
+                              if (nueva != null && nueva.isNotEmpty) {
+                                final auth = context.read<AuthProvider>();
+
+                                bool success = await ApiService.createCategory(
+                                  auth.token!,
+                                  nueva,
+                                  type,
+                                );
+
+                                if (success) {
+                                  await loadCategories();
+
+                                  setStateDialog(() {
+                                    final nuevaCat = categories.firstWhere(
+                                      (c) => c.name == nueva && c.type == type,
+                                    );
+                                    selectedCategoryId = int.parse(nuevaCat.id);
+                                  });
+                                }
+                              }
+                            },
+                            child: const Text(
+                              "Agregar categoría",
+                              style: TextStyle(color: Colors.green),
+                            ),
+                          ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             decoration: BoxDecoration(

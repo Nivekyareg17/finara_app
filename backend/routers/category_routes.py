@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from backend import schemas
+from backend.auth import verify_token
 from database import SessionLocal
-from models import Category
+from models import Category, User
 
 router = APIRouter(
     prefix="/categories",
@@ -17,4 +19,26 @@ def get_db():
 
 @router.get("/")
 def get_categories(db: Session = Depends(get_db)):
-    return db.query(Category).all()
+    db.query(Category).filter(Category.user_id == user.id).all()
+
+
+@router.post("/")
+def create_category(
+    category: schemas.CategoryCreate,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    data = verify_token(token)
+    user = db.query(User).filter(User.email == data["sub"]).first()
+
+    new_category = Category(
+        name=category.name,
+        type=category.type,
+        user_id=user.id
+    )
+
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
+
+    return new_category

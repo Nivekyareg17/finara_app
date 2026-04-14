@@ -42,6 +42,11 @@ class TransactionResponse(BaseModel):
         orm_mode = True
         
 
+class CategoryCreate(BaseModel):
+    name: str
+    type: Literal["gasto", "ingreso"]
+
+    
 # VIDEO CATEGORY
 class VideoCategoryCreate(BaseModel):
     title: str

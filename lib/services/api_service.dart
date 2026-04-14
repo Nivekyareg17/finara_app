@@ -170,6 +170,28 @@ class ApiService {
     }
   }
 
+  static Future<bool> createCategory(
+    String token,
+    String name,
+    String type,
+  ) async {
+    final url = Uri.parse("$baseUrl/categories/");
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+      body: jsonEncode({
+        "name": name,
+        "type": type,
+      }),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
   static Future<bool> resetPassword(String token, String newPassword) async {
     final url = Uri.parse("$baseUrl/auth/reset-password");
 
