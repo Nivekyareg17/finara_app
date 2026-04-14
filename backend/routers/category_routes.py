@@ -25,14 +25,25 @@ def get_categories(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    data = verify_token(token)
-    user = db.query(User).filter(User.email == data["sub"]).first()
+    try:
+        data = verify_token(token)
+        print("TOKEN DATA:", data)
 
-    categories = db.query(Category).filter(
-        Category.user_id == user.id
-    ).all()
+        user = db.query(User).filter(User.email == data["sub"]).first()
+        print("USER:", user)
 
-    return categories
+        if not user:
+            return {"error": "Usuario no encontrado"}
+
+        categories = db.query(Category).filter(
+            Category.user_id == user.id
+        ).all()
+
+        return categories
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return {"error": str(e)}
 
 
 @router.post("/")
