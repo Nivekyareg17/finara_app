@@ -158,14 +158,17 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  static Future<List<dynamic>> getTransactionCategories() async {
+
+  static Future<List<dynamic>> getTransactionCategories(String token) async {
     final response = await http.get(
       Uri.parse("$baseUrl/categories/"),
+      headers: {"Authorization": "Bearer $token"},
     );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
+      print("Error categorías: ${response.statusCode} - ${response.body}");
       return [];
     }
   }

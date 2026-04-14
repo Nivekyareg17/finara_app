@@ -108,7 +108,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadCategories() async {
-    final data = await ApiService.getTransactionCategories();
+    final auth = context.read<AuthProvider>();
+    final data = await ApiService.getTransactionCategories(auth.token!);
 
     setState(() {
       categories = data.map((e) => CategoryModel.fromMap(e)).toList();
@@ -484,7 +485,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void showForm({TransactionModel? edit}) {
+  void showForm({TransactionModel? edit}) async {
+    await loadCategories();
+    List<CategoryModel> localCategories = List.from(categories);
     final dateController = TextEditingController(
         text: edit != null
             ? "10/27/2023"
@@ -508,7 +511,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final isDark = Theme.of(context).brightness == Brightness.dark;
 
             final filteredCategories =
-                categories.where((c) => c.type == type).toList();
+                localCategories.where((c) => c.type == type).toList();
 
             if (filteredCategories.isNotEmpty) {
               if (selectedCategoryId == null ||
@@ -640,13 +643,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                 if (success) {
                                   await loadCategories();
-
-                                  await Future.delayed(
-                                      const Duration(milliseconds: 300));
-
                                   setStateDialog(() {
-                                    if (categories.isNotEmpty) {
-                                      final nuevaCat = categories.last;
+                                    localCategories = List.from(categories);
+                                    if (localCategories.isNotEmpty) {
+                                      final nuevaCat = localCategories.last;
                                       selectedCategoryId =
                                           int.parse(nuevaCat.id);
                                     }
