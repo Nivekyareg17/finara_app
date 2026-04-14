@@ -67,11 +67,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     loadUser();
-    loadTransactions();
-    loadCategories();
+    _loadData();
   }
 
-  void loadTransactions() async {
+  Future<void> loadTransactions() async {
     final auth = context.read<AuthProvider>();
 
     final data = await ApiService.getTransactions(auth.token!);
@@ -105,6 +104,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         email = "";
       });
     }
+  }
+
+  Future<void> _loadData() async {
+    await loadCategories();
+    await loadTransactions();
   }
 
   Future<void> loadCategories() async {
@@ -420,13 +424,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                t.description,
+                                categoryName,
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                categoryName,
+                                t.description,
                                 style: TextStyle(
                                     color: Colors.grey[500], fontSize: 12),
                               ),
@@ -633,8 +637,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await _mostrarDialogoNuevaCategoria();
 
                               if (nueva != null && nueva.isNotEmpty) {
-                                final auth = context.read<AuthProvider>();
+                                // Validar duplicado localmente
+                                if (localCategories.any((c) =>
+                                    c.name.toLowerCase() ==
+                                    nueva.toLowerCase())) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text("Esa categoría ya existe")),
+                                  );
+                                  return;
+                                }
 
+                                final auth = context.read<AuthProvider>();
                                 bool success = await ApiService.createCategory(
                                   auth.token!,
                                   nueva,
@@ -731,7 +746,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 25),
 
                           // --- AQUÍ REGRESA LA DESCRIPCIÓN (NOTAS) ---
-                          const TranslatedText("Notas (Opcional)",
+                          const TranslatedText("Notas",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
@@ -800,6 +815,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           const SnackBar(
                                               content: TranslatedText(
                                                   "Por favor ingresa un monto válido")),
+                                        );
+                                        return;
+                                      }
+
+                                      if (desc.text.trim().isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: TranslatedText(
+                                                  "Por favor ingresa una descripción")),
                                         );
                                         return;
                                       }
