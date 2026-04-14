@@ -47,6 +47,21 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="transactions")
 
+    category_id = Column(Integer, ForeignKey("categories.id"))
+    category = relationship("Category", back_populates="transactions")
+
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    type = Column(String)
+
+    transactions = relationship("Transaction", back_populates="category")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
+
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 

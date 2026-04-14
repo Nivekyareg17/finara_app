@@ -1,3 +1,4 @@
+import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,6 @@ import 'package:finara_app_v1/providers/theme_provider.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
 import '../widgets/custom_bottom_nav.dart';
-import 'package:finara_app_v1/models/category_model.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:finara_app_v1/providers/languaje_provider.dart';
@@ -61,12 +61,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String email = "";
 
   List<TransactionModel> transactions = [];
+  List<CategoryModel> categories = [];
 
   @override
   void initState() {
     super.initState();
     loadUser();
     loadTransactions();
+    loadCategories();
   }
 
   void loadTransactions() async {
@@ -102,6 +104,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         name = "Error cargando";
         email = "";
       });
+    }
+  }
+
+  Future<void> loadCategories() async {
+    final data = await ApiService.getTransactionCategories();
+
+    setState(() {
+      categories = data.map((e) => CategoryModel.fromMap(e)).toList();
+    });
+  }
+
+  String getCategoryName(int categoryId) {
+    try {
+      return categories
+          .firstWhere(
+            (c) => int.parse(c.id) == categoryId,
+          )
+          .name;
+    } catch (e) {
+      return "General";
     }
   }
 
@@ -361,8 +383,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 itemBuilder: (context, index) {
                   final t = transactions[index];
                   final bool isIngreso = t.type == "ingreso";
-                  final catData = _getCategoryData(t.categoryName);
-
+                  final categoryName =
+                      getCategoryName(int.tryParse(t.categoryId) ?? 0);
+                  final catData = _getCategoryData(categoryName);
                   return Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
@@ -402,7 +425,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "04/04/2026", //Aquí puedes usar t.createdAt si tu API lo manda
+                                categoryName,
+                                style: TextStyle(
+                                    color: Colors.grey[500], fontSize: 12),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "14/04/2026",
                                 style: TextStyle(
                                     color: Colors.grey[500], fontSize: 12),
                               ),
@@ -465,25 +494,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final amount =
         TextEditingController(text: edit != null ? edit.amount.toString() : "");
     String type = edit?.type ?? "gasto";
-    List<String> categoriasGasto = ["Mercado", "Ahorro", "Gastos Adicionales"];
-    List<String> categoriasIngreso = ["Pago del Trabajo", "Ahorro", "Regalo"];
-
-    String selectedCategory = categoriasGasto.contains(edit?.description)
-        ? edit!.description
-        : "Mercado";
-
-    if (edit != null) {
-      if (type == "gasto" && !categoriasGasto.contains(edit.description)) {
-        categoriasGasto.add(edit.description);
-      } else if (type == "ingreso" &&
-          !categoriasIngreso.contains(edit.description)) {
-        categoriasIngreso.add(edit.description);
-      }
-    }
+    int selectedCategoryId = 0;
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Importante para que no se corte
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) {
         bool isLoadingDialog = false;
@@ -492,8 +507,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context, setStateDialog) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
 
+            final filteredCategories =
+                categories.where((c) => c.type == type).toList();
+            if (filteredCategories.isNotEmpty) {
+              if (!filteredCategories
+                  .any((c) => int.parse(c.id) == selectedCategoryId)) {
+                selectedCategoryId = int.parse(filteredCategories.first.id);
+              }
+            }
+
             return Container(
-              // Ajustamos la altura para que ocupe el 85% de la pantalla como en la imagen
               height: MediaQuery.of(context).size.height * 0.85,
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -547,7 +570,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     type,
                                     (v) => setStateDialog(() {
                                           type = v;
-                                          selectedCategory = "Mercado";
                                         }),
                                     isDark),
                                 _buildTypeButton(
@@ -555,7 +577,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     type,
                                     (v) => setStateDialog(() {
                                           type = v;
-                                          selectedCategory = "Pago del Trabajo";
                                         }),
                                     isDark),
                               ],
@@ -601,6 +622,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: () async {
+                              String? nueva =
+                                  await _mostrarDialogoNuevaCategoria();
+
+                              if (nueva != null && nueva.isNotEmpty) {
+                                final auth = context.read<AuthProvider>();
+
+                                bool success = await ApiService.createCategory(
+                                  auth.token!,
+                                  nueva,
+                                  type,
+                                );
+
+                                if (success) {
+                                  await loadCategories();
+
+                                  setStateDialog(() {
+                                    final nuevaCat = categories.firstWhere(
+                                      (c) => c.name == nueva && c.type == type,
+                                    );
+                                    selectedCategoryId = int.parse(nuevaCat.id);
+                                  });
+                                }
+                              }
+                            },
+                            child: const Text(
+                              "Agregar categoría",
+                              style: TextStyle(color: Colors.green),
+                            ),
+                          ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             decoration: BoxDecoration(
@@ -608,62 +660,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               borderRadius: BorderRadius.circular(15),
                               border: Border.all(color: Colors.grey[200]!),
                             ),
-                            child: DropdownButton<String>(
-                              value: selectedCategory,
+                            child: DropdownButton<int>(
+                              value: selectedCategoryId,
                               isExpanded: true,
                               underline: const SizedBox(),
                               icon: const Icon(Icons.keyboard_arrow_down),
-                              items: [
-                                // Usamos las variables que definiste arriba, no listas estáticas
-                                ...(type == "gasto"
-                                        ? categoriasGasto
-                                        : categoriasIngreso)
-                                    .map((cat) => DropdownMenuItem(
-                                          value: cat,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                  _getCategoryData(cat)['icon'],
-                                                  color: _getCategoryData(
-                                                      cat)['color'],
-                                                  size: 20),
-                                              const SizedBox(width: 12),
-                                              Text(cat),
-                                            ],
-                                          ),
-                                        )),
-                                const DropdownMenuItem(
-                                  value: "add_new",
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.add, color: Colors.green),
-                                      SizedBox(width: 12),
-                                      TranslatedText("Agregar categoría"),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              onChanged: (v) async {
-                                if (v == "add_new") {
-                                  String? nueva =
-                                      await _mostrarDialogoNuevaCategoria();
-                                  if (nueva != null && nueva.isNotEmpty) {
-                                    setStateDialog(() {
-                                      // 1. IMPORTANTE: Agregarla a la lista para que el Dropdown la reconozca
-                                      if (type == "gasto") {
-                                        categoriasGasto.add(nueva);
-                                      } else {
-                                        categoriasIngreso.add(nueva);
-                                      }
-                                      // 2. Ahora sí la puedes seleccionar sin que explote
-                                      selectedCategory = nueva;
-                                    });
-                                  }
-                                } else {
-                                  setStateDialog(() {
-                                    selectedCategory = v!;
-                                  });
-                                }
+                              items: filteredCategories.map((cat) {
+                                return DropdownMenuItem<int>(
+                                  value: int.parse(cat.id),
+                                  child: Text(cat.name),
+                                );
+                              }).toList(),
+                              onChanged: (v) {
+                                setStateDialog(() {
+                                  selectedCategoryId = v!;
+                                });
                               },
                             ),
                           ),
@@ -765,15 +776,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       DateTime fechaFinal =
                                           DateFormat("MM/dd/yyyy")
                                               .parse(dateController.text);
-                                      int categoryId = categoriasGasto
-                                              .contains(selectedCategory)
-                                          ? categoriasGasto
-                                                  .indexOf(selectedCategory) +
-                                              1
-                                          : 0; // ID simulado basado en la posición
-                                      int typeInt = type == "Gasto"
-                                          ? 1
-                                          : 2; // 1 para ingreso, 2 para gasto
+                                      int categoryId = selectedCategoryId;
 
                                       if (montoFinal <= 0) {
                                         ScaffoldMessenger.of(context)
@@ -796,10 +799,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         success =
                                             await ApiService.createTransaction(
                                           auth.token!,
-                                          montoFinal.toString(),
-                                          typeInt.toDouble(),
-                                          selectedCategory,
+                                          type,
+                                          montoFinal,
                                           desc.text,
+                                          categoryId,
                                         );
                                       } else {
                                         // ES EDICIÓN
@@ -807,10 +810,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             await ApiService.updateTransaction(
                                           auth.token!,
                                           edit.id!,
-                                          montoFinal.toString(),
-                                          typeInt.toDouble(),
-                                          selectedCategory,
+                                          type,
+                                          montoFinal,
                                           desc.text,
+                                          categoryId,
                                         );
                                       }
 

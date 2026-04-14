@@ -28,18 +28,25 @@ class TransactionCreate(BaseModel):
     amount: float = Field(..., gt=0)
     type: Literal["ingreso", "gasto"]
     description: str = Field(..., min_length=1, max_length=100)
+    category_id: int
 
 
 class TransactionResponse(BaseModel):
     id: int
-    amount: int
+    amount: float
     type: str
     description: str
+    category_id: int
 
     class Config:
         orm_mode = True
+        
 
+class CategoryCreate(BaseModel):
+    name: str
+    type: Literal["gasto", "ingreso"]
 
+    
 # VIDEO CATEGORY
 class VideoCategoryCreate(BaseModel):
     title: str

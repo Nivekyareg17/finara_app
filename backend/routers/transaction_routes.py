@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import Transaction, User
+from models import Transaction, User, Category
 from auth import verify_token
 from fastapi.security import OAuth2PasswordBearer
 import schemas
@@ -30,6 +30,13 @@ def create_transaction(
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
+    category = db.query(Category).filter(
+        Category.id == transaction.category_id
+    ).first
+
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+
     existing = db.query(Transaction).filter(
         Transaction.user_id == user.id,
         Transaction.type == transaction.type,
@@ -44,6 +51,7 @@ def create_transaction(
         amount=transaction.amount,
         type=transaction.type,
         description=transaction.description,
+        category_id=transaction.category_id,
         user_id=user.id
     )
 
@@ -86,7 +94,14 @@ def update_transaction(
 
     if not db_transaction:
         raise HTTPException(status_code=404, detail="Transacción no encontrada")
-    
+
+    category = db.query(Category).filter(
+        Category.id == transaction.category_id
+    ).first()
+
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+
     existing = db.query(Transaction).filter(
         Transaction.user_id == user.id,
         Transaction.type == transaction.type,
@@ -101,6 +116,7 @@ def update_transaction(
     db_transaction.amount = transaction.amount
     db_transaction.type = transaction.type
     db_transaction.description = transaction.description
+    db_transaction.category_id = transaction.category_id
 
     db.commit()
     db.refresh(db_transaction)
