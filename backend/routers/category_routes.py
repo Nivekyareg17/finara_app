@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from backend import schemas
-from backend.auth import verify_token
+from auth import verify_token
 from database import SessionLocal
 from models import Category, User
+import schemas
 
 router = APIRouter(
     prefix="/categories",
