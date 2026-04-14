@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from auth import verify_token
 from database import SessionLocal
@@ -9,6 +10,8 @@ router = APIRouter(
     prefix="/categories",
     tags=["Categories"]
 )
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_db():
     db = SessionLocal()
