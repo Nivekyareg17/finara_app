@@ -76,13 +76,13 @@ class ApiService {
   }
 
   // CREAR transacción
- static Future<bool> createTransaction(
-  String token,
-  String type,
-  double amount,
-  String description,
-  String category,
-) async {
+  static Future<bool> createTransaction(
+    String token,
+    String type,
+    double amount,
+    String description,
+    int categoryId,
+  ) async {
     final url = Uri.parse("$baseUrl/transactions/");
 
     final response = await http.post(
@@ -95,16 +95,9 @@ class ApiService {
         "type": type,
         "amount": amount,
         "description": description,
-        "category": category,
+        "category_id": categoryId,
       }),
     );
-
-    if (response.statusCode == 400) {
-      print("Duplicado");
-    }
-
-    print("STATUS: ${response.statusCode}");
-    print("BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
   }
@@ -131,8 +124,7 @@ class ApiService {
     String type,
     double amount,
     String description,
-    String category,
-    
+    int categoryId,
   ) async {
     final url = Uri.parse("$baseUrl/transactions/$id");
 
@@ -146,8 +138,7 @@ class ApiService {
         "type": type,
         "amount": amount,
         "description": description,
-        "category": category,
-        
+        "category_id": categoryId,
       }),
     );
 
@@ -165,6 +156,18 @@ class ApiService {
     );
 
     return response.statusCode == 200;
+  }
+
+  static Future<List<dynamic>> getTransactionCategories() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/categories/"),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      return [];
+    }
   }
 
   static Future<bool> resetPassword(String token, String newPassword) async {

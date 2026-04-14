@@ -3,9 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 from models import Base, PasswordResetToken
-from routers import auth_routes, user_routes, transaction_routes
+from routers import auth_routes, user_routes, transaction_routes, video_routes, lecturas_routes, stock_routes, category_routes
 from routers.news_routes import news_router
-from routers import video_routes, lecturas_routes, stock_routes
 
 # from routers import ai_routes
 
@@ -31,9 +30,10 @@ Base.metadata.create_all(bind=engine)
 # Agregar las rutas definidas
 app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
-# app.include_router(ai_routes.router)  # Tu IA ya está activa aquí
+# app.include_router(ai_routes.router)
 app.include_router(transaction_routes.router)
 app.include_router(news_router)
 app.include_router(video_routes.router)
 app.include_router(lecturas_routes.router)
 app.include_router(stock_routes.stock_router)
+app.include_router(category_routes.router)
