@@ -21,8 +21,18 @@ def get_db():
         db.close()
 
 @router.get("/")
-def get_categories(db: Session = Depends(get_db)):
-    db.query(Category).filter(Category.user_id == user.id).all()
+def get_categories(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    data = verify_token(token)
+    user = db.query(User).filter(User.email == data["sub"]).first()
+
+    categories = db.query(Category).filter(
+        Category.user_id == user.id
+    ).all()
+
+    return categories
 
 
 @router.post("/")
