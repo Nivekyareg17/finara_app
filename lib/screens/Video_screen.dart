@@ -35,12 +35,13 @@ class _VideoScreenState extends State<VideoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0B1220) : Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF0B1220) : Colors.white,
         title: Row(
           children: [
             Container(
@@ -64,7 +65,6 @@ class _VideoScreenState extends State<VideoScreen> {
           ],
         ),
       ),
-
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -90,15 +90,17 @@ class _VideoScreenState extends State<VideoScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
+                        boxShadow: isDark
+                            ? []
+                            : [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
                       ),
                       child: Row(
                         children: [
@@ -106,8 +108,7 @@ class _VideoScreenState extends State<VideoScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF00C853)
-                                  .withOpacity(0.1),
+                              color: const Color(0xFF00C853).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -122,8 +123,7 @@ class _VideoScreenState extends State<VideoScreen> {
                           // Texto
                           Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 TranslatedText(
                                   category["title"],
@@ -136,7 +136,9 @@ class _VideoScreenState extends State<VideoScreen> {
                                 TranslatedText(
                                   category["description"],
                                   style: TextStyle(
-                                    color: Colors.grey[600],
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                     fontSize: 12,
                                   ),
                                 ),
@@ -145,8 +147,7 @@ class _VideoScreenState extends State<VideoScreen> {
                           ),
 
                           // Flecha
-                          const Icon(Icons.arrow_forward_ios_rounded,
-                              size: 16, color: Colors.grey),
+                          Icon(Icons.arrow_forward_ios_rounded,color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, size: 16),
                         ],
                       ),
                     ),
@@ -154,9 +155,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 );
               },
             ),
-
-      bottomNavigationBar:
-          const CustomBottomNav(selectedIndex: 3),
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 3),
     );
   }
 }
