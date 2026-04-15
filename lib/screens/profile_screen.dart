@@ -897,6 +897,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           // DropdownButton
+
                         ], // Cierre de children
                       ),
                     ),

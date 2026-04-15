@@ -31,12 +31,20 @@ class TransactionCreate(BaseModel):
     category_id: int
 
 
-class TransactionResponse(BaseModel):
+# --- CATEGORÍAS (Para Gastos e Ingresos) ---
+class CategoryBase(BaseModel):
+    name: str
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryResponse(CategoryBase):
     id: int
     amount: float
     type: str
     description: str
     category_id: int
+
 
     class Config:
         orm_mode = True
@@ -45,6 +53,24 @@ class TransactionResponse(BaseModel):
 class CategoryCreate(BaseModel):
     name: str
     type: Literal["gasto", "ingreso"]
+
+# --- TRANSACCIONES (ACTUALIZADO) ---
+class TransactionCreate(BaseModel):
+    amount: float = Field(..., gt=0)
+    type: str # "ingreso" o "gasto"
+    description: str = Field(..., min_length=1, max_length=100)
+    category_id: int  # <--- ESTE ES EL CAMPO QUE FALTABA
+
+class TransactionResponse(BaseModel):
+    id: int
+    amount: float # Cambiado a float para que coincida con el modelo
+    type: str
+    description: str
+    category_id: int
+
+    class Config:
+        orm_mode = True
+
 
     
 # VIDEO CATEGORY

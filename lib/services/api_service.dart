@@ -1,9 +1,12 @@
-// Este archivo envía HTTP request al backend
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   static const String baseUrl = "https://finara-api-1lmd.onrender.com";
+
+  // =========================
+  // 🔐 AUTH
+  // =========================
 
   static Future<String?> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
@@ -16,7 +19,6 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-
       return data["access_token"];
     } else {
       print("Error login: ${response.body}");
@@ -25,39 +27,20 @@ class ApiService {
   }
 
   static Future<bool> register(
-    String name,
-    String email,
-    String password,
-  ) async {
+      String name, String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/register");
 
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"name": name, "email": email, "password": password}),
+      body: jsonEncode(
+          {"name": name, "email": email, "password": password}),
     );
 
     print("REGISTER STATUS: ${response.statusCode}");
     print("REGISTER BODY: ${response.body}");
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    } else {
-      try {
-        final data = jsonDecode(response.body);
-
-        final detail = data["detail"];
-
-        if (detail is List && detail.isNotEmpty) {
-          throw Exception(detail[0]["msg"]);
-        } else {
-          throw Exception("Error desconocido");
-        }
-      } catch (e) {
-        //si no es JSON válido
-        throw Exception(response.body);
-      }
-    }
+    return response.statusCode == 200 || response.statusCode == 201;
   }
 
   static Future<Map<String, dynamic>?> getUser(String token) async {
@@ -75,7 +58,10 @@ class ApiService {
     return null;
   }
 
-  // CREAR transacción
+  // =========================
+  // 💸 TRANSACTIONS
+  // =========================
+
   static Future<bool> createTransaction(
     String token,
     String type,
@@ -86,13 +72,13 @@ class ApiService {
     final url = Uri.parse("$baseUrl/transactions/");
 
     final body = jsonEncode({
-      "type": type,
+      "type": type.toLowerCase(),
       "amount": amount,
       "description": description,
       "category_id": categoryId,
     });
 
-    print("CREATE BODY ENVIADO: $body");
+    print("CREATE BODY: $body");
 
     final response = await http.post(
       url,
@@ -103,13 +89,12 @@ class ApiService {
       body: body,
     );
 
-    print("CREATE STATUS: ${response.statusCode}");
-    print("CREATE BODY: ${response.body}");
+    print("STATUS: ${response.statusCode}");
+    print("BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
-// OBTENER transacciones
   static Future<List<dynamic>> getTransactions(String token) async {
     final url = Uri.parse("$baseUrl/transactions/");
 
@@ -142,7 +127,7 @@ class ApiService {
         "Authorization": "Bearer $token"
       },
       body: jsonEncode({
-        "type": type,
+        "type": type.toLowerCase(),
         "amount": amount,
         "description": description,
         "category_id": categoryId,
@@ -157,15 +142,18 @@ class ApiService {
 
     final response = await http.delete(
       url,
-      headers: {
-        "Authorization": "Bearer $token",
-      },
+      headers: {"Authorization": "Bearer $token"},
     );
 
     return response.statusCode == 200;
   }
 
-  static Future<List<dynamic>> getTransactionCategories(String token) async {
+  // =========================
+  // 🏷️ CATEGORIES
+  // =========================
+
+  static Future<List<dynamic>> getTransactionCategories(
+      String token) async {
     final response = await http.get(
       Uri.parse("$baseUrl/categories/"),
       headers: {"Authorization": "Bearer $token"},
@@ -174,16 +162,13 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      print("Error categorías: ${response.statusCode} - ${response.body}");
+      print("Error categorías: ${response.body}");
       return [];
     }
   }
 
   static Future<bool> createCategory(
-    String token,
-    String name,
-    String type,
-  ) async {
+      String token, String name, String type) async {
     final url = Uri.parse("$baseUrl/categories/");
 
     final response = await http.post(
@@ -201,7 +186,12 @@ class ApiService {
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
-  static Future<bool> resetPassword(String token, String newPassword) async {
+  // =========================
+  // 🔐 PASSWORD
+  // =========================
+
+  static Future<bool> resetPassword(
+      String token, String newPassword) async {
     final url = Uri.parse("$baseUrl/auth/reset-password");
 
     try {
@@ -215,9 +205,6 @@ class ApiService {
             }),
           )
           .timeout(const Duration(seconds: 60));
-
-      print("RESET STATUS: ${response.statusCode}");
-      print("RESET BODY: ${response.body}");
 
       return response.statusCode == 200;
     } catch (e) {
@@ -238,9 +225,6 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 60));
 
-      print("STATUS: ${response.statusCode}");
-      print("BODY: ${response.body}");
-
       return response.statusCode == 200;
     } catch (e) {
       print("ERROR FORGOT PASSWORD: $e");
@@ -248,26 +232,24 @@ class ApiService {
     }
   }
 
+  // =========================
+  // 👤 USERS
+  // =========================
+
   static Future<List<dynamic>> getUsers(String token) async {
     final url = Uri.parse("$baseUrl/users/all");
 
     final res =
         await http.get(url, headers: {"Authorization": "Bearer $token"});
 
-    print("STATUS USERS: ${res.statusCode}");
-    print("BODY USERS: ${res.body}");
-
     return jsonDecode(res.body);
   }
 
   static Future<void> deleteUser(String token, int id) async {
-    final res = await http.delete(
+    await http.delete(
       Uri.parse("$baseUrl/users/delete/$id"),
       headers: {"Authorization": "Bearer $token"},
     );
-
-    print("DELETE STATUS: ${res.statusCode}");
-    print("DELETE BODY: ${res.body}");
   }
 
   static Future<void> makeAdmin(String token, int id) async {
@@ -284,33 +266,44 @@ class ApiService {
     );
   }
 
+  // =========================
+  // 🎥 VIDEOS & LECTURAS
+  // =========================
+
   static Future<List<dynamic>> getCategories() async {
-    final response = await http.get(Uri.parse("$baseUrl/videos/categories"));
+    final response =
+        await http.get(Uri.parse("$baseUrl/videos/categories"));
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return jsonDecode(response.body);
     } else {
       throw Exception("Error al cargar categorías");
     }
   }
 
-  // Obtener videos por categoría
   static Future<List<dynamic>> getVideos(int categoryId) async {
-    final response = await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
+    final response =
+        await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return jsonDecode(response.body);
     } else {
       throw Exception("Error al cargar videos");
     }
   }
 
+<<<<<<< HEAD
   Future<List<dynamic>> obtenerLecturas() async {
     final response = await http
         .get(Uri.parse("https://finara-api-1lmd.onrender.com/api/lecturas/"));
+=======
+  static Future<List<dynamic>> obtenerLecturas() async {
+    final response =
+        await http.get(Uri.parse("$baseUrl/api/lecturas/"));
+>>>>>>> 7b3f127 (actualizacion plugins flutter)
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return jsonDecode(response.body);
     } else {
       throw Exception("Error al cargar lecturas");
     }

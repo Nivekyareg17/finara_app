@@ -27,10 +27,8 @@ def get_categories(
 ):
     try:
         data = verify_token(token)
-        print("TOKEN DATA:", data)
 
         user = db.query(User).filter(User.email == data["sub"]).first()
-        print("USER:", user)
 
         if not user:
             return {"error": "Usuario no encontrado"}
@@ -42,7 +40,6 @@ def get_categories(
         return categories
 
     except Exception as e:
-        print("ERROR:", str(e))
         return {"error": str(e)}
 
 
