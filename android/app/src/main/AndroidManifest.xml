@@ -35,7 +35,7 @@
 
                 <data
                     android:scheme="https"
-                    android:host="finara-api.onrender.com"
+                    android:host="finara-api-1lmd.onrender.com"
                     android:pathPrefix="/reset-password"/>
             </intent-filter>
         </activity>

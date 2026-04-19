@@ -28,7 +28,7 @@ class NewsArticle {
 }
 
 class NewsService {
-  final String baseUrl = "https://finara-api.onrender.com/api/news";
+  final String baseUrl = "https://finara-api-1lmd.onrender.com/api/news";
 
   Future<List<NewsArticle>> getNews() async {
     final response = await http.get(Uri.parse(baseUrl));

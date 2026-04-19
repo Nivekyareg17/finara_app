@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/stock_model.dart';
 
 class StockService {
-  final String baseUrl = "https://finara-api.onrender.com/api/stocks/";
+  final String baseUrl = "https://finara-api-1lmd.onrender.com/api/stocks/";
 
   Future<List<Stock>> getStocks() async {
     final response = await http.get(Uri.parse(baseUrl));
@@ -19,7 +19,7 @@ class StockService {
   Future<List<double>> getHistory(String symbol, String range) async {
     final response = await http.get(
       Uri.parse(
-          "https://finara-api.onrender.com/api/stocks/history?symbol=$symbol&range=$range"),
+          "https://finara-api-1lmd.onrender.com/api/stocks/history?symbol=$symbol&range=$range"),
     );
 
     final data = json.decode(response.body);
