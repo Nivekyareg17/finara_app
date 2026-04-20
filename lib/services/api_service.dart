@@ -152,38 +152,62 @@ class ApiService {
   // 🏷️ CATEGORIES
   // =========================
 
-  static Future<List<dynamic>> getTransactionCategories(
-      String token) async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/categories/"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+  static Future<List<dynamic>> getTransactionCategories(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/categories/"),
+        headers: {"Authorization": "Bearer $token"},
+      );
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      print("Error categorías: ${response.body}");
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return [];
+    } catch (e) {
+      print("Error de conexión: $e");
       return [];
     }
   }
 
-  static Future<bool> createCategory(
-      String token, String name, String type) async {
-    final url = Uri.parse("$baseUrl/categories/");
-
+  // --- CREAR (POST) ---
+  static Future<bool> createCategory(String token, String name, String type) async {
     final response = await http.post(
-      url,
+      Uri.parse("$baseUrl/categories/"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
       },
-      body: jsonEncode({
-        "name": name,
-        "type": type,
-      }),
+      body: jsonEncode({"name": name, "type": type}),
     );
-
     return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  // --- ACTUALIZAR (PUT) ---
+  // Necesitamos el ID para saber cuál editar
+  static Future<bool> updateCategory(String token, int id, String name, String type) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/categories/$id/"), // Verifica si tu API usa / al final
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+      body: jsonEncode({"name": name, "type": type}),
+    );
+    return response.statusCode == 200;
+  }
+
+  // --- ELIMINAR (DELETE) ---
+  static Future<bool> deleteCategory(String token, int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/categories/$id/"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      print("Error al borrar: $e");
+      return false;
+    }
   }
 
   // =========================

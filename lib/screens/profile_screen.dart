@@ -627,78 +627,120 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           // SELECTOR CATEGORÍA
                           const TranslatedText("Categoría",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey)),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            onPressed: () async {
-                              String? nueva =
-                                  await _mostrarDialogoNuevaCategoria();
+    style: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.grey)),
+const SizedBox(height: 10),
 
-                              if (nueva != null && nueva.isNotEmpty) {
-                                // Validar duplicado localmente
-                                if (localCategories.any((c) =>
-                                    c.name.toLowerCase() ==
-                                    nueva.toLowerCase())) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text("Esa categoría ya existe")),
-                                  );
-                                  return;
-                                }
+// 1. Botón para crear nueva
+TextButton(
+  onPressed: () async {
+    String? nueva = await _mostrarDialogoNuevaCategoria();
+    if (nueva != null && nueva.isNotEmpty) {
+      if (localCategories.any((c) => c.name.toLowerCase() == nueva.toLowerCase())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Esa categoría ya existe")),
+        );
+        return;
+      }
 
-                                final auth = context.read<AuthProvider>();
-                                bool success = await ApiService.createCategory(
-                                  auth.token!,
-                                  nueva,
-                                  type,
-                                );
+      final auth = context.read<AuthProvider>();
+      bool success = await ApiService.createCategory(auth.token!, nueva, type);
 
-                                if (success) {
-                                  await loadCategories();
-                                  setStateDialog(() {
-                                    localCategories = List.from(categories);
-                                    if (localCategories.isNotEmpty) {
-                                      final nuevaCat = localCategories.last;
-                                      selectedCategoryId =
-                                          int.parse(nuevaCat.id);
-                                    }
-                                  });
-                                }
-                              }
-                            },
-                            child: const Text(
-                              "Agregar categoría",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.black12 : Colors.grey[50],
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(color: Colors.grey[200]!),
-                            ),
-                            child: DropdownButton<int>(
-                              value: selectedCategoryId,
-                              isExpanded: true,
-                              underline: const SizedBox(),
-                              icon: const Icon(Icons.keyboard_arrow_down),
-                              items: filteredCategories.map((cat) {
-                                return DropdownMenuItem<int>(
-                                  value: int.parse(cat.id),
-                                  child: Text(cat.name),
-                                );
-                              }).toList(),
-                              onChanged: (v) {
-                                setStateDialog(() {
-                                  selectedCategoryId = v!;
-                                });
-                              },
-                            ),
-                          ),
+      if (success) {
+        await loadCategories();
+        setStateDialog(() {
+          localCategories = List.from(categories);
+          if (localCategories.isNotEmpty) {
+            selectedCategoryId = int.parse(localCategories.last.id);
+          }
+        });
+      }
+    }
+  },
+  child: const Text("Agregar categoría", style: TextStyle(color: Colors.green)),
+),
+
+// 2. Fila con Dropdown + Editar + Eliminar
+Row(
+  children: [
+    Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.black12 : Colors.grey[50],
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: DropdownButton<int>(
+          value: selectedCategoryId,
+          isExpanded: true,
+          underline: const SizedBox(),
+          icon: const Icon(Icons.keyboard_arrow_down),
+          items: filteredCategories.map((cat) {
+            return DropdownMenuItem<int>(
+              value: int.parse(cat.id),
+              child: Text(cat.name),
+            );
+          }).toList(),
+          onChanged: (v) {
+            setStateDialog(() => selectedCategoryId = v!);
+          },
+        ),
+      ),
+    ),
+    
+    // Si hay una categoría seleccionada, mostramos acciones de CRUD
+    if (selectedCategoryId != null) ...[
+      // BOTÓN EDITAR
+      IconButton(
+        icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
+        onPressed: () async {
+          final catActual = filteredCategories.firstWhere((c) => int.parse(c.id) == selectedCategoryId);
+          String? nuevoNombre = await _mostrarDialogoNuevaCategoria(valorInicial: catActual.name);
+          
+          if (nuevoNombre != null && nuevoNombre.isNotEmpty) {
+            final auth = context.read<AuthProvider>();
+            bool success = await ApiService.updateCategory(auth.token!, selectedCategoryId!, nuevoNombre, type);
+            if (success) {
+              await loadCategories();
+              setStateDialog(() => localCategories = List.from(categories));
+            }
+          }
+        },
+      ),
+      // BOTÓN ELIMINAR
+      IconButton(
+        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+        onPressed: () async {
+          final auth = context.read<AuthProvider>();
+          // Confirmación rápida
+          bool? confirmar = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text("¿Eliminar?"),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("No")),
+                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Sí, borrar")),
+              ],
+            ),
+          );
+
+          if (confirmar == true) {
+            bool success = await ApiService.deleteCategory(auth.token!, selectedCategoryId!);
+            if (success) {
+              await loadCategories();
+              setStateDialog(() {
+                localCategories = List.from(categories);
+                selectedCategoryId = null; // Limpiamos selección tras borrar
+              });
+            }
+          }
+        },
+      ),
+    ],
+  ],
+),
 
                           const SizedBox(height: 25),
 
@@ -1005,8 +1047,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<String?> _mostrarDialogoNuevaCategoria() async {
+  Future<String?> _mostrarDialogoNuevaCategoria({String? valorInicial}) async {
     TextEditingController controller = TextEditingController();
+    controller.text = valorInicial ?? '';
 
     return showDialog<String>(
       context: context,
