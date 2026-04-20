@@ -64,3 +64,39 @@ class PasswordResetToken(Base):
     expires_at = Column(DateTime)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+
+class VideoCategory(Base):
+    __tablename__ = "video_categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+
+    videos = relationship(
+        "Video",
+        back_populates="category",
+        cascade="all, delete-orphan"
+    )
+
+
+class Video(Base):
+    __tablename__ = "videos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    url = Column(String)
+
+    category_id = Column(
+        Integer,
+        ForeignKey("video_categories.id", ondelete="CASCADE")
+    )
+    category = relationship("VideoCategory", back_populates="videos")
+
+
+class Lectura(Base):
+    __tablename__ = "lecturas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String)
+    contenido = Column(String)
+    tiempo_lectura = Column(String)
