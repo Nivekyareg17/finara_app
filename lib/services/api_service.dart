@@ -290,27 +290,22 @@ class ApiService {
     );
   }
 
-  // =========================
-  // 🎥 VIDEOS & LECTURAS
-  // =========================
-
   static Future<List<dynamic>> getCategories() async {
-    final response =
-        await http.get(Uri.parse("$baseUrl/videos/categories"));
+    final response = await http.get(Uri.parse("$baseUrl/videos/categories"));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return json.decode(response.body);
     } else {
       throw Exception("Error al cargar categorías");
     }
   }
 
+  // Obtener videos por categoría
   static Future<List<dynamic>> getVideos(int categoryId) async {
-    final response =
-        await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
+    final response = await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return json.decode(response.body);
     } else {
       throw Exception("Error al cargar videos");
     }
@@ -320,11 +315,80 @@ class ApiService {
     final response = await http
         .get(Uri.parse("https://finara-api-1lmd.onrender.com/api/lecturas/"));
 
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar lecturas");
+    }
+  }
+
+  static Future<List<dynamic>> getLecturas() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/api/lecturas/"),
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
       throw Exception("Error al cargar lecturas");
     }
+  }
+
+  static Future<bool> createLectura(
+    String titulo,
+    String contenido,
+    String tiempoLectura,
+  ) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/lecturas/"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "titulo": titulo,
+        "contenido": contenido,
+        "tiempo_lectura": tiempoLectura,
+      }),
+    );
+
+    print("CREATE LECTURA STATUS: ${response.statusCode}");
+    print("CREATE LECTURA BODY: ${response.body}");
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  static Future<bool> deleteLectura(int id) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/api/lecturas/$id"),
+    );
+
+    print("DELETE LECTURA STATUS: ${response.statusCode}");
+    print("DELETE LECTURA BODY: ${response.body}");
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> updateLectura(
+    int id,
+    String titulo,
+    String contenido,
+    String tiempoLectura,
+  ) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/api/lecturas/$id"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "titulo": titulo,
+        "contenido": contenido,
+        "tiempo_lectura": tiempoLectura,
+      }),
+    );
+
+    print("UPDATE LECTURA STATUS: ${response.statusCode}");
+    print("UPDATE LECTURA BODY: ${response.body}");
+
+    return response.statusCode == 200;
   }
 }

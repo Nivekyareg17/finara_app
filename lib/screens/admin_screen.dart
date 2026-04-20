@@ -1,53 +1,21 @@
 import 'package:flutter/material.dart';
+import 'admin/admin_users_screen.dart';
+import 'admin/admin_lecturas_screen.dart';
+import 'admin/admin_videos_screen.dart';
+import '../widgets/translate_widget.dart';
+import '../widgets/app_drawer.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../widgets/translate_widget.dart';
 import '../widgets/app_drawer.dart';
 
-class AdminScreen extends StatefulWidget {
+class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
-
-  @override
-  State<AdminScreen> createState() => _AdminScreenState();
-}
-
-class _AdminScreenState extends State<AdminScreen> {
-  List users = [];
-  String? currentUserEmail;
-
-  Future<void> loadUsers() async {
-    final auth = context.read<AuthProvider>();
-    final token = auth.token!;
-
-    print("Cargando users...");
-
-    final response = await ApiService.getUsers(token);
-    print("USERS: $response");
-
-    setState(() => users = response);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadUsers();
-    loadCurrentUser();
-  }
-
-  Future<void> loadCurrentUser() async {
-    final auth = context.read<AuthProvider>();
-    final data = await auth.getUserData();
-
-    setState(() {
-      currentUserEmail = data?["email"];
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
-    final token = auth.token!;
 
     return Scaffold(
       appBar: AppBar(
@@ -75,10 +43,9 @@ class _AdminScreenState extends State<AdminScreen> {
               );
 
               if (confirm == true) {
-                final auth = context.read<AuthProvider>();
                 await auth.logout();
 
-                if (!mounted) return;
+                if (!context.mounted) return;
 
                 Navigator.pushReplacementNamed(context, "/login");
               }
