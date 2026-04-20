@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../widgets/translate_widget.dart';
+import '../widgets/app_drawer.dart';
+
 import 'admin/admin_users_screen.dart';
 import 'admin/admin_lecturas_screen.dart';
 import 'admin/admin_videos_screen.dart';
-import '../widgets/translate_widget.dart';
-import '../widgets/app_drawer.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../services/api_service.dart';
-import '../widgets/translate_widget.dart';
-import '../widgets/app_drawer.dart';
 
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
@@ -19,7 +17,7 @@ class AdminScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const TranslatedText("Admin Panel"),
+        title: const TranslatedText("Panel de administración"),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -54,70 +52,68 @@ class AdminScreen extends StatelessWidget {
         ],
       ),
       drawer: const AppDrawer(),
-      body: ListView.builder(
-        itemCount: users.length,
-        itemBuilder: (context, i) {
-          final user = users[i];
-
-          return ListTile(
-            title: Text(user["name"]),
-            subtitle: TranslatedText("${user["email"]} - ${user["role"]}"),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // eliminar
-                if (user["email"] != currentUserEmail)
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      final confirm = await showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const TranslatedText("Eliminar usuario"),
-                          content: const TranslatedText("¿Estás seguro?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const TranslatedText("Cancelar"),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const TranslatedText("Eliminar"),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      if (confirm == true) {
-                        await ApiService.deleteUser(token, user["id"]);
-                        loadUsers();
-                      }
-                    },
-                  ),
-
-                // SI NO es admin => mostrar botón hacer admin
-                if (user["role"] != "admin")
-                  IconButton(
-                    icon: const Icon(Icons.security),
-                    onPressed: () async {
-                      await ApiService.makeAdmin(token, user["id"]);
-                      loadUsers();
-                    },
-                  ),
-
-                // SI es admin => mostrar botón quitar admin
-                if (user["role"] == "admin")
-                  IconButton(
-                    icon: const Icon(Icons.person),
-                    onPressed: () async {
-                      await ApiService.removeAdmin(token, user["id"]);
-                      loadUsers();
-                    },
-                  ),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.people),
+                title: const TranslatedText("Gestionar usuarios"),
+                subtitle: const TranslatedText(
+                  "Administrar usuarios y roles",
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminUsersScreen(),
+                    ),
+                  );
+                },
+              ),
             ),
-          );
-        },
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.menu_book),
+                title: const TranslatedText("Gestionar lecturas"),
+                subtitle: const TranslatedText(
+                  "Crear, editar y eliminar lecturas",
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminLecturasScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.video_library),
+                title: const TranslatedText("Gestionar videos"),
+                subtitle: const TranslatedText(
+                  "Crear, editar y eliminar videos",
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminVideosScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
