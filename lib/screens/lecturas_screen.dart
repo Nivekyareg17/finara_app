@@ -2,7 +2,6 @@ import 'package:finara_app_v1/screens/detalle_lectura_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/translate_widget.dart';
-import 'package:finara_app_v1/services/api_service.dart';
 
 class LecturasScreen extends StatelessWidget {
   LecturasScreen({super.key});

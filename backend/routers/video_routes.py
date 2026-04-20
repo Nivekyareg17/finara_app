@@ -39,3 +39,81 @@ def create_video(video: schemas.VideoCreate, db: Session = Depends(get_db)):
 @router.get("/{category_id}", response_model=list[schemas.VideoResponse])
 def get_videos(category_id: int, db: Session = Depends(get_db)):
     return db.query(models.Video).filter(models.Video.category_id == category_id).all()
+
+# Editar categoria
+@router.put("/categories/{category_id}")
+def update_category(
+    category_id: int,
+    data: schemas.VideoCategoryCreate,
+    db: Session = Depends(get_db)
+):
+    category = db.query(models.VideoCategory).filter(
+        models.VideoCategory.id == category_id
+    ).first()
+
+    if not category:
+        return {"error": "Categoría no encontrada"}
+
+    category.title = data.title
+    category.description = data.description
+
+    db.commit()
+    db.refresh(category)
+
+    return category
+
+
+# Eliminar categoria
+@router.delete("/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    category = db.query(models.VideoCategory).filter(
+        models.VideoCategory.id == category_id
+    ).first()
+
+    if not category:
+        return {"error": "Categoría no encontrada"}
+
+    db.delete(category)
+    db.commit()
+
+    return {"message": "Categoría eliminada"}
+
+
+# Editar video
+@router.put("/{video_id}")
+def update_video(
+    video_id: int,
+    data: schemas.VideoCreate,
+    db: Session = Depends(get_db)
+):
+    video = db.query(models.Video).filter(
+        models.Video.id == video_id
+    ).first()
+
+    if not video:
+        return {"error": "Video no encontrado"}
+
+    video.title = data.title
+    video.url = data.url
+    video.category_id = data.category_id
+
+    db.commit()
+    db.refresh(video)
+
+    return video
+
+
+# Eliminar video
+@router.delete("/{video_id}")
+def delete_video(video_id: int, db: Session = Depends(get_db)):
+    video = db.query(models.Video).filter(
+        models.Video.id == video_id
+    ).first()
+
+    if not video:
+        return {"error": "Video no encontrado"}
+
+    db.delete(video)
+    db.commit()
+
+    return {"message": "Video eliminado"}

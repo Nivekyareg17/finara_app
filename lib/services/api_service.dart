@@ -33,8 +33,7 @@ class ApiService {
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode(
-          {"name": name, "email": email, "password": password}),
+      body: jsonEncode({"name": name, "email": email, "password": password}),
     );
 
     print("REGISTER STATUS: ${response.statusCode}");
@@ -170,7 +169,8 @@ class ApiService {
   }
 
   // --- CREAR (POST) ---
-  static Future<bool> createCategory(String token, String name, String type) async {
+  static Future<bool> createCategory(
+      String token, String name, String type) async {
     final response = await http.post(
       Uri.parse("$baseUrl/categories/"),
       headers: {
@@ -184,9 +184,11 @@ class ApiService {
 
   // --- ACTUALIZAR (PUT) ---
   // Necesitamos el ID para saber cuál editar
-  static Future<bool> updateCategory(String token, int id, String name, String type) async {
+  static Future<bool> updateCategory(
+      String token, int id, String name, String type) async {
     final response = await http.put(
-      Uri.parse("$baseUrl/categories/$id/"), // Verifica si tu API usa / al final
+      Uri.parse(
+          "$baseUrl/categories/$id/"), // Verifica si tu API usa / al final
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
@@ -214,8 +216,7 @@ class ApiService {
   // 🔐 PASSWORD
   // =========================
 
-  static Future<bool> resetPassword(
-      String token, String newPassword) async {
+  static Future<bool> resetPassword(String token, String newPassword) async {
     final url = Uri.parse("$baseUrl/auth/reset-password");
 
     try {
@@ -309,6 +310,100 @@ class ApiService {
     } else {
       throw Exception("Error al cargar videos");
     }
+  }
+
+  static Future<bool> createVideoCategory(
+    String title,
+    String description,
+  ) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/videos/categories"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "description": description,
+      }),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  static Future<bool> updateVideoCategory(
+    int id,
+    String title,
+    String description,
+  ) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/videos/categories/$id"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "description": description,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> deleteVideoCategory(int id) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/videos/categories/$id"),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> createVideo(
+    String title,
+    String url,
+    int categoryId,
+  ) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/videos/"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "url": url,
+        "category_id": categoryId,
+      }),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  static Future<bool> updateVideo(
+    int id,
+    String title,
+    String url,
+    int categoryId,
+  ) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/videos/$id"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "url": url,
+        "category_id": categoryId,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> deleteVideo(int id) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/videos/$id"),
+    );
+
+    return response.statusCode == 200;
   }
 
   Future<List<dynamic>> obtenerLecturas() async {
