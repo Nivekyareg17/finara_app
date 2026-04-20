@@ -316,15 +316,10 @@ class ApiService {
     }
   }
 
-<<<<<<< HEAD
   Future<List<dynamic>> obtenerLecturas() async {
     final response = await http
         .get(Uri.parse("https://finara-api-1lmd.onrender.com/api/lecturas/"));
-=======
-  static Future<List<dynamic>> obtenerLecturas() async {
-    final response =
-        await http.get(Uri.parse("$baseUrl/api/lecturas/"));
->>>>>>> 7b3f127 (actualizacion plugins flutter)
+
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

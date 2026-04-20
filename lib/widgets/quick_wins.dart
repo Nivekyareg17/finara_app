@@ -12,7 +12,7 @@ class FinaraQuickWins extends StatelessWidget {
     final apiService = ApiService();
 
     return FutureBuilder(
-      future: ApiService.obtenerLecturas(),// Asegúrate de que este método exista en tu ApiService
+      future: apiService.obtenerLecturas(),// Asegúrate de que este método exista en tu ApiService
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

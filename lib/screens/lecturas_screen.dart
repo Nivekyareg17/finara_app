@@ -16,7 +16,7 @@ class LecturasScreen extends StatelessWidget {
         title: const TranslatedText("Lecturas"),
       ),
       body: FutureBuilder(
-        future: ApiService.obtenerLecturas(),
+        future: apiService.obtenerLecturas(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
