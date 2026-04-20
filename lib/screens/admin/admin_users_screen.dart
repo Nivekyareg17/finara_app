@@ -44,12 +44,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const primaryColor = Color.fromARGB(255, 10, 109, 82);
     final auth = context.read<AuthProvider>();
     final token = auth.token!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const TranslatedText("Gestionar usuarios"),
+        title: const TranslatedText(
+          "Gestionar usuarios",
+          style: TextStyle(color: primaryColor),
+        ),
+        iconTheme: const IconThemeData(color: primaryColor),
       ),
       body: ListView.builder(
         itemCount: users.length,
@@ -66,7 +71,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 children: [
                   if (user["email"] != currentUserEmail)
                     IconButton(
-                      icon: const Icon(Icons.delete),
+                      icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () async {
                         final confirm = await showDialog(
                           context: context,
@@ -77,13 +82,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false),
+                                onPressed: () => Navigator.pop(context, false),
                                 child: const TranslatedText("Cancelar"),
                               ),
                               ElevatedButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, true),
+                                onPressed: () => Navigator.pop(context, true),
                                 child: const TranslatedText("Eliminar"),
                               ),
                             ],
@@ -98,7 +101,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     ),
                   if (user["role"] != "admin")
                     IconButton(
-                      icon: const Icon(Icons.security),
+                      icon: const Icon(Icons.security, color: Color.fromARGB(255, 10, 86, 109)),
                       onPressed: () async {
                         await ApiService.makeAdmin(token, user["id"]);
                         loadUsers();
@@ -106,7 +109,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     ),
                   if (user["role"] == "admin")
                     IconButton(
-                      icon: const Icon(Icons.person),
+                      icon: const Icon(Icons.person, color: primaryColor),
                       onPressed: () async {
                         await ApiService.removeAdmin(token, user["id"]);
                         loadUsers();

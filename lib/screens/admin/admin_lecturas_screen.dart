@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/translate_widget.dart';
 
+const primaryColor = Color.fromARGB(255, 10, 109, 82);
+
 class AdminLecturasScreen extends StatefulWidget {
   const AdminLecturasScreen({super.key});
 
@@ -40,67 +42,52 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
     final tiempoController = TextEditingController();
 
     showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Crear lectura"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: tituloController,
-                decoration: const InputDecoration(
-                  labelText: "Título",
+        context: context,
+        builder: (_) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text(
+                "Crear lectura",
+                style: TextStyle(
+                  color: primaryColor,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: tiempoController,
-                decoration: const InputDecoration(
-                  labelText: "Tiempo de lectura",
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildInput(tituloController, "Título"),
+                    const SizedBox(height: 12),
+                    _buildInput(tiempoController, "Tiempo de lectura"),
+                    const SizedBox(height: 12),
+                    _buildInput(contenidoController, "Contenido", maxLines: 6),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: contenidoController,
-                maxLines: 6,
-                decoration: const InputDecoration(
-                  labelText: "Contenido",
-                  alignLabelWithHint: true,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final success = await ApiService.createLectura(
-                tituloController.text,
-                contenidoController.text,
-                tiempoController.text,
-              );
-
-              if (success) {
-                Navigator.pop(context);
-                loadLecturas();
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Lectura creada correctamente"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Cancelar",
+                    style: TextStyle(color: Colors.grey),
                   ),
-                );
-              }
-            },
-            child: const Text("Guardar"),
-          ),
-        ],
-      ),
-    );
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    // lógica
+                  },
+                  child: const Text("Guardar"),
+                ),
+              ],
+            ));
   }
 
   void openEditDialog(Map lectura) {
@@ -179,11 +166,41 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
     );
   }
 
+  Widget _buildInput(
+  TextEditingController controller,
+  String label, {
+  int maxLines = 1,
+}) {
+  return TextField(
+    controller: controller,
+    maxLines: maxLines,
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: primaryColor),
+      filled: true,
+      fillColor: Colors.grey.withOpacity(0.08),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
+      ),
+    ),
+  );
+}
+
   @override
   Widget build(BuildContext context) {
+    const primaryColor = Color.fromARGB(255, 10, 109, 82);
     return Scaffold(
       appBar: AppBar(
-        title: const TranslatedText("Gestionar lecturas"),
+        title: const TranslatedText(
+          "Gestionar lecturas",
+          style: TextStyle(color: primaryColor),
+        ),
+        iconTheme: const IconThemeData(color: primaryColor),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -210,7 +227,7 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit),
+                              icon: const Icon(Icons.edit, color: primaryColor),
                               onPressed: () {
                                 openEditDialog(lectura);
                               },
@@ -265,8 +282,9 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                   },
                 ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
         onPressed: openCreateDialog,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

@@ -13,11 +13,16 @@ class AdminScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const primaryColor = Color.fromARGB(255, 10, 109, 82);
     final auth = context.read<AuthProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const TranslatedText("Panel de administración"),
+        title: const TranslatedText(
+          "Panel de administración",
+          style: TextStyle(color: primaryColor),
+        ),
+        iconTheme: const IconThemeData(color: primaryColor),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -58,12 +63,12 @@ class AdminScreen extends StatelessWidget {
           children: [
             Card(
               child: ListTile(
-                leading: const Icon(Icons.people),
+                leading: const Icon(Icons.people, color: primaryColor),
                 title: const TranslatedText("Gestionar usuarios"),
                 subtitle: const TranslatedText(
                   "Administrar usuarios y roles",
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+                trailing: const Icon(Icons.arrow_forward_ios, color: primaryColor),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -77,12 +82,12 @@ class AdminScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.menu_book),
+                leading: const Icon(Icons.menu, color: primaryColor),
                 title: const TranslatedText("Gestionar lecturas"),
                 subtitle: const TranslatedText(
                   "Crear, editar y eliminar lecturas",
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+                trailing: const Icon(Icons.arrow_forward_ios, color: primaryColor),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -96,12 +101,12 @@ class AdminScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.video_library),
+                leading: const Icon(Icons.video_library, color: primaryColor),
                 title: const TranslatedText("Gestionar videos"),
                 subtitle: const TranslatedText(
                   "Crear, editar y eliminar videos",
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+                trailing: const Icon(Icons.arrow_forward_ios, color: primaryColor),
                 onTap: () {
                   Navigator.push(
                     context,
