@@ -65,7 +65,7 @@ def create_category(
     return new_category
 
 # --- ACTUALIZAR CATEGORÍA ---
-@router.put("/{category_id}")
+@router.put("/categories/{category_id}")
 def update_category(
     category_id: int,
     category_data: schemas.CategoryCreate,
@@ -91,7 +91,7 @@ def update_category(
     return db_category
 
 # --- ELIMINAR CATEGORÍA ---
-@router.delete("/{category_id}")
+@router.delete("/categories/{category_id}")
 def delete_category(
     category_id: int,
     token: str = Depends(oauth2_scheme),

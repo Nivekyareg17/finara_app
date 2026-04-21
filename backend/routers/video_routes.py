@@ -65,7 +65,7 @@ def update_category(
 
 # Eliminar categoria
 @router.delete("/categories/{video_category_id}")
-def delete_category(category_id: int, db: Session = Depends(get_db)):
+def delete_category(video_category_id: int, db: Session = Depends(get_db)):
     category = db.query(models.VideoCategory).filter(
         models.VideoCategory.id == category_id
     ).first()
