@@ -6,6 +6,7 @@ from backend import models
 from database import SessionLocal
 from models import Category, User
 import schemas
+import models
 
 router = APIRouter(
     prefix="/categories",
@@ -93,7 +94,7 @@ def update_category(
 
 # --- ELIMINAR CATEGORÍA ---
 @router.delete("/{category_id}")
-def delete_transaction_category(
+def delete_category(
     category_id: int, 
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
@@ -101,6 +102,7 @@ def delete_transaction_category(
     data = verify_token(token)
     user = db.query(models.User).filter(models.User.email == data["sub"]).first()
 
+    # USAMOS models.Category (la de transacciones)
     db_category = db.query(models.Category).filter(
         models.Category.id == category_id,
         models.Category.user_id == user.id
@@ -111,6 +113,4 @@ def delete_transaction_category(
 
     db.delete(db_category)
     db.commit()
-    return {"message": "Categoría eliminada con éxito"}
-
-
+    return {"message": "Categoría eliminada"}
