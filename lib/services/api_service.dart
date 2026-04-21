@@ -152,35 +152,34 @@ class ApiService {
   // =========================
 
   static Future<List<dynamic>> getTransactionCategories(String token) async {
-    try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/categories/"),
-        headers: {"Authorization": "Bearer $token"},
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-      return [];
-    } catch (e) {
-      print("Error de conexión: $e");
-      return [];
-    }
-  }
-
-  // --- CREAR (POST) ---
-  static Future<bool> createCategory(
-      String token, String name, String type) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/categories/"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-      body: jsonEncode({"name": name, "type": type}),
+  try {
+    final response = await http.get(
+      Uri.parse("$baseUrl/categories/categories/"), // <--- RUTA DOBLE Y CON BARRA AL FINAL
+      headers: {"Authorization": "Bearer $token"},
     );
-    return response.statusCode == 200 || response.statusCode == 201;
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body); // Esto llenará tu Dropdown
+    }
+    return [];
+  } catch (e) {
+    return [];
   }
+}
+
+  // 2. CREAR CATEGORÍA
+static Future<bool> createCategory(String token, String name, String type) async {
+  final response = await http.post(
+    Uri.parse("$baseUrl/categories/categories/"), // <--- MISMA RUTA QUE EL GET
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token"
+    },
+    body: jsonEncode({"name": name, "type": type}),
+  );
+  // Aceptamos 200 o 201 como éxito
+  return response.statusCode == 200 || response.statusCode == 201;
+}
 
   // --- ACTUALIZAR (PUT) ---
   // Necesitamos el ID para saber cuál editar
@@ -200,17 +199,31 @@ class ApiService {
 
   // --- ELIMINAR (DELETE) ---
   static Future<bool> deleteCategory(String token, int id) async {
-    try {
-      final response = await http.delete(
-        Uri.parse("$baseUrl/categories/$id/"),
-        headers: {"Authorization": "Bearer $token"},
-      );
-      return response.statusCode == 200 || response.statusCode == 204;
-    } catch (e) {
-      print("Error al borrar: $e");
+  try {
+    // IMPORTANTE: Agregamos el prefijo doble /categories/categories/
+    final url = Uri.parse("$baseUrl/categories/$id/"); // Verifica si tu API requiere / al final 
+    
+    final response = await http.delete(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    // FastAPI suele devolver 200 o 204 (No Content) al borrar con éxito
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      print("Categoría eliminada con éxito");
+      return true;
+    } else {
+      print("Error al borrar: ${response.statusCode} - ${response.body}");
       return false;
     }
+  } catch (e) {
+    print("Error de red al borrar: $e");
+    return false;
   }
+}
 
   // =========================
   // 🔐 PASSWORD
