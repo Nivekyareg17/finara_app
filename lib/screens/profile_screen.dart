@@ -10,6 +10,12 @@ import '../widgets/custom_bottom_nav.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:finara_app_v1/providers/languaje_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -179,113 +185,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       //DRAWER (MENU)
       drawer: Drawer(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         child: Column(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF064E3B)),
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: TranslatedText(
-                  "Opciones",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
+            // HEADER PERSONALIZADO
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(
+                color: Color(0xFF064E3B),
+              ),
+              currentAccountPicture: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white24,
+                    // Aquí pondremos la lógica de la foto más adelante
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : "U",
+                      style: const TextStyle(fontSize: 30, color: Colors.white),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => _pickImage(), // Función para la galería
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF00C853),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.edit,
+                            color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              accountName: Text(
+                name.isEmpty ? "Cargando..." : name,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white),
+              ),
+              accountEmail: Text(
+                email.isEmpty ? "Cargando..." : email,
+                style: const TextStyle(color: Colors.white70),
               ),
             ),
 
-            //MODO OSCURO
-            ListTile(
-              leading: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-              title: Text(isDark ? "Modo claro" : "Modo oscuro"),
-              onTap: () {
-                final themeProvider = context.read<ThemeProvider>();
-                themeProvider.toggleTheme();
-              },
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text("CONFIGURACIÓN",
+                        style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2)),
+                  ),
+
+                  // MODO OSCURO MEJORADO
+                  _buildDrawerItem(
+                    icon: isDark ? Icons.light_mode : Icons.dark_mode,
+                    title: isDark ? "Modo claro" : "Modo oscuro",
+                    color: Colors.orange,
+                    onTap: () => context.read<ThemeProvider>().toggleTheme(),
+                  ),
+
+                  // IDIOMA MEJORADO
+                  Consumer<LanguageProvider>(
+                    builder: (context, langProvider, child) {
+                      return _buildDrawerItem(
+                        icon: Icons.translate,
+                        title: "Idioma de la App",
+                        subtitle: langProvider.currentLanguageName,
+                        color: const Color(0xFF00C853),
+                        onTap: () => _showLanguagePicker(context, langProvider),
+                      );
+                    },
+                  ),
+
+                  const Divider(),
+                ],
+              ),
             ),
-            Consumer<LanguageProvider>(
-              builder: (context, langProvider, child) {
-                return ListTile(
-                  leading:
-                      const Icon(Icons.translate, color: Color(0xFF00C853)),
-                  title: const TranslatedText("Idioma de la App"),
-                  // Muestra el nombre real del idioma (ej: Japonés)
-                  subtitle: Text("Actual: ${langProvider.currentLanguageName}"),
-                  onTap: () {
-                    // Al tocarlo, se abre la lista de los 50 desde abajo
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor:
-                          Theme.of(context).scaffoldBackgroundColor,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(20)),
-                      ),
-                      builder: (context) {
-                        return Column(
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: TranslatedText(
-                                "Selecciona Idioma",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 18),
-                              ),
-                            ),
-                            const Divider(),
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount:
-                                    langProvider.supportedLanguages.length,
-                                itemBuilder: (context, index) {
-                                  // Sacamos el código (es, en, ru...) y el nombre (Español, English...)
-                                  String key = langProvider
-                                      .supportedLanguages.keys
-                                      .elementAt(index);
-                                  String name =
-                                      langProvider.supportedLanguages[key]!;
 
-                                  return ListTile(
-                                    title: Text(name),
-                                    // Ponemos un check verde al idioma que está seleccionado
-                                    trailing:
-                                        langProvider.currentLanguage == key
-                                            ? const Icon(Icons.check,
-                                                color: Colors.green)
-                                            : null,
-                                    onTap: () {
-                                      langProvider.setLanguage(
-                                          key); // Cambia el idioma global
-                                      Navigator.pop(context); // Cierra la lista
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            ),
-            //LOGOUT
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const TranslatedText("Cerrar sesión"),
-              onTap: () async {
-                Navigator.pop(context);
-
-                final auth = context.read<AuthProvider>();
-                await auth.logout();
-
-                if (!mounted) return;
-
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  "/login",
-                  (route) => false,
-                );
-              },
+            // BOTÓN DE CERRAR SESIÓN ESTILIZADO
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                tileColor: Colors.red.withOpacity(0.1),
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const TranslatedText("Cerrar sesión",
+                    style: TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.bold)),
+                onTap: () async {
+                  // Tu lógica de logout existente
+                },
+              ),
             ),
           ],
         ),
@@ -627,120 +630,157 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           // SELECTOR CATEGORÍA
                           const TranslatedText("Categoría",
-    style: TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Colors.grey)),
-const SizedBox(height: 10),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey)),
+                          const SizedBox(height: 10),
 
 // 1. Botón para crear nueva
-TextButton(
-  onPressed: () async {
-    String? nueva = await _mostrarDialogoNuevaCategoria();
-    if (nueva != null && nueva.isNotEmpty) {
-      if (localCategories.any((c) => c.name.toLowerCase() == nueva.toLowerCase())) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Esa categoría ya existe")),
-        );
-        return;
-      }
+                          TextButton(
+                            onPressed: () async {
+                              String? nueva =
+                                  await _mostrarDialogoNuevaCategoria();
+                              if (nueva != null && nueva.isNotEmpty) {
+                                if (localCategories.any((c) =>
+                                    c.name.toLowerCase() ==
+                                    nueva.toLowerCase())) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text("Esa categoría ya existe")),
+                                  );
+                                  return;
+                                }
 
-      final auth = context.read<AuthProvider>();
-      bool success = await ApiService.createCategory(auth.token!, nueva, type);
+                                final auth = context.read<AuthProvider>();
+                                bool success = await ApiService.createCategory(
+                                    auth.token!, nueva, type);
 
-      if (success) {
-        await loadCategories();
-        setStateDialog(() {
-          localCategories = List.from(categories);
-          if (localCategories.isNotEmpty) {
-            selectedCategoryId = int.parse(localCategories.last.id);
-          }
-        });
-      }
-    }
-  },
-  child: const Text("Agregar categoría", style: TextStyle(color: Colors.green)),
-),
+                                if (success) {
+                                  await loadCategories();
+                                  setStateDialog(() {
+                                    localCategories = List.from(categories);
+                                    if (localCategories.isNotEmpty) {
+                                      selectedCategoryId =
+                                          int.parse(localCategories.last.id);
+                                    }
+                                  });
+                                }
+                              }
+                            },
+                            child: const Text("Agregar categoría",
+                                style: TextStyle(color: Colors.green)),
+                          ),
 
 // 2. Fila con Dropdown + Editar + Eliminar
-Row(
-  children: [
-    Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.black12 : Colors.grey[50],
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: DropdownButton<int>(
-          value: selectedCategoryId,
-          isExpanded: true,
-          underline: const SizedBox(),
-          icon: const Icon(Icons.keyboard_arrow_down),
-          items: filteredCategories.map((cat) {
-            return DropdownMenuItem<int>(
-              value: int.parse(cat.id),
-              child: Text(cat.name),
-            );
-          }).toList(),
-          onChanged: (v) {
-            setStateDialog(() => selectedCategoryId = v!);
-          },
-        ),
-      ),
-    ),
-    
-    // Si hay una categoría seleccionada, mostramos acciones de CRUD
-    if (selectedCategoryId != null) ...[
-      // BOTÓN EDITAR
-      IconButton(
-        icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
-        onPressed: () async {
-          final catActual = filteredCategories.firstWhere((c) => int.parse(c.id) == selectedCategoryId);
-          String? nuevoNombre = await _mostrarDialogoNuevaCategoria(valorInicial: catActual.name);
-          
-          if (nuevoNombre != null && nuevoNombre.isNotEmpty) {
-            final auth = context.read<AuthProvider>();
-            bool success = await ApiService.updateCategory(auth.token!, selectedCategoryId!, nuevoNombre, type);
-            if (success) {
-              await loadCategories();
-              setStateDialog(() => localCategories = List.from(categories));
-            }
-          }
-        },
-      ),
-      // BOTÓN ELIMINAR
-      IconButton(
-        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-        onPressed: () async {
-          final auth = context.read<AuthProvider>();
-          // Confirmación rápida
-          bool? confirmar = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text("¿Eliminar?"),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("No")),
-                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Sí, borrar")),
-              ],
-            ),
-          );
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 15),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.black12
+                                        : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(15),
+                                    border:
+                                        Border.all(color: Colors.grey[200]!),
+                                  ),
+                                  child: DropdownButton<int>(
+                                    value: selectedCategoryId,
+                                    isExpanded: true,
+                                    underline: const SizedBox(),
+                                    icon: const Icon(Icons.keyboard_arrow_down),
+                                    items: filteredCategories.map((cat) {
+                                      return DropdownMenuItem<int>(
+                                        value: int.parse(cat.id),
+                                        child: Text(cat.name),
+                                      );
+                                    }).toList(),
+                                    onChanged: (v) {
+                                      setStateDialog(
+                                          () => selectedCategoryId = v!);
+                                    },
+                                  ),
+                                ),
+                              ),
 
-          if (confirmar == true) {
-            bool success = await ApiService.deleteCategory(auth.token!, selectedCategoryId!);
-            if (success) {
-              await loadCategories();
-              setStateDialog(() {
-                localCategories = List.from(categories);
-                selectedCategoryId = null; // Limpiamos selección tras borrar
-              });
-            }
-          }
-        },
-      ),
-    ],
-  ],
-),
+                              // Si hay una categoría seleccionada, mostramos acciones de CRUD
+                              if (selectedCategoryId != null) ...[
+                                // BOTÓN EDITAR
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined,
+                                      color: Colors.blueAccent),
+                                  onPressed: () async {
+                                    final catActual =
+                                        filteredCategories.firstWhere((c) =>
+                                            int.parse(c.id) ==
+                                            selectedCategoryId);
+                                    String? nuevoNombre =
+                                        await _mostrarDialogoNuevaCategoria(
+                                            valorInicial: catActual.name);
+
+                                    if (nuevoNombre != null &&
+                                        nuevoNombre.isNotEmpty) {
+                                      final auth = context.read<AuthProvider>();
+                                      bool success =
+                                          await ApiService.updateCategory(
+                                              auth.token!,
+                                              selectedCategoryId!,
+                                              nuevoNombre,
+                                              type);
+                                      if (success) {
+                                        await loadCategories();
+                                        setStateDialog(() => localCategories =
+                                            List.from(categories));
+                                      }
+                                    }
+                                  },
+                                ),
+                                // BOTÓN ELIMINAR
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline,
+                                      color: Colors.redAccent),
+                                  onPressed: () async {
+                                    final auth = context.read<AuthProvider>();
+                                    // Confirmación rápida
+                                    bool? confirmar = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text("¿Eliminar?"),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, false),
+                                              child: const Text("No")),
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, true),
+                                              child: const Text("Sí, borrar")),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirmar == true) {
+                                      bool success =
+                                          await ApiService.deleteCategory(
+                                              auth.token!, selectedCategoryId!);
+                                      if (success) {
+                                        await loadCategories();
+                                        setStateDialog(() {
+                                          localCategories =
+                                              List.from(categories);
+                                          selectedCategoryId =
+                                              null; // Limpiamos selección tras borrar
+                                        });
+                                      }
+                                    }
+                                  },
+                                ),
+                              ],
+                            ],
+                          ),
 
                           const SizedBox(height: 25),
 
@@ -939,7 +979,6 @@ Row(
                             ),
                           ),
                           // DropdownButton
-
                         ], // Cierre de children
                       ),
                     ),
@@ -1076,4 +1115,102 @@ Row(
       ),
     );
   }
+
+  // Constructor de items para el menú
+  Widget _buildDrawerItem(
+      {required IconData icon,
+      required String title,
+      String? subtitle,
+      required Color color,
+      required VoidCallback onTap}) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8)),
+        child: Icon(icon, color: color),
+      ),
+      title: TranslatedText(title,
+          style: const TextStyle(fontWeight: FontWeight.w500)),
+      subtitle: subtitle != null
+          ? Text(subtitle, style: const TextStyle(fontSize: 12))
+          : null,
+      trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+      onTap: onTap,
+    );
+  }
+
+// El Modal de Idioma que ya tenías, pero llamado desde afuera
+  void _showLanguagePicker(
+      BuildContext context, LanguageProvider langProvider) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return Column(
+          mainAxisSize:
+              MainAxisSize.min, // Hace que el modal solo ocupe lo necesario
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: TranslatedText("Selecciona Idioma",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: langProvider.supportedLanguages.length,
+                itemBuilder: (context, index) {
+                  String key =
+                      langProvider.supportedLanguages.keys.elementAt(index);
+                  String name = langProvider.supportedLanguages[key]!;
+                  return ListTile(
+                    title: Text(name),
+                    trailing: langProvider.currentLanguage == key
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : null,
+                    onTap: () {
+                      langProvider.setLanguage(key);
+                      Navigator.pop(context);
+                    },
+                    
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+
+ Future<void> _pickImage() async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+  if (image != null) {
+    var request = http.MultipartRequest('POST', Uri.parse('https://finara-app.onrender.com/users/upload-profile-picture'));
+    
+    if (kIsWeb) {
+      // SOLUCIÓN PARA WEB: Leer los bytes de la imagen
+      var bytes = await image.readAsBytes();
+      var multipartFile = http.MultipartFile.fromBytes(
+        'file', 
+        bytes, 
+        filename: image.name
+      );
+      request.files.add(multipartFile);
+    } else {
+      // SOLUCIÓN PARA MÓVIL
+      request.files.add(await http.MultipartFile.fromPath('file', image.path));
+    }
+
+    await request.send();
+  }
+
 }
+}
+

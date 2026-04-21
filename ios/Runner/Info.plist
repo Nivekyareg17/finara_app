@@ -66,5 +66,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	
+	<key>NSPhotoLibraryUsageDescription</key>
+        <string>Necesitamos acceso a tu galería para cambiar tu foto de perfil.</string>
+        <key>NSCameraUsageDescription</key>
+        <string>Necesitamos usar tu cámara si quieres tomarte una foto ahora.</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>Necesitamos el micrófono para videos (opcional).</string>
 </dict>
 </plist>
