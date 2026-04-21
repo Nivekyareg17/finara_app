@@ -36,12 +36,12 @@ def create_video(video: schemas.VideoCreate, db: Session = Depends(get_db)):
     return new_video
 
 # Obtener videos por categoría
-@router.get("/{category_id}", response_model=list[schemas.VideoResponse])
-def get_videos(category_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Video).filter(models.Video.category_id == category_id).all()
+@router.get("/{video_category_id}", response_model=list[schemas.VideoResponse])
+def get_videos(video_category_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Video).filter(models.Video.category_id == video_category_id).all()
 
 # Editar categoria
-@router.put("/categories/{category_id}")
+@router.put("/categories/{video_category_id}")
 def update_category(
     category_id: int,
     data: schemas.VideoCategoryCreate,
@@ -64,7 +64,7 @@ def update_category(
 
 
 # Eliminar categoria
-@router.delete("/categories/{category_id}")
+@router.delete("/categories/{video_category_id}")
 def delete_category(category_id: int, db: Session = Depends(get_db)):
     category = db.query(models.VideoCategory).filter(
         models.VideoCategory.id == category_id

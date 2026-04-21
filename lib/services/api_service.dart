@@ -187,7 +187,7 @@ static Future<bool> createCategory(String token, String name, String type) async
       String token, int id, String name, String type) async {
     final response = await http.put(
       Uri.parse(
-          "$baseUrl/categories/$id/"), // Verifica si tu API usa / al final
+          "$baseUrl/categories/$id"), // Verifica si tu API usa / al final
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token"
@@ -201,7 +201,7 @@ static Future<bool> createCategory(String token, String name, String type) async
   static Future<bool> deleteCategory(String token, int id) async {
   try {
     // IMPORTANTE: Agregamos el prefijo doble /categories/categories/
-    final url = Uri.parse("$baseUrl/categories/$id/"); // Verifica si tu API requiere / al final 
+    final url = Uri.parse("$baseUrl/categories/$id"); // Verifica si tu API requiere / al final 
     
     final response = await http.delete(
       url,
