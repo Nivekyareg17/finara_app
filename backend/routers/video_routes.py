@@ -41,14 +41,15 @@ def get_videos(video_category_id: int, db: Session = Depends(get_db)):
     return db.query(models.Video).filter(models.Video.category_id == video_category_id).all()
 
 # Editar categoria
-@router.put("/categories/{video_category_id}")
-def update_category(
-    category_id: int,
+# --- Editar categoria de VIDEO ---
+@router.put("/video-categories/{video_category_id}")
+def update_video_category(
+    video_category_id: int, # <--- El nombre debe coincidir abajo
     data: schemas.VideoCategoryCreate,
     db: Session = Depends(get_db)
 ):
     category = db.query(models.VideoCategory).filter(
-        models.VideoCategory.id == category_id
+        models.VideoCategory.id == video_category_id # <--- Antes decía category_id (ERROR)
     ).first()
 
     if not category:
@@ -56,18 +57,15 @@ def update_category(
 
     category.title = data.title
     category.description = data.description
-
     db.commit()
     db.refresh(category)
-
     return category
 
-
-# Eliminar categoria
-@router.delete("/categories/{video_category_id}")
-def delete_category(video_category_id: int, db: Session = Depends(get_db)):
+# --- Eliminar categoria de VIDEO ---
+@router.delete("/video-categories/{video_category_id}")
+def delete_video_category(video_category_id: int, db: Session = Depends(get_db)):
     category = db.query(models.VideoCategory).filter(
-        models.VideoCategory.id == category_id
+        models.VideoCategory.id == video_category_id # <--- Antes decía category_id (ERROR)
     ).first()
 
     if not category:
@@ -75,7 +73,6 @@ def delete_category(video_category_id: int, db: Session = Depends(get_db)):
 
     db.delete(category)
     db.commit()
-
     return {"message": "Categoría eliminada"}
 
 

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from auth import verify_token
+from backend import models
 from database import SessionLocal
 from models import Category, User
 import schemas
@@ -91,26 +92,25 @@ def update_category(
     return db_category
 
 # --- ELIMINAR CATEGORÍA ---
-@router.delete("/categories/{category_id}")
-def delete_category(
-    category_id: int,
-    token: str = Depends(oauth2_scheme),
+@router.delete("/{category_id}")
+def delete_transaction_category(
+    category_id: int, 
+    token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
 ):
     data = verify_token(token)
-    user = db.query(User).filter(User.email == data["sub"]).first()
+    user = db.query(models.User).filter(models.User.email == data["sub"]).first()
 
-    db_category = db.query(Category).filter(
-        Category.id == category_id, 
-        Category.user_id == user.id
+    db_category = db.query(models.Category).filter(
+        models.Category.id == category_id,
+        models.Category.user_id == user.id
     ).first()
 
     if not db_category:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
 
     db.delete(db_category)
     db.commit()
-    return {"message": "Categoría eliminada correctamente"}
+    return {"message": "Categoría eliminada con éxito"}
 
 
