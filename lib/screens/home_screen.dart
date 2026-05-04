@@ -1,3 +1,4 @@
+import 'package:finara_app_v1/screens/chat_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:finara_app_v1/screens/stock_screen.dart';
@@ -8,6 +9,7 @@ import '../widgets/statcard.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/translate_widget.dart';
 import '../widgets/app_drawer.dart';
+import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,12 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
       // 2. Ejecutamos la carga inicial del idioma
       future: langProvider.ensureInitialized(),
       builder: (context, snapshot) {
-        
         // 3. Mientras carga (estos son los 2 segundos de delay)
         // Mostramos un fondo sólido con un cargador elegante
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            backgroundColor: isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
+            backgroundColor:
+                isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
             body: const Center(
               child: CircularProgressIndicator(
                 color: Color.fromRGBO(6, 78, 59, 1),
@@ -46,7 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
         // 4. UNA VEZ CARGADO: Mostramos la UI real
         // Aquí ya NO hay parpadeo porque el Scaffold se dibuja con los datos listos
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
+          backgroundColor:
+              isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
           appBar: AppBar(
             backgroundColor: isDark ? Colors.black : Colors.white,
             elevation: 0,
@@ -80,21 +83,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    Expanded(
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChatListScreen(),
+                          ),
+                        );
+                      },
                       child: StatCard(
-                        title: langProvider.currentLanguage == 'zh' ? "已完成" : "COMPLETADO",
-                        count: "24",
-                        unit: langProvider.currentLanguage == 'zh' ? "课程" : "Lecciones",
-                        icon: Icons.emoji_events_outlined,
-                        accentColor: Colors.blue,
+                        title: "MENSAJES",
+                        count: "💬",
+                        unit: "Chats",
+                        icon: Icons.chat,
+                        accentColor: Colors.green,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: StatCard(
-                        title: langProvider.currentLanguage == 'zh' ? "AI 积分" : "CRÉDITOS IA",
+                        title: langProvider.currentLanguage == 'zh'
+                            ? "AI 积分"
+                            : "CRÉDITOS IA",
                         count: "850",
-                        unit: langProvider.currentLanguage == 'zh' ? "剩余" : "Restantes",
+                        unit: langProvider.currentLanguage == 'zh'
+                            ? "剩余"
+                            : "Restantes",
                         icon: Icons.auto_awesome,
                         accentColor: const Color(0xFF2ECC71),
                       ),
@@ -110,7 +125,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
-                  langProvider.currentLanguage == 'zh' ? "快速操作" : "ACCIONES RÁPIDAS",
+                  langProvider.currentLanguage == 'zh'
+                      ? "快速操作"
+                      : "ACCIONES RÁPIDAS",
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -124,17 +141,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // ACCESO AL CHAT IA
               QuickActionTile(
-                title: langProvider.currentLanguage == 'zh' ? "咨询 Finara AI" : "Pregunta a Finara AI",
-                subtitle: langProvider.currentLanguage == 'zh' ? "24/7 专家建议" : "Asesoría experta 24/7",
+                title: langProvider.currentLanguage == 'zh'
+                    ? "咨询 Finara AI"
+                    : "Pregunta a Finara AI",
+                subtitle: langProvider.currentLanguage == 'zh'
+                    ? "24/7 专家建议"
+                    : "Asesoría experta 24/7",
                 icon: Icons.chat_bubble_outline_rounded,
                 iconColor: const Color(0xFF1E8449),
-                onTap: () => Navigator.pushReplacementNamed(context, "/daiko_ai"),
+                onTap: () =>
+                    Navigator.pushReplacementNamed(context, "/daiko_ai"),
               ),
 
               // VISTA DE MERCADO
               QuickActionTile(
-                title: langProvider.currentLanguage == 'zh' ? "股票市场" : "Mercado de Valores",
-                subtitle: langProvider.currentLanguage == 'zh' ? "查看实时价格" : "Ver precios en vivo",
+                title: langProvider.currentLanguage == 'zh'
+                    ? "股票市场"
+                    : "Mercado de Valores",
+                subtitle: langProvider.currentLanguage == 'zh'
+                    ? "查看实时价格"
+                    : "Ver precios en vivo",
                 icon: Icons.show_chart,
                 iconColor: Colors.green,
                 onTap: () {
@@ -149,8 +175,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // RUTA DE APRENDIZAJE
               QuickActionTile(
-                title: langProvider.currentLanguage == 'zh' ? "学习路线" : "Ruta de Aprendizaje",
-                subtitle: langProvider.currentLanguage == 'zh' ? "今天有 3 个模块待完成" : "3 módulos para completar hoy",
+                title: langProvider.currentLanguage == 'zh'
+                    ? "学习路线"
+                    : "Ruta de Aprendizaje",
+                subtitle: langProvider.currentLanguage == 'zh'
+                    ? "今天有 3 个模块待完成"
+                    : "3 módulos para completar hoy",
                 icon: Icons.school_outlined,
                 iconColor: Colors.purple,
                 onTap: () => Navigator.pushReplacementNamed(context, "/video"),

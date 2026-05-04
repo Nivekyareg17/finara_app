@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Literal
+from datetime import datetime
 import re
 
 # Creación de tablas
@@ -125,6 +126,7 @@ class MessageResponse(BaseModel):
     content: str
     sender_id: int
     receiver_id: int
+    timestamp: datetime
 
     class Config:
         orm_mode = True
