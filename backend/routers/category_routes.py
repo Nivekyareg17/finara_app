@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from auth import verify_token
-from backend import models
 from database import SessionLocal
 from models import Category, User
 import schemas
