@@ -71,6 +71,23 @@ def get_current_user(   # Función cuando alguien llame /me
         "role": data["role"]
     }
 
+@router.get("/")
+def get_users_public(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    data = verify_token(token)
+
+    users = db.query(User).all()
+
+    return [
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email
+        } for u in users
+    ]
+
 
 @router.post("/create-admin")
 def create_admin(
