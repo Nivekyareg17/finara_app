@@ -1,33 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
-from fastapi import UploadFile, File
 import models  # IMPORTANTE para registrar modelos
-import shutil
-import os
-
-
-# Carpeta donde se guardarán las fotos
-UPLOAD_DIR = "static/profile_pics"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-@router.post("/users/upload-profile-picture")
-async def upload_picture(
-    file: UploadFile = File(...), 
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    file_path = f"{UPLOAD_DIR}/{current_user.id}_{file.filename}"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Guardamos la URL en la base de datos
-    url = f"https://tu-api-en-render.com/{file_path}"
-    current_user.profile_image_url = url
-    db.commit()
-    
-    return {"url": url}
 
 from routers import (
     auth_routes, 
