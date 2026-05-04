@@ -14,9 +14,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-
-
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -274,7 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            // BOTÓN DE CERRAR SESIÓN ESTILIZADO
+            // BOTÓN DE CERRAR SESIÓN
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListTile(
@@ -286,7 +283,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                         color: Colors.red, fontWeight: FontWeight.bold)),
                 onTap: () async {
-                  // Tu lógica de logout existente
+                  final auth = context.read<AuthProvider>();
+
+                  await auth.logout();
+
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
                 },
               ),
             ),
@@ -1175,7 +1180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       langProvider.setLanguage(key);
                       Navigator.pop(context);
                     },
-                    
                   );
                 },
               ),
@@ -1185,32 +1189,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-  
 
- Future<void> _pickImage() async {
-  final ImagePicker picker = ImagePicker();
-  final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-  if (image != null) {
-    var request = http.MultipartRequest('POST', Uri.parse('https://finara-app.onrender.com/users/upload-profile-picture'));
-    
-    if (kIsWeb) {
-      // SOLUCIÓN PARA WEB: Leer los bytes de la imagen
-      var bytes = await image.readAsBytes();
-      var multipartFile = http.MultipartFile.fromBytes(
-        'file', 
-        bytes, 
-        filename: image.name
-      );
-      request.files.add(multipartFile);
-    } else {
-      // SOLUCIÓN PARA MÓVIL
-      request.files.add(await http.MultipartFile.fromPath('file', image.path));
+    if (image != null) {
+      var request = http.MultipartRequest(
+          'POST',
+          Uri.parse(
+              'https://finara-api-1lmd.onrender.com/users/upload-profile-picture'));
+
+      if (kIsWeb) {
+        // SOLUCIÓN PARA WEB: Leer los bytes de la imagen
+        var bytes = await image.readAsBytes();
+        var multipartFile =
+            http.MultipartFile.fromBytes('file', bytes, filename: image.name);
+        request.files.add(multipartFile);
+      } else {
+        // SOLUCIÓN PARA MÓVIL
+        request.files
+            .add(await http.MultipartFile.fromPath('file', image.path));
+      }
+
+      await request.send();
     }
-
-    await request.send();
   }
-
 }
-}
-
