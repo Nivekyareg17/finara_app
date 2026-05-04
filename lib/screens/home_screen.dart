@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:finara_app_v1/screens/stock_screen.dart';
-import '../providers/languaje_provider.dart'; // Asegúrate que el nombre del archivo sea este
+import '../providers/languaje_provider.dart';
 import '../widgets/QuickActionTile.dart';
 import '../widgets/quick_wins.dart';
 import '../widgets/statcard.dart';

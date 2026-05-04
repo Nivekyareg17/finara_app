@@ -4,9 +4,6 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl = "https://finara-api-1lmd.onrender.com";
 
-  // =========================
-  // 🔐 AUTH
-  // =========================
 
   static Future<String?> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
@@ -57,9 +54,7 @@ class ApiService {
     return null;
   }
 
-  // =========================
-  // 💸 TRANSACTIONS
-  // =========================
+
 
   static Future<bool> createTransaction(
     String token,
@@ -147,9 +142,6 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // =========================
-  // 🏷️ CATEGORIES
-  // =========================
 
   static Future<List<dynamic>> getTransactionCategories(String token) async {
   try {
@@ -225,9 +217,7 @@ static Future<bool> createCategory(String token, String name, String type) async
   }
 }
 
-  // =========================
-  // 🔐 PASSWORD
-  // =========================
+
 
   static Future<bool> resetPassword(String token, String newPassword) async {
     final url = Uri.parse("$baseUrl/auth/reset-password");
@@ -270,9 +260,6 @@ static Future<bool> createCategory(String token, String name, String type) async
     }
   }
 
-  // =========================
-  // 👤 USERS
-  // =========================
 
   static Future<List<dynamic>> getUsers(String token) async {
     final url = Uri.parse("$baseUrl/users/all");

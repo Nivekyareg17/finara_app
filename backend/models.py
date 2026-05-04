@@ -1,6 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Float
 from sqlalchemy.orm import relationship
 from database import Base
+from datetime import datetime
 
 # 1. TABLA DE CATEGORÍAS
 class Category(Base):
@@ -100,3 +101,13 @@ class Lectura(Base):
     titulo = Column(String)
     contenido = Column(String)
     tiempo_lectura = Column(String)
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))

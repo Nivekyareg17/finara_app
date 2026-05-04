@@ -115,3 +115,16 @@ class LecturaResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class MessageCreate(BaseModel):
+    receiver_id: int
+    content: str
+
+class MessageResponse(BaseModel):
+    id: int
+    content: str
+    sender_id: int
+    receiver_id: int
+
+    class Config:
+        orm_mode = True

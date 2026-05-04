@@ -12,7 +12,8 @@ from routers import (
     video_routes, 
     lecturas_routes, 
     stock_routes,
-    category_routes
+    category_routes,
+    message_routes
 )
 
 # 1. Crear la aplicación backend
@@ -44,6 +45,7 @@ app.include_router(news_router)
 app.include_router(video_routes.router)
 app.include_router(lecturas_routes.router)
 app.include_router(stock_routes.stock_router)
+app.include_router(message_routes.router)
 
 @app.get("/")
 def read_root():

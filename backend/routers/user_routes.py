@@ -192,7 +192,6 @@ async def upload_profile_picture(
     filename = f"{user.id}_{file.filename}"
     file_path = f"{UPLOAD_DIR}/{filename}"
 
-    # 🔥 ESTO FALTABA
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
