@@ -9,6 +9,13 @@ from database import SessionLocal
 from models import User
 from auth import verify_token, require_admin
 
+from fastapi import UploadFile, File
+import shutil
+import os
+
+UPLOAD_DIR = "static/profile_pics"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
@@ -166,3 +173,32 @@ def remove_admin(
     db.commit()
 
     return {"message": "Ahora es usuario normal"}
+
+
+@router.post("/upload-profile-picture")
+async def upload_profile_picture(
+    file: UploadFile = File(...),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    data = verify_token(token)
+    email = data["sub"]
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    filename = f"{user.id}_{file.filename}"
+    file_path = f"{UPLOAD_DIR}/{filename}"
+
+    # 🔥 ESTO FALTABA
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    url = f"https://finara-api-1lmd.onrender.com/static/profile_pics/{filename}"
+
+    user.profile_image_url = url
+    db.commit()
+
+    return {"url": url}
