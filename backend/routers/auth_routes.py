@@ -9,6 +9,7 @@ from email_utils import send_email
 from datetime import datetime
 from auth import create_access_token, require_admin
 from pydantic import BaseModel
+from fastapi import UploadFile, File
 import schemas
 import threading
 
