@@ -71,6 +71,11 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (context, i) {
                 final msg = messages[i];
                 final isMe = msg["sender_id"] != widget.userId;
+                final raw = msg["timestamp"];
+
+                final date = raw != null
+                    ? DateTime.parse(raw.replaceFirst(" ", "T") + "Z").toLocal()
+                    : null;
 
                 return Align(
                   alignment:
@@ -91,9 +96,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          (msg["timestamp"] != null)
-                              ? msg["timestamp"].substring(11, 16)
-                              : "", // hora
+                          date != null
+                              ? "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}"
+                              : "",
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 10,
