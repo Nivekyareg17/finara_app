@@ -157,17 +157,3 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
 
     return {"msg": "Contraseña actualizada"}
-
-router = APIRouter()
-
-@router.post("/upload-profile-picture")
-async def upload_picture(file: UploadFile = File(...)):
-    # Por ahora solo vamos a imprimir que llegó
-    print(f"Recibí el archivo: {file.filename}")
-    
-    # Aquí es donde guardarías el archivo en el futuro
-    return {
-        "status": "success",
-        "message": "Foto recibida correctamente",
-        "url": f"https://finara-app.onrender.com/static/{file.filename}"
-    }
