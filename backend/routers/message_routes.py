@@ -31,7 +31,8 @@ def send_message(
         content=msg.content,
         sender_id=sender.id,
         receiver_id=msg.receiver_id,
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow(),
+        is_read=False
     )
 
     db.add(new_msg)
@@ -49,6 +50,12 @@ def get_messages(
 ):
     data = verify_token(token)
     current_user = db.query(User).filter(User.email == data["sub"]).first()
+
+    db.query(Message).filter(
+        Message.sender_id == user_id,
+        Message.receiver_id == current_user.id,
+        Message.is_read == False
+    ).update({"is_read": True})
 
     messages = db.query(Message).filter(
         ((Message.sender_id == current_user.id) & (Message.receiver_id == user_id)) |

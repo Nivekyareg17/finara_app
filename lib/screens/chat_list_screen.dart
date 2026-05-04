@@ -32,29 +32,65 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Chats")),
+      appBar: AppBar(title: const Text("Chats"),titleTextStyle: TextStyle(fontSize: 25,color: const Color.fromARGB(221, 16, 75, 8),),),
       body: ListView.builder(
+        padding: const EdgeInsets.all(10),
         itemCount: users.length,
         itemBuilder: (context, i) {
           final user = users[i];
 
-          return ListTile(
-            leading: CircleAvatar(
-              child: Text(user["name"][0]),
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-            title: Text(user["name"]),
-            subtitle: const Text("Toca para chatear"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChatScreen(
-                    userId: user["id"],
-                    userName: user["name"],
-                  ),
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+
+              //AVATAR
+              leading: CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.green.shade600,
+                child: Text(
+                  user["name"][0].toUpperCase(),
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
                 ),
-              );
-            },
+              ),
+
+              //NOMBRE
+              title: Text(
+                user["name"],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Color.fromARGB(221, 27, 136, 13),
+                ),
+              ),
+
+              //SUBTEXTO
+              subtitle: const Text(
+                "Toca para chatear",
+                style: TextStyle(color: Colors.grey),
+              ),
+
+              //ICONO DERECHA
+              trailing:
+                  const Icon(Icons.chat_bubble_outline, color: Colors.green),
+
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                      userId: user["id"],
+                      userName: user["name"],
+                    ),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),
