@@ -23,7 +23,7 @@ def get_news():
     noticias = []
 
     if "articles" in data:
-        for item in data["articles"][:10]:
+        for item in data["articles"][:30]:
             noticias.append({
                 "titulo": item.get("title"),
                 "categoria": "GENERAL",

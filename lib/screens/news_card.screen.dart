@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/news_model.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:finara_app_v1/services/translation_service.dart'; 
+import 'package:finara_app_v1/services/translation_service.dart';
 import '../widgets/translate_widget.dart';
 import '../widgets/app_drawer.dart';
 
@@ -18,9 +18,36 @@ class NewsScreen extends StatelessWidget {
     }
   }
 
+  String formatearFecha(String fecha) {
+    final date = DateTime.parse(fecha).toLocal();
+
+    const meses = [
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic"
+    ];
+
+    return "${date.day} ${meses[date.month - 1]} ${date.year}";
+  }
+
+  String calcularTiempoLectura(String texto) {
+    final palabras = texto.split(" ").length;
+    final minutos = (palabras / 200).ceil();
+    return "$minutos min";
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark; 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // Datos de ejemplo que vendrían de tu API
     final newsService = NewsService();
 
@@ -42,7 +69,7 @@ class NewsScreen extends StatelessWidget {
             TranslatedText(
               "Finara News",
               style: TextStyle(
-                  color:Color.fromARGB(255, 10, 109, 82),
+                  color: Color.fromARGB(255, 10, 109, 82),
                   fontWeight: FontWeight.bold,
                   fontSize: 18),
             ),
@@ -76,9 +103,10 @@ class NewsScreen extends StatelessWidget {
                           child: _buildNewsCard(
                             NoticiaAPI(
                               categoria: noticia.categoria.toUpperCase(),
-                              tiempoHace: "Reciente",
+                              tiempoHace: formatearFecha(noticia.fecha),
                               titulo: noticia.titulo,
-                              tiempoLectura: "3 min",
+                              tiempoLectura:
+                                  calcularTiempoLectura(noticia.titulo),
                               imagen: noticia.imagen,
                               url: noticia.url,
                             ),
@@ -107,17 +135,15 @@ class NewsScreen extends StatelessWidget {
     );
   }
 
-
-
   // 3. Tarjeta de Noticia Principal
   Widget _buildNewsCard(NoticiaAPI noticia, bool isDark) {
     return Container(
       decoration: BoxDecoration(
         color: isDark
-    ? const Color.fromARGB(255, 32, 32, 32)
-    : Color.fromARGB(255, 128, 127, 127),
-    borderRadius: BorderRadius.circular(16),
-    ),
+            ? const Color.fromARGB(255, 32, 32, 32)
+            : Color.fromARGB(255, 128, 127, 127),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -148,7 +174,9 @@ class NewsScreen extends StatelessWidget {
                   children: [
                     SizedBox(width: 8),
                     TranslatedText(noticia.tiempoHace,
-                        style: TextStyle(color: const Color.fromARGB(221, 255, 255, 255), fontSize: 11)),
+                        style: TextStyle(
+                            color: const Color.fromARGB(221, 255, 255, 255),
+                            fontSize: 11)),
                   ],
                 ),
                 SizedBox(height: 12),
