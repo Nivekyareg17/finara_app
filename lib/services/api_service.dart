@@ -506,6 +506,9 @@ class ApiService {
       body: jsonEncode({"receiver_id": receiverId, "content": content}),
     );
 
+    print(res.statusCode);
+    print(res.body);
+
     return res.statusCode == 200 || res.statusCode == 201;
   }
 

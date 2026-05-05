@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import Message, User
@@ -26,6 +26,9 @@ def send_message(
 ):
     data = verify_token(token)
     sender = db.query(User).filter(User.email == data["sub"]).first()
+    
+    if not sender:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     new_msg = Message(
         content=msg.content,
