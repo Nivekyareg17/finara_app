@@ -82,7 +82,21 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                     ),
                   ),
                   onPressed: () async {
-                    // lógica
+                    final success = await ApiService.createLectura(
+                      tituloController.text,
+                      contenidoController.text,
+                      tiempoController.text,
+                    );
+
+                    if (success) {
+                      Navigator.pop(context);
+                      loadLecturas();
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Lectura creada correctamente")),
+                      );
+                    }
                   },
                   child: const Text("Guardar"),
                 ),
@@ -167,29 +181,29 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
   }
 
   Widget _buildInput(
-  TextEditingController controller,
-  String label, {
-  int maxLines = 1,
-}) {
-  return TextField(
-    controller: controller,
-    maxLines: maxLines,
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: primaryColor),
-      filled: true,
-      fillColor: Colors.grey.withOpacity(0.08),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+    TextEditingController controller,
+    String label, {
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: primaryColor),
+        filled: true,
+        fillColor: Colors.grey.withOpacity(0.08),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
+        ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primaryColor, width: 2),
-      ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
