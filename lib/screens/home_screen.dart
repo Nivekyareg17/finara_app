@@ -1,3 +1,4 @@
+import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:finara_app_v1/screens/chat_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,8 @@ import '../widgets/custom_bottom_nav.dart';
 import '../widgets/translate_widget.dart';
 import '../widgets/app_drawer.dart';
 import 'chat_screen.dart';
+import '../widgets/calculators_card.dart';
+import 'calculators/calculators_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -184,6 +187,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.school_outlined,
                 iconColor: Colors.purple,
                 onTap: () => Navigator.pushReplacementNamed(context, "/video"),
+              ),
+
+              // CALCULADORAS
+              CalculatorsCard(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CalculatorsScreen(),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 80),
