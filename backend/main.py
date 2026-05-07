@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 from fastapi.staticfiles import StaticFiles
 from routers.news_routes import news_router
-from notes_routes import router as notes_router
+from routers.notes_routes import router as notes_router
 import models
 
 from routers import (
