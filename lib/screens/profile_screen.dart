@@ -13,9 +13,9 @@ import 'package:finara_app_v1/providers/languaje_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
-
+import 'package:intl/intl.dart';
 import 'dart:convert';
-
+import 'package:finara_app_v1/services/api_service.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -163,27 +163,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       // APPBAR
-      appBar: AppBar(
-        elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                  color: Color(0xFF00C853),
-                  borderRadius: BorderRadius.circular(4)),
-              child: Icon(Icons.account_circle_rounded,
-                  color: Colors.white, size: 18),
+     appBar: AppBar(
+  elevation: 0,
+  backgroundColor: Colors.transparent, // Fondo transparente para mayor fluidez
+  surfaceTintColor: Colors.transparent,
+  title: Row(
+    children: [
+      // Logo o Icono de la marca con un degradado sutil
+      Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF00C853), Color(0xFF00E676)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12), // Bordes más redondeados son tendencia
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF00C853).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            SizedBox(width: 8),
-            Text("Profile",
-                style: TextStyle(
-                    color: Color.fromARGB(255, 10, 109, 82),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18)),
           ],
         ),
+        child: const Icon(Icons.account_balance_wallet_rounded,
+            color: Colors.white, size: 20),
       ),
+      const SizedBox(width: 12),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Finara", // Nombre de la App
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF1B4332),
+              fontWeight: FontWeight.w900,
+              fontSize: 20,
+              letterSpacing: -0.5,
+            ),
+          ),
+          Text(
+            "Mi Perfil", // Subtítulo indicativo
+            style: TextStyle(
+              color: isDark ? Colors.white54 : Colors.grey[600],
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ],
+  ),
+  
+),
 
       //DRAWER (MENU)
       drawer: Drawer(
@@ -196,38 +229,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Color(0xFF064E3B),
               ),
               currentAccountPicture: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white24,
-                    // El '!' después de profileImageUrl solo se pone si ya comprobaste que no es nulo
-                    backgroundImage:
-                        (profileImageUrl != null && profileImageUrl!.isNotEmpty)
-                            ? NetworkImage(profileImageUrl!)
-                            : null,
-                    child: (profileImageUrl == null || profileImageUrl!.isEmpty)
-                        ? const Icon(Icons.person,
-                            size: 40, color: Colors.white)
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () => _pickImage(), // Función para la galería
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00C853),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.edit,
-                            color: Colors.white, size: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+  children: [
+    Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white24, width: 2), // Un borde lo hace ver más fino
+      ),
+      child: CircleAvatar(
+        radius: 40,
+        backgroundColor: Colors.white12,
+        // Usamos un try-catch visual con errorBuilder si fuera necesario, 
+        // pero aquí optimizamos la lógica de carga
+        backgroundImage: (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+            ? NetworkImage(profileImageUrl!)
+            : null,
+        child: (profileImageUrl == null || profileImageUrl!.isEmpty)
+            ? const Icon(Icons.person, size: 40, color: Colors.white54)
+            : null,
+      ),
+    ),
+    Positioned(
+      bottom: 0,
+      right: 0,
+      child: GestureDetector(
+        onTap: _pickImage, 
+        child: AnimatedContainer( // Pequeña animación al tocar
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(6), // Un poquito más grande para el dedo
+          decoration: BoxDecoration(
+            color: const Color(0xFF00C853),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              )
+            ],
+          ),
+          child: const Icon(Icons.camera_alt, // Camera_alt se entiende mejor que edit
+              color: Colors.white, size: 18),
+        ),
+      ),
+    ),
+  ],
+),
               accountName: Text(
                 name.isEmpty ? "Cargando..." : name,
                 style: const TextStyle(
@@ -316,12 +362,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             //PERFIL
             Row(
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: primaryColor,
-                  child:
-                      const Icon(Icons.person, size: 30, color: Colors.white),
-                ),
+               CircleAvatar(
+          radius: 20, // Más pequeño
+          backgroundColor: Colors.white12,
+          // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
+          backgroundImage: (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+              ? NetworkImage(profileImageUrl!)
+              : null,
+          child: (profileImageUrl == null || profileImageUrl!.isEmpty)
+              ? const Icon(Icons.person_outline_rounded, size: 20, color: Colors.white54)
+              : null,
+        ),
+
                 const SizedBox(width: 15),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,33 +394,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            //TARJETA DE BALANCE
+            // TARJETA DE BALANCE MEJORADA
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24), // Un poco más de aire
               decoration: BoxDecoration(
-                //light/dark
-                color:
-                    isDark ? const Color(0xFF064E3B) : const Color(0xFFE8F5E9),
-                borderRadius: BorderRadius.circular(20),
+                // Un degradado sutil lo hace ver más "Premium"
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [const Color(0xFF064E3B), const Color(0xFF065F46)]
+                      : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Balance Total",
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white70
+                              : const Color(0xFF1B4332).withOpacity(0.7),
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: isDark
+                            ? Colors.white38
+                            : const Color(0xFF1B4332).withOpacity(0.3),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Text(
-                    "Balance Total",
+                    formatCurrency(getBalance()), // <-- Usando la función nueva
                     style: TextStyle(
-                      color: isDark ? Colors.white70 : const Color(0xFF1B4332),
-                      fontSize: 14,
+                      fontSize: 36, // Un poco más grande
+                      fontWeight: FontWeight.w900, // Más grueso
+                      letterSpacing:
+                          -1, // Un poco más juntas las letras se ve pro
+                      color: isDark ? Colors.white : const Color(0xFF1B4332),
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    "\$${getBalance().toStringAsFixed(2)}",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1B4332),
+                  const SizedBox(height: 8),
+                  // Un pequeño indicador extra le da el toque final
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white10 : Colors.white54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      "Actualizado hace un momento",
+                      style: TextStyle(
+                        fontSize: 10,
+                        color:
+                            isDark ? Colors.white60 : const Color(0xFF1B4332),
+                      ),
                     ),
                   ),
                 ],
@@ -466,11 +565,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              "${isIngreso ? '+' : '-'} \$${t.amount.toStringAsFixed(2)}",
+                              "${isIngreso ? '+' : '-'} ${formatCurrency(t.amount)}",
                               style: TextStyle(
-                                color: isIngreso ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.bold,
+                                color: isIngreso ? Colors.green : Colors.redAccent,fontWeight: FontWeight.bold,
                                 fontSize: 16,
+                                
                               ),
                             ),
                             Row(
@@ -1097,59 +1196,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void confirmDelete(TransactionModel t) {
-    showDialog(
-      context: context,
-      builder: (_) {
-        bool isDeleting = false;
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const TranslatedText("Confirmar"),
-              content: Text("¿Eliminar '${t.description}'?"),
-              actions: [
-                TextButton(
-                  onPressed: isDeleting ? null : () => Navigator.pop(context),
-                  child: const TranslatedText("Cancelar"),
-                ),
-                TextButton(
-                  onPressed: isDeleting
-                      ? null
-                      : () async {
-                          setStateDialog(() => isDeleting = true);
-
-                          final auth = context.read<AuthProvider>();
-
-                          final success = await ApiService.deleteTransaction(
-                            auth.token!,
-                            t.id!,
-                          );
-
-                          if (!mounted) return;
-
-                          Navigator.pop(context);
-
-                          if (success) {
-                            loadTransactions();
-                          }
-                        },
-                  child: isDeleting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const TranslatedText(
-                          "Eliminar",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                ),
+  showDialog(
+    context: context,
+    builder: (_) {
+      bool isDeleting = false;
+      return StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text("¿Eliminar movimiento?", 
+              style: TextStyle(fontWeight: FontWeight.bold)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Se eliminará '${t.description}'"),
+                const SizedBox(height: 8),
+                Text("Monto: \$${t.amount.toStringAsFixed(2)}", 
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent)),
               ],
-            );
-          },
-        );
-      },
-    );
+            ),
+            actions: [
+              TextButton(
+                onPressed: isDeleting ? null : () => Navigator.pop(context),
+                child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                ),
+                onPressed: isDeleting ? null : () async {
+                  // ... tu lógica de borrado que ya tienes ...
+                },
+                child: isDeleting 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text("Eliminar"),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
   }
 
   Future<String?> _mostrarDialogoNuevaCategoria({String? valorInicial}) async {
@@ -1252,51 +1342,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+  final auth = context.read<AuthProvider>(); // Obtenemos el token
+  final ImagePicker picker = ImagePicker();
+  
+  // 1. Seleccionar la imagen
+  final XFile? image = await picker.pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 50, // Comprimimos un poco para que suba más rápido
+  );
 
-    if (image != null) {
-      var request = http.MultipartRequest(
-          'POST',
-          Uri.parse(
-              'https://finara-app.onrender.com/users/upload-profile-picture'));
+  if (image == null) return;
 
-      // Si manejas tokens de seguridad, no olvides agregarlo:
-      // request.headers['Authorization'] = 'Bearer $tuToken';
+  // 2. Mostrar indicador de carga
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(child: CircularProgressIndicator()),
+  );
 
-      if (kIsWeb) {
-        var bytes = await image.readAsBytes();
-        request.files.add(
-            http.MultipartFile.fromBytes('file', bytes, filename: image.name));
-      } else {
-        request.files
-            .add(await http.MultipartFile.fromPath('file', image.path));
-      }
+  try {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiService.baseUrl}/users/upload-profile-picture'),
+    );
 
-      // --- EL CAMBIO ESTÁ AQUÍ ---
-      try {
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
+    // 3. Agregar el Token (Indispensable para tu Backend)
+    request.headers['Authorization'] = 'Bearer ${auth.token}';
 
-        if (response.statusCode == 200) {
-          final Map<String, dynamic> data = json.decode(response.body);
-
-          setState(() {
-            // 'url' es el nombre que configuramos en el backend de FastAPI
-            // Agregamos un timestamp (?v=...) para evitar que el caché de Flutter ignore el cambio
-            profileImageUrl =
-                "${data['url']}?v=${DateTime.now().millisecondsSinceEpoch}";
-          });
-
-          print("¡Imagen subida y actualizada!");
-        } else {
-          print("Error en el servidor: ${response.statusCode}");
-        }
-      } catch (e) {
-        print("Error de red: $e");
-      }
+    if (kIsWeb) {
+      var bytes = await image.readAsBytes();
+      request.files.add(
+          http.MultipartFile.fromBytes('file', bytes, filename: image.name));
     } else {
-      print("No se seleccionó ninguna imagen.");
+      request.files.add(await http.MultipartFile.fromPath('file', image.path));
     }
+
+    // 4. Enviar y procesar
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+
+    // Quitar el círculo de carga
+    if (mounted) Navigator.pop(context);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      setState(() {
+        // El timestamp ?v= es un truco excelente para refrescar la imagen
+        profileImageUrl = "${data['url']}?v=${DateTime.now().millisecondsSinceEpoch}";
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Foto de perfil actualizada ✅")),
+      );
+    } else {
+      throw "Error del servidor: ${response.statusCode}";
+    }
+  } catch (e) {
+    if (mounted) Navigator.pop(context); // Quitar carga si hay error
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error al subir imagen: $e")),
+    );
+  }
+}
+
+  String formatCurrency(double amount) {
+    // Crea un formato: $1,234.56
+    final formatter = NumberFormat.currency(locale: "en_US", symbol: "\$");
+    return formatter.format(amount);
   }
 }

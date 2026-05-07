@@ -43,7 +43,9 @@ class TransactionModel {
           map["categoryName"] ??
           map["category"] ??
           "General",
-      date: map["date"] ?? "",
+      date: map["date"] != null 
+        ? (map["date"] is DateTime ? map["date"] : DateTime.parse(map["date"].toString())) 
+        : DateTime.now(),
       imagePath: map["imagePath"],
     );
   }
