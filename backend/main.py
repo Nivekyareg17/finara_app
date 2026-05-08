@@ -99,5 +99,10 @@ async def upload_picture(
     return {"url": url}
 
 # ESTO ES VITAL: Para que las fotos se puedan ver desde el navegador/Flutter
-from fastapi.staticfiles import StaticFiles
+# Asegurarnos de que la carpeta existe antes de montar
+if not os.path.exists("static"):
+    os.makedirs("static")
+    os.makedirs("static/profile_pics")
+
+# Montar solo UNA VEZ
 app.mount("/static", StaticFiles(directory="static"), name="static")
