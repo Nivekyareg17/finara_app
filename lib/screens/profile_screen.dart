@@ -1,4 +1,4 @@
-import 'package:finara_app_v1/models/category_model.dart';
+﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
@@ -13,9 +13,10 @@ import 'package:finara_app_v1/providers/languaje_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:intl/intl.dart';
 import 'dart:convert';
-import 'package:finara_app_v1/services/api_service.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 
@@ -32,10 +33,10 @@ class CurrencyInputFormatter extends TextInputFormatter {
       TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.selection.baseOffset == 0) return newValue;
 
-    // Quita cualquier cosa que no sea número
+    // Quita cualquier cosa que no sea nÃºmero
     String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Convierte a número y formatea (ejemplo: 1000 -> 1.000)
+    // Convierte a nÃºmero y formatea (ejemplo: 1000 -> 1.000)
     double value = double.parse(newText) / 100; // Divide por 100 para centavos
     final formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
     String formatted = formatter.format(value).trim();
@@ -48,7 +49,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 }
 
 Map<String, dynamic> _getCategoryData(String description) {
-  // Comparamos la descripción para asignar icono y color
+  // Comparamos la descripciÃ³n para asignar icono y color
   String desc = description.toLowerCase();
   if (desc.contains("mercado")) {
     return {'icon': Icons.shopping_basket_rounded, 'color': Colors.orange};
@@ -71,6 +72,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
+  bool showAllMovements = false;
+
+  void _showFloatingMessage(String message, {bool isError = false}) {
+    final overlay = Overlay.of(context, rootOverlay: true);
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder: (_) => Positioned(
+        top: MediaQuery.of(context).padding.top + 14,
+        left: 18,
+        right: 18,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: isError ? const Color(0xFFB91C1C) : const Color(0xFF047857),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.22),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isError ? Icons.error_outline : Icons.check_circle_outline,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+    Future.delayed(const Duration(seconds: 3), () {
+      entry.remove();
+    });
+  }
 
   @override
   void initState() {
@@ -81,6 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> loadTransactions() async {
     final auth = context.read<AuthProvider>();
+    if (auth.token == null || auth.token!.isEmpty) return;
 
     final data = await ApiService.getTransactions(auth.token!);
 
@@ -106,6 +162,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void loadUser() async {
     try {
       final auth = context.read<AuthProvider>();
+      if (auth.token == null || auth.token!.isEmpty) {
+        setState(() {
+          name = "Sesion vencida";
+          email = "Inicia sesion nuevamente";
+          profileImageUrl = null;
+        });
+        return;
+      }
+
       final data = await auth.getUserData();
       print(data);
 
@@ -113,9 +178,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (data != null) {
           name = data["name"] ?? "Sin nombre";
           email = data["email"] ?? "Sin email";
+          profileImageUrl = data["profile_image_url"];
         } else {
           name = "No se pudo cargar";
           email = "";
+          profileImageUrl = null;
         }
       });
     } catch (e) {
@@ -128,12 +195,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadData() async {
+    final auth = context.read<AuthProvider>();
+    if (auth.token == null || auth.token!.isEmpty) return;
+
     await loadCategories();
     await loadTransactions();
   }
 
   Future<void> loadCategories() async {
     final auth = context.read<AuthProvider>();
+    if (auth.token == null || auth.token!.isEmpty) return;
+
     final data = await ApiService.getTransactionCategories(auth.token!);
 
     if (!mounted) return;
@@ -153,6 +225,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       return "General";
     }
+  }
+
+  ImageProvider? _profileImageProvider() {
+    final imageUrl = profileImageUrl;
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return null;
+    }
+
+    if (imageUrl.startsWith("data:image")) {
+      try {
+        final commaIndex = imageUrl.indexOf(",");
+        if (commaIndex == -1) return null;
+
+        return MemoryImage(base64Decode(imageUrl.substring(commaIndex + 1)));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return NetworkImage(imageUrl);
   }
 
   double getBalance() {
@@ -196,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(
-                    12), // Bordes más redondeados son tendencia
+                    12), // Bordes mÃ¡s redondeados son tendencia
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF00C853).withOpacity(0.3),
@@ -222,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  "Mi Perfil", // Subtítulo indicativo
+                  "Mi Perfil", // SubtÃ­tulo indicativo
                   style: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey[600],
                     fontSize: 12,
@@ -252,17 +345,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(
                           color: Colors.white24,
-                          width: 2), // Un borde lo hace ver más fino
+                          width: 2), // Un borde lo hace ver mÃ¡s fino
                     ),
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.white12,
                       // Usamos un try-catch visual con errorBuilder si fuera necesario,
-                      // pero aquí optimizamos la lógica de carga
-                      backgroundImage: (profileImageUrl != null &&
-                              profileImageUrl!.isNotEmpty)
-                          ? NetworkImage(profileImageUrl!)
-                          : null,
+                      // pero aquÃ­ optimizamos la lÃ³gica de carga
+                      backgroundImage: _profileImageProvider(),
                       child:
                           (profileImageUrl == null || profileImageUrl!.isEmpty)
                               ? const Icon(Icons.person,
@@ -276,10 +366,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: AnimatedContainer(
-                        // Pequeña animación al tocar
+                        // PequeÃ±a animaciÃ³n al tocar
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(
-                            6), // Un poquito más grande para el dedo
+                            6), // Un poquito mÃ¡s grande para el dedo
                         decoration: BoxDecoration(
                           color: const Color(0xFF00C853),
                           shape: BoxShape.circle,
@@ -320,7 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text("CONFIGURACIÓN",
+                    child: Text("CONFIGURACIÃ“N",
                         style: TextStyle(
                             color: Colors.grey,
                             fontWeight: FontWeight.bold,
@@ -333,6 +423,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: isDark ? "Modo claro" : "Modo oscuro",
                     color: Colors.orange,
                     onTap: () => context.read<ThemeProvider>().toggleTheme(),
+                  ),
+
+                  _buildDrawerItem(
+                    icon: Icons.picture_as_pdf_outlined,
+                    title: "Descargar movimientos",
+                    subtitle: "Exportar historial en PDF",
+                    color: const Color(0xFF00C853),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await _downloadMovementsPdf();
+                    },
                   ),
 
                   // IDIOMA MEJORADO
@@ -353,7 +454,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            // BOTÓN DE CERRAR SESIÓN
+            // BOTÃ“N DE CERRAR SESIÃ“N
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListTile(
@@ -361,7 +462,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12)),
                 tileColor: Colors.red.withOpacity(0.1),
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const TranslatedText("Cerrar sesión",
+                title: const TranslatedText("Cerrar sesiÃ³n",
                     style: TextStyle(
                         color: Colors.red, fontWeight: FontWeight.bold)),
                 onTap: () async {
@@ -384,19 +485,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       //BODY CRUD
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
+        child: ListView(
           children: [
             //PERFIL
             Row(
               children: [
                 CircleAvatar(
-                  radius: 20, // Más pequeño
+                  radius: 20, // MÃ¡s pequeÃ±o
                   backgroundColor: Colors.white12,
                   // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
-                  backgroundImage:
-                      (profileImageUrl != null && profileImageUrl!.isNotEmpty)
-                          ? NetworkImage(profileImageUrl!)
-                          : null,
+                  backgroundImage: _profileImageProvider(),
                   child: (profileImageUrl == null || profileImageUrl!.isEmpty)
                       ? const Icon(Icons.person_outline_rounded,
                           size: 20, color: Colors.white54)
@@ -425,9 +523,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // TARJETA DE BALANCE MEJORADA
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24), // Un poco más de aire
+              padding: const EdgeInsets.all(24), // Un poco mÃ¡s de aire
               decoration: BoxDecoration(
-                // Un degradado sutil lo hace ver más "Premium"
+                // Un degradado sutil lo hace ver mÃ¡s "Premium"
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -471,17 +569,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    formatCurrency(getBalance()), // <-- Usando la función nueva
+                    formatCurrency(getBalance()), // <-- Usando la funciÃ³n nueva
                     style: TextStyle(
-                      fontSize: 36, // Un poco más grande
-                      fontWeight: FontWeight.w900, // Más grueso
+                      fontSize: 36, // Un poco mÃ¡s grande
+                      fontWeight: FontWeight.w900, // MÃ¡s grueso
                       letterSpacing:
-                          -1, // Un poco más juntas las letras se ve pro
+                          -1, // Un poco mÃ¡s juntas las letras se ve pro
                       color: isDark ? Colors.white : const Color(0xFF1B4332),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Un pequeño indicador extra le da el toque final
+                  // Un pequeÃ±o indicador extra le da el toque final
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -502,7 +600,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            //SECCIÓN METAS
+            //SECCIÃ“N METAS
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -522,7 +620,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               height: 180,
               child: metas.isEmpty
-                  ? const Center(child: Text("No hay metas aún"))
+                  ? const Center(child: Text("No hay metas aÃºn"))
                   : ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: metas.length,
@@ -601,7 +699,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            //TÍTULO Y BOTÓN AGREGAR
+            //TÃTULO Y BOTÃ“N AGREGAR
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -621,18 +719,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
 
             //LISTA DE TRANSACCIONES
-            Expanded(
-              child: ListView.separated(
-                itemCount: transactions.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final t = transactions[index];
-                  final bool isIngreso = t.type == "ingreso";
-                  final categoryName =
-                      getCategoryName(int.tryParse(t.categoryId) ?? 0);
-                  final catData = _getCategoryData(categoryName);
-                  return Container(
+            if (transactions.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF10231F) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Center(
+                  child: Text("No hay movimientos registrados"),
+                ),
+              )
+            else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: showAllMovements
+                  ? transactions.length
+                  : transactions.take(4).length,
+              separatorBuilder: (context, index) =>
+                  const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final t = transactions[index];
+                final bool isIngreso = t.type == "ingreso";
+                final categoryName =
+                    getCategoryName(int.tryParse(t.categoryId) ?? 0);
+                final catData = _getCategoryData(categoryName);
+                return Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -647,7 +760,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Row(
                       children: [
-                        //ICON SEGÚN LA IMAGEN
+                        //ICON SEGÃšN LA IMAGEN
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -659,7 +772,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(width: 15),
 
-                        //DESCRIPCIÓN Y FECHA
+                        //DESCRIPCIÃ“N Y FECHA
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -718,10 +831,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
+                );
+              },
             ),
+            if (transactions.length > 4) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    setState(() => showAllMovements = !showAllMovements);
+                  },
+                  icon: Icon(showAllMovements
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down),
+                  label: Text(showAllMovements
+                      ? "Mostrar menos"
+                      : "Ver todos los movimientos"),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -794,7 +923,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // TÍTULO
+                          // TÃTULO
                           Center(
                             child: Text(
                               edit == null
@@ -867,35 +996,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          // SELECTOR CATEGORÍA
-                          const TranslatedText("Categoría",
+                          // SELECTOR CATEGORÃA
+                          const TranslatedText("CategorÃ­a",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
 
-// 1. Botón para crear nueva
-                          // 1. Botón para crear nueva
+// 1. BotÃ³n para crear nueva
+                          // 1. BotÃ³n para crear nueva
                           TextButton(
                             onPressed: () async {
                               String? nueva =
                                   await _mostrarDialogoNuevaCategoria();
 
                               if (nueva != null && nueva.isNotEmpty) {
-                                // Validación local: Usamos ignoreCase para mayor seguridad
+                                // ValidaciÃ³n local: Usamos ignoreCase para mayor seguridad
                                 if (localCategories.any((c) =>
                                     c.name.toLowerCase() ==
                                     nueva.toLowerCase())) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text("Esa categoría ya existe")),
-                                  );
+                                  _showFloatingMessage("Esa categoria ya existe", isError: true);
                                   return;
                                 }
 
                                 final auth = context.read<AuthProvider>();
-                                // Asumimos que la API devuelve el objeto creado o al menos confirma el éxito
+                                // Asumimos que la API devuelve el objeto creado o al menos confirma el Ã©xito
                                 bool success = await ApiService.createCategory(
                                     auth.token!, nueva, type);
 
@@ -903,8 +1028,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await loadCategories(); // Recarga la lista global 'categories'
 
                                   setStateDialog(() {
-                                    // ACTUALIZACIÓN CRÍTICA:
-                                    // 1. Sincronizamos la lista local con la global recién cargada
+                                    // ACTUALIZACIÃ“N CRÃTICA:
+                                    // 1. Sincronizamos la lista local con la global reciÃ©n cargada
                                     localCategories = List.from(categories);
 
                                     // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
@@ -914,7 +1039,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     if (filtered.isNotEmpty) {
                                       // 3. Intentamos encontrar la que acabamos de crear por nombre
-                                      // (Es más seguro que .last si la lista viene ordenada del servidor)
+                                      // (Es mÃ¡s seguro que .last si la lista viene ordenada del servidor)
                                       final creada = filtered.firstWhere(
                                         (c) =>
                                             c.name.toLowerCase() ==
@@ -927,7 +1052,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               }
                             },
-                            child: const Text("Agregar categoría",
+                            child: const Text("Agregar categorÃ­a",
                                 style: TextStyle(color: Colors.green)),
                           ),
 
@@ -951,12 +1076,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     isExpanded: true,
                                     underline: const SizedBox(),
                                     icon: const Icon(Icons.keyboard_arrow_down),
-                                    // IMPORTANTE: Asegúrate de que filteredCategories se re-calcule
-                                    // antes de este punto en el build del diálogo.
+                                    // IMPORTANTE: AsegÃºrate de que filteredCategories se re-calcule
+                                    // antes de este punto en el build del diÃ¡logo.
                                     items: localCategories
                                         .where((c) =>
                                             c.type ==
-                                            type) // Filtramos aquí directamente para evitar desfases
+                                            type) // Filtramos aquÃ­ directamente para evitar desfases
                                         .map((cat) {
                                       return DropdownMenuItem<int>(
                                         value: int.parse(cat.id),
@@ -971,7 +1096,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               if (selectedCategoryId != null) ...[
-                                // BOTÓN EDITAR
+                                // BOTÃ“N EDITAR
                                 IconButton(
                                   icon: const Icon(Icons.edit_outlined,
                                       color: Colors.blueAccent),
@@ -1004,11 +1129,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                         });
+                                        _showFloatingMessage(
+                                            "Categoria actualizada");
+                                      } else {
+                                        _showFloatingMessage(
+                                          "Error al actualizar la categoria",
+                                          isError: true,
+                                        );
                                       }
                                     }
                                   },
                                 ),
-                                // BOTÓN ELIMINAR
+                                // BOTÃ“N ELIMINAR
                                 IconButton(
                                   icon: const Icon(Icons.delete_outline,
                                       color: Colors.redAccent),
@@ -1017,9 +1149,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title:
-                                            const Text("¿Eliminar categoría?"),
+                                            const Text("Â¿Eliminar categorÃ­a?"),
                                         content: const Text(
-                                            "Esta acción no se puede deshacer."),
+                                            "Esta acciÃ³n no se puede deshacer."),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
@@ -1050,21 +1182,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                           selectedCategoryId =
-                                              null; // Reset de selección
+                                              null; // Reset de selecciÃ³n
                                         });
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "Categoría eliminada con éxito")),
-                                        );
+                                        _showFloatingMessage("Categoria eliminada con exito");
                                       } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "Error al eliminar la categoría")),
-                                        );
+                                        _showFloatingMessage("Error al eliminar la categoria", isError: true);
                                       }
                                     }
                                   },
@@ -1075,7 +1197,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          //AQUÍ REGRESA LA FECHA
+                          //AQUÃ REGRESA LA FECHA
                           const TranslatedText("Fecha",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1146,9 +1268,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 35),
-                          // BOTÓN GUARDAR
+                          // BOTÃ“N GUARDAR
 
-                          //(SizedBox después del TextField de Notas)
+                          //(SizedBox despuÃ©s del TextField de Notas)
                           const SizedBox(height: 30),
 
                           SizedBox(
@@ -1164,7 +1286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onPressed: isLoadingDialog
                                   ? null
                                   : () async {
-                                      // 1. Validar que el monto no esté vacío o sea 0
+                                      // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
                                       String cleanText = amount.text
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
@@ -1177,7 +1299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Selecciona una categoría")),
+                                                  "Selecciona una categorÃ­a")),
                                         );
                                         return;
                                       }
@@ -1189,7 +1311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa un monto válido")),
+                                                  "Por favor ingresa un monto vÃ¡lido")),
                                         );
                                         return;
                                       }
@@ -1199,7 +1321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa una descripción")),
+                                                  "Por favor ingresa una descripciÃ³n")),
                                         );
                                         return;
                                       }
@@ -1221,13 +1343,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           categoryId,
                                         );
                                         if (type == "ingreso") {
-                                          context
+                                          await context
                                               .read<AuthProvider>()
                                               .actualizarMetasConIngreso(
                                                   montoFinal);
                                         }
                                       } else {
-                                        // ES EDICIÓN
+                                        // ES EDICIÃ“N
                                         success =
                                             await ApiService.updateTransaction(
                                           auth.token!,
@@ -1248,8 +1370,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           SnackBar(
                                               content: Text(edit == null
-                                                  ? "Creado con éxito"
-                                                  : "Actualizado con éxito")),
+                                                  ? "Creado con Ã©xito"
+                                                  : "Actualizado con Ã©xito")),
                                         );
                                       } else {
                                         setStateDialog(
@@ -1339,13 +1461,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-              title: const Text("¿Eliminar movimiento?",
+              title: const Text("Â¿Eliminar movimiento?",
                   style: TextStyle(fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Se eliminará '${t.description}'"),
+                  Text("Se eliminarÃ¡ '${t.description}'"),
                   const SizedBox(height: 8),
                   Text("Monto: \$${t.amount.toStringAsFixed(2)}",
                       style: const TextStyle(
@@ -1368,7 +1490,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: isDeleting
                       ? null
                       : () async {
-                          // ... tu lógica de borrado que ya tienes ...
+                          // ... tu lÃ³gica de borrado que ya tienes ...
                         },
                   child: isDeleting
                       ? const SizedBox(
@@ -1393,7 +1515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const TranslatedText("Nueva categoría"),
+        title: const TranslatedText("Nueva categorÃ­a"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -1416,7 +1538,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Constructor de items para el menú
+  // Constructor de items para el menÃº
   Widget _buildDrawerItem(
       {required IconData icon,
       required String title,
@@ -1485,14 +1607,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _downloadMovementsPdf() async {
+    if (transactions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No hay movimientos para exportar")),
+      );
+      return;
+    }
+
+    final pdf = pw.Document();
+    final generatedAt = DateFormat("dd/MM/yyyy HH:mm").format(DateTime.now());
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(28),
+        build: (context) => [
+          pw.Text(
+            "Movimientos Finara",
+            style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 6),
+          pw.Text("Usuario: ${name.isEmpty ? 'Sin nombre' : name}"),
+          pw.Text("Email: ${email.isEmpty ? 'Sin email' : email}"),
+          pw.Text("Generado: $generatedAt"),
+          pw.SizedBox(height: 16),
+          pw.Table.fromTextArray(
+            headers: ["Tipo", "Categoria", "Descripcion", "Monto"],
+            data: transactions.map((t) {
+              final categoryName =
+                  getCategoryName(int.tryParse(t.categoryId) ?? 0);
+              return [
+                t.type,
+                categoryName,
+                t.description,
+                formatCurrency(t.amount),
+              ];
+            }).toList(),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white,
+            ),
+            headerDecoration: const pw.BoxDecoration(
+              color: PdfColor.fromInt(0xFF064E3B),
+            ),
+            cellAlignment: pw.Alignment.centerLeft,
+            cellStyle: const pw.TextStyle(fontSize: 10),
+            columnWidths: {
+              0: const pw.FixedColumnWidth(60),
+              1: const pw.FlexColumnWidth(),
+              2: const pw.FlexColumnWidth(),
+              3: const pw.FixedColumnWidth(85),
+            },
+          ),
+          pw.SizedBox(height: 16),
+          pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Text(
+              "Balance total: ${formatCurrency(getBalance())}",
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: "movimientos_finara.pdf",
+    );
+  }
+
   Future<void> _pickImage() async {
     final auth = context.read<AuthProvider>(); // Obtenemos el token
+    if (auth.token == null || auth.token!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Inicia sesion nuevamente")),
+      );
+      return;
+    }
+
     final ImagePicker picker = ImagePicker();
 
     // 1. Seleccionar la imagen
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 50, // Comprimimos un poco para que suba más rápido
+      imageQuality: 50, // Comprimimos un poco para que suba mÃ¡s rÃ¡pido
     );
 
     if (image == null) return;
@@ -1503,6 +1703,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
+    bool loadingDialogOpen = true;
 
     try {
       var request = http.MultipartRequest(
@@ -1526,26 +1727,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      // Quitar el círculo de carga
-      if (mounted) Navigator.pop(context);
+      // Quitar el cÃ­rculo de carga
+      if (!mounted) return;
+
+      if (loadingDialogOpen) {
+        Navigator.pop(context);
+        loadingDialogOpen = false;
+      }
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
 
         setState(() {
-          // El timestamp ?v= es un truco excelente para refrescar la imagen
-          profileImageUrl =
-              "${data['url']}?v=${DateTime.now().millisecondsSinceEpoch}";
+          profileImageUrl = data['url'];
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Foto de perfil actualizada ✅")),
+          const SnackBar(content: Text("Foto de perfil actualizada âœ…")),
         );
       } else {
         throw "Error del servidor: ${response.statusCode}";
       }
     } catch (e) {
-      if (mounted) Navigator.pop(context); // Quitar carga si hay error
+      if (!mounted) return;
+
+      if (loadingDialogOpen) {
+        Navigator.pop(context);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error al subir imagen: $e")),
       );
@@ -1558,9 +1766,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return formatter.format(amount);
   }
 
+  double _parseAmount(String value) {
+    final normalized = value.replaceAll(",", "").trim();
+    return double.tryParse(normalized) ?? 0;
+  }
+
   void _crearMeta() {
     TextEditingController nombre = TextEditingController();
     TextEditingController montoMeta = TextEditingController();
+    TextEditingController montoActual = TextEditingController();
     TextEditingController ahorroMensual = TextEditingController();
 
     showModalBottomSheet(
@@ -1604,7 +1818,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          //TÍTULO
+                          //TÃTULO
                           const Center(
                             child: Text(
                               "Nueva meta de ahorro",
@@ -1630,6 +1844,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: nombre,
                             decoration: InputDecoration(
                               hintText: "Ej: Viaje, Moto, Laptop...",
+                              filled: true,
+                              fillColor:
+                                  isDark ? Colors.black12 : Colors.grey[50],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[200]!),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 25),
+
+                          const Text(
+                            "Monto actual",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: montoActual,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.trending_up,
+                                  color: Color(0xFF064E3B)),
+                              hintText: "0.00",
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
@@ -1710,7 +1951,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15)),
                               ),
-                              onPressed: () {
+                              onPressed: () async {
                                 if (nombre.text.isEmpty ||
                                     montoMeta.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1721,13 +1962,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   return;
                                 }
 
-                                context.read<AuthProvider>().addMeta(
+                                final objetivo = _parseAmount(montoMeta.text);
+                                if (objetivo <= 0) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            "El monto objetivo debe ser mayor a 0")),
+                                  );
+                                  return;
+                                }
+
+                                await context.read<AuthProvider>().addMeta(
                                       MetaAhorro(
                                         nombre: nombre.text,
-                                        montoMeta: double.parse(montoMeta.text),
-                                        ahorroMensual: double.tryParse(
-                                                ahorroMensual.text) ??
-                                            0,
+                                        montoMeta: objetivo,
+                                        montoActual:
+                                            _parseAmount(montoActual.text),
+                                        ahorroMensual:
+                                            _parseAmount(ahorroMensual.text),
                                       ),
                                     );
 
@@ -1755,7 +2007,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-// 👇 AQUÍ PEGAS ESTAS
   void _editarMeta(int index) {
     final metas = context.read<AuthProvider>().metas;
     final meta = metas[index];
@@ -1763,6 +2014,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     TextEditingController nombre = TextEditingController(text: meta.nombre);
     TextEditingController montoMeta =
         TextEditingController(text: meta.montoMeta.toString());
+    TextEditingController montoActual =
+        TextEditingController(text: meta.montoActual.toString());
     TextEditingController ahorroMensual =
         TextEditingController(text: meta.ahorroMensual.toString());
 
@@ -1774,50 +2027,183 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
+            final objetivoPreview = _parseAmount(montoMeta.text);
+            final actualPreview = _parseAmount(montoActual.text);
+            final previewProgress = objetivoPreview <= 0
+                ? 0.0
+                : (actualPreview / objetivoPreview).clamp(0.0, 1.0);
 
             return Container(
-              height: MediaQuery.of(context).size.height * 0.75,
+              height: MediaQuery.of(context).size.height * 0.82,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                color: isDark ? const Color(0xFF0F2A25) : Colors.white,
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(30)),
               ),
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  left: 25,
-                  right: 25,
-                  top: 20,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                ),
-                child: Column(
-                  children: [
-                    const Text("Editar Meta",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF064E3B))),
-                    const SizedBox(height: 20),
-                    TextField(controller: nombre),
-                    TextField(controller: montoMeta),
-                    TextField(controller: ahorroMensual),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<AuthProvider>().editarMeta(
-                              index,
-                              MetaAhorro(
-                                nombre: nombre.text,
-                                montoMeta: double.parse(montoMeta.text),
-                                ahorroMensual: double.parse(ahorroMensual.text),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 52,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.only(
+                        left: 24,
+                        right: 24,
+                        top: 20,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF064E3B),
+                                  Color(0xFF10B981),
+                                ],
                               ),
-                            );
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Row(
+                                  children: [
+                                    Icon(Icons.savings_rounded,
+                                        color: Colors.white),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      "Actualizar meta",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 18),
+                                LinearProgressIndicator(
+                                  value: previewProgress,
+                                  minHeight: 8,
+                                  backgroundColor: Colors.white24,
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  "${(previewProgress * 100).toStringAsFixed(1)}% completado",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                          _metaTextField(
+                            controller: nombre,
+                            label: "Nombre",
+                            hint: "Ej: Viaje, Moto, Laptop...",
+                            icon: Icons.flag_rounded,
+                            isDark: isDark,
+                            onChanged: (_) => setStateDialog(() {}),
+                          ),
+                          const SizedBox(height: 16),
+                          _metaTextField(
+                            controller: montoMeta,
+                            label: "Monto objetivo",
+                            hint: "0.00",
+                            icon: Icons.track_changes_rounded,
+                            isDark: isDark,
+                            keyboardType: TextInputType.number,
+                            onChanged: (_) => setStateDialog(() {}),
+                          ),
+                          const SizedBox(height: 16),
+                          _metaTextField(
+                            controller: montoActual,
+                            label: "Monto actual",
+                            hint: "0.00",
+                            icon: Icons.trending_up_rounded,
+                            isDark: isDark,
+                            keyboardType: TextInputType.number,
+                            onChanged: (_) => setStateDialog(() {}),
+                          ),
+                          const SizedBox(height: 16),
+                          _metaTextField(
+                            controller: ahorroMensual,
+                            label: "Ahorro mensual",
+                            hint: "Opcional",
+                            icon: Icons.calendar_month_rounded,
+                            isDark: isDark,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 26),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 54,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onPressed: () async {
+                                final objetivo = _parseAmount(montoMeta.text);
+                                if (nombre.text.trim().isEmpty ||
+                                    objetivo <= 0) {
+                                  _showFloatingMessage(
+                                    "Completa nombre y monto objetivo",
+                                    isError: true,
+                                  );
+                                  return;
+                                }
 
-                        Navigator.pop(context);
-                      },
-                      child: const Text("Guardar"),
-                    )
-                  ],
-                ),
+                                await context.read<AuthProvider>().editarMeta(
+                                      index,
+                                      MetaAhorro(
+                                        nombre: nombre.text.trim(),
+                                        montoMeta: objetivo,
+                                        montoActual:
+                                            _parseAmount(montoActual.text),
+                                        ahorroMensual:
+                                            _parseAmount(ahorroMensual.text),
+                                      ),
+                                    );
+
+                                if (!mounted) return;
+                                Navigator.pop(context);
+                                _showFloatingMessage("Meta actualizada");
+                              },
+                              icon: const Icon(Icons.save_rounded),
+                              label: const Text(
+                                "Guardar cambios",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -1826,19 +2212,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _metaTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required bool isDark,
+    TextInputType keyboardType = TextInputType.text,
+    ValueChanged<String>? onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.grey[700],
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: const Color(0xFF10B981)),
+            hintText: hint,
+            filled: true,
+            fillColor: isDark ? const Color(0xFF10231F) : Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark ? Colors.white10 : Colors.grey[300]!,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _eliminarMeta(int index) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Eliminar meta"),
-        content: const Text("¿Seguro?"),
+        content: const Text("Â¿Seguro?"),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancelar")),
           TextButton(
-            onPressed: () {
-              context.read<AuthProvider>().eliminarMeta(index);
+            onPressed: () async {
+              await context.read<AuthProvider>().eliminarMeta(index);
               Navigator.pop(context);
             },
             child: const Text("Eliminar", style: TextStyle(color: Colors.red)),

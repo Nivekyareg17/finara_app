@@ -21,6 +21,8 @@ dependencies:
 
   url_launcher: ^6.2.5
   intl: ^0.20.2
+  pdf: ^3.11.1
+  printing: ^5.13.4
 
   youtube_player_iframe: ^5.0.0
   flutter_inappwebview: ^6.0.0

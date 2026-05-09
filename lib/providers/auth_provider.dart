@@ -1,104 +1,130 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/meta_ahorro.dart';
+import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final storage = const FlutterSecureStorage();
 
   String? _token;
+  List<MetaAhorro> _metas = [];
+
+  AuthProvider() {
+    loadMetas();
+  }
 
   String? get token => _token;
-
   bool get isAuthenticated => _token != null;
+  List<MetaAhorro> get metas => _metas;
 
-  // LOGIN
   Future<bool> login(String email, String password) async {
     final token = await ApiService.login(email, password);
 
     if (token != null) {
       _token = token;
-
       await storage.write(key: "jwt_token", value: token);
-
-
       notifyListeners();
-
       return true;
     }
 
     return false;
   }
 
-  // REGISTER
   Future<bool> register(String name, String email, String password) async {
     return await ApiService.register(name, email, password);
   }
 
-  // CARGAR TOKEN AL ABRIR LA APP
   Future<void> loadToken() async {
     final savedToken = await storage.read(key: "jwt_token");
 
     if (savedToken != null) {
       _token = savedToken;
-
       notifyListeners();
     }
   }
 
-  // LOGOUT
   Future<void> logout() async {
     _token = null;
-
     await storage.delete(key: "jwt_token");
-
     notifyListeners();
   }
 
   Future<Map<String, dynamic>?> getUserData() async {
     if (_token == null) return null;
 
-    return await ApiService.getUser(_token!);
-  }
+    final user = await ApiService.getUser(_token!);
 
-  // OBTENER METAS DE AHORRO
-  List<MetaAhorro> _metas = [];
-
-  List<MetaAhorro> get metas => _metas;
-
-  void addMeta(MetaAhorro meta) {
-    _metas.add(meta);
-    notifyListeners();
-  }
-
-  //aCTUALIZAR METAS
-  void actualizarMetasConIngreso(double ingreso) {
-    for (var meta in _metas) {
-      meta.montoActual += ingreso * 0.1; // 10% automático
+    if (user == null) {
+      await logout();
     }
+
+    return user;
+  }
+
+  Future<void> loadMetas() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString("metas_ahorro");
+    if (raw == null || raw.isEmpty) return;
+
+    try {
+      final data = jsonDecode(raw);
+      if (data is List) {
+        _metas = data
+            .map((e) => MetaAhorro.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+        notifyListeners();
+      }
+    } catch (_) {
+      _metas = [];
+    }
+  }
+
+  Future<void> _saveMetas() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      "metas_ahorro",
+      jsonEncode(_metas.map((meta) => meta.toJson()).toList()),
+    );
+  }
+
+  Future<void> addMeta(MetaAhorro meta) async {
+    _metas.add(meta);
+    await _saveMetas();
     notifyListeners();
   }
 
-  //Limpiar metas (ejemplo al cerrar sesión)
+  Future<void> actualizarMetasConIngreso(double ingreso) async {
+    for (var meta in _metas) {
+      meta.montoActual += ingreso * 0.1;
+    }
+    await _saveMetas();
+    notifyListeners();
+  }
+
   Future<void> logoutM() async {
     _token = null;
-    _metas.clear(); //IMPORTANTE
+    _metas.clear();
 
     await storage.delete(key: "jwt_token");
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove("metas_ahorro");
 
     notifyListeners();
   }
 
-  //Editar Metas
-  void editarMeta(int index, MetaAhorro nueva) {
-    metas[index] = nueva;
+  Future<void> editarMeta(int index, MetaAhorro nueva) async {
+    _metas[index] = nueva;
+    await _saveMetas();
     notifyListeners();
   }
 
-  //Eliminar Meta
-  void eliminarMeta(int index) {
-    metas.removeAt(index);
+  Future<void> eliminarMeta(int index) async {
+    _metas.removeAt(index);
+    await _saveMetas();
     notifyListeners();
   }
-
 }

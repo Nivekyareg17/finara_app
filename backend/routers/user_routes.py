@@ -10,7 +10,7 @@ from models import User
 from auth import verify_token, require_admin
 
 from fastapi import UploadFile, File
-import shutil
+import base64
 import os
 
 UPLOAD_DIR = "static/profile_pics"
@@ -64,11 +64,15 @@ def get_current_user(   # Función cuando alguien llame /me
 
     user = db.query(User).filter(User.email == email).first()   # Buscar usuario en la base de datos
 
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
 # Retorna nombre y email del usuario
     return {
         "name": user.name,
         "email": user.email,
-        "role": data["role"]
+        "role": data["role"],
+        "profile_image_url": user.profile_image_url,
     }
 
 @router.get("/")
@@ -206,13 +210,14 @@ async def upload_profile_picture(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    filename = f"{user.id}_{file.filename}"
-    file_path = f"{UPLOAD_DIR}/{filename}"
+    contents = await file.read()
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not contents:
+        raise HTTPException(status_code=400, detail="Archivo vacio")
 
-    url = f"https://finara-api-1lmd.onrender.com/static/profile_pics/{filename}"
+    content_type = file.content_type or "image/jpeg"
+    encoded_image = base64.b64encode(contents).decode("utf-8")
+    url = f"data:{content_type};base64,{encoded_image}"
 
     user.profile_image_url = url
     db.commit()

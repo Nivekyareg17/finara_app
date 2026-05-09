@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
 import models, schemas
 
 router = APIRouter(prefix="/videos", tags=["Videos"])
+
 
 def get_db():
     db = SessionLocal()
@@ -12,7 +13,7 @@ def get_db():
     finally:
         db.close()
 
-# Crear categoría
+
 @router.post("/categories", response_model=schemas.VideoCategoryResponse)
 def create_category(category: schemas.VideoCategoryCreate, db: Session = Depends(get_db)):
     new_category = models.VideoCategory(**category.dict())
@@ -21,12 +22,48 @@ def create_category(category: schemas.VideoCategoryCreate, db: Session = Depends
     db.refresh(new_category)
     return new_category
 
-# Obtener categorías
+
 @router.get("/categories", response_model=list[schemas.VideoCategoryResponse])
 def get_categories(db: Session = Depends(get_db)):
     return db.query(models.VideoCategory).all()
 
-# Crear video
+
+@router.put("/categories/{video_category_id}", response_model=schemas.VideoCategoryResponse)
+@router.put("/video-categories/{video_category_id}", response_model=schemas.VideoCategoryResponse)
+def update_video_category(
+    video_category_id: int,
+    data: schemas.VideoCategoryCreate,
+    db: Session = Depends(get_db),
+):
+    category = db.query(models.VideoCategory).filter(
+        models.VideoCategory.id == video_category_id
+    ).first()
+
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoria no encontrada")
+
+    category.title = data.title
+    category.description = data.description
+    db.commit()
+    db.refresh(category)
+    return category
+
+
+@router.delete("/categories/{video_category_id}")
+@router.delete("/video-categories/{video_category_id}")
+def delete_video_category(video_category_id: int, db: Session = Depends(get_db)):
+    category = db.query(models.VideoCategory).filter(
+        models.VideoCategory.id == video_category_id
+    ).first()
+
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoria no encontrada")
+
+    db.delete(category)
+    db.commit()
+    return {"message": "Categoria eliminada"}
+
+
 @router.post("/", response_model=schemas.VideoResponse)
 def create_video(video: schemas.VideoCreate, db: Session = Depends(get_db)):
     new_video = models.Video(**video.dict())
@@ -35,60 +72,24 @@ def create_video(video: schemas.VideoCreate, db: Session = Depends(get_db)):
     db.refresh(new_video)
     return new_video
 
-# Obtener videos por categoría
+
 @router.get("/{video_category_id}", response_model=list[schemas.VideoResponse])
 def get_videos(video_category_id: int, db: Session = Depends(get_db)):
     return db.query(models.Video).filter(models.Video.category_id == video_category_id).all()
 
-# Editar categoria
-# --- Editar categoria de VIDEO ---
-@router.put("/video-categories/{video_category_id}")
-def update_video_category(
-    video_category_id: int, # <--- El nombre debe coincidir abajo
-    data: schemas.VideoCategoryCreate,
-    db: Session = Depends(get_db)
-):
-    category = db.query(models.VideoCategory).filter(
-        models.VideoCategory.id == video_category_id # <--- Antes decía category_id (ERROR)
-    ).first()
 
-    if not category:
-        return {"error": "Categoría no encontrada"}
-
-    category.title = data.title
-    category.description = data.description
-    db.commit()
-    db.refresh(category)
-    return category
-
-# --- Eliminar categoria de VIDEO ---
-@router.delete("/video-categories/{video_category_id}")
-def delete_video_category(video_category_id: int, db: Session = Depends(get_db)):
-    category = db.query(models.VideoCategory).filter(
-        models.VideoCategory.id == video_category_id # <--- Antes decía category_id (ERROR)
-    ).first()
-
-    if not category:
-        return {"error": "Categoría no encontrada"}
-
-    db.delete(category)
-    db.commit()
-    return {"message": "Categoría eliminada"}
-
-
-# Editar video
 @router.put("/{video_id}")
 def update_video(
     video_id: int,
     data: schemas.VideoCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     video = db.query(models.Video).filter(
         models.Video.id == video_id
     ).first()
 
     if not video:
-        return {"error": "Video no encontrado"}
+        raise HTTPException(status_code=404, detail="Video no encontrado")
 
     video.title = data.title
     video.url = data.url
@@ -100,7 +101,6 @@ def update_video(
     return video
 
 
-# Eliminar video
 @router.delete("/{video_id}")
 def delete_video(video_id: int, db: Session = Depends(get_db)):
     video = db.query(models.Video).filter(
@@ -108,7 +108,7 @@ def delete_video(video_id: int, db: Session = Depends(get_db)):
     ).first()
 
     if not video:
-        return {"error": "Video no encontrado"}
+        raise HTTPException(status_code=404, detail="Video no encontrado")
 
     db.delete(video)
     db.commit()

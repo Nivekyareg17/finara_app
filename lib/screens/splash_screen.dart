@@ -23,6 +23,9 @@ class _SplashScreenState extends State<SplashScreen> {
     final auth = context.read<AuthProvider>();
 
     await auth.loadToken();
+    if (auth.isAuthenticated) {
+      await auth.getUserData();
+    }
 
     await Future.delayed(const Duration(seconds: 2));
 

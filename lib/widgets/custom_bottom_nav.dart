@@ -10,6 +10,7 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color primaryColor = Color(0xFF10B981);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Escuchamos el provider para que la barra sepa cuándo traducir
     final langProv = context.watch<LanguageProvider>();
@@ -28,6 +29,8 @@ class CustomBottomNav extends StatelessWidget {
         final labels = snapshot.data ?? ["INICIO", "NOTICIAS", "DAIKO", "VIDEOS", "PERFIL"];
 
         return BottomNavigationBar(
+          backgroundColor:
+              isDark ? const Color(0xFF0F2A25) : Colors.white,
           currentIndex: selectedIndex,
           onTap: (index) {
             if (index == selectedIndex) return;
