@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/translate_widget.dart';
+import '../../utils/snackbar.dart';
 
 const primaryColor = Color.fromARGB(255, 10, 109, 82);
 
@@ -74,16 +75,24 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
             icon: const Icon(Icons.save, color: Colors.white),
             label: const Text("Guardar"),
             onPressed: () async {
+              final title = titleController.text.trim();
+              final description = descriptionController.text.trim();
+
+              if (title.isEmpty || description.isEmpty) {
+                _showSnack("Todos los campos son obligatorios");
+                return;
+              }
+
               final success = await ApiService.createVideoCategory(
-                titleController.text,
-                descriptionController.text,
+                title,
+                description,
               );
 
               if (success) {
-                Navigator.pop(context);
-                loadCategories();
-
-                _showSnack("Categoría creada");
+                showSnack(context, "Categoría creada", isSuccess: true);
+              } else {
+                showSnack(context, "Todos los campos son obligatorios",
+                    isError: true);
               }
             },
           ),
@@ -127,16 +136,24 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
             icon: const Icon(Icons.check, color: Colors.white),
             label: const Text("Actualizar"),
             onPressed: () async {
+              final title = titleController.text.trim();
+              final description = descriptionController.text.trim();
+
+              if (title.isEmpty || description.isEmpty) {
+                _showSnack("Todos los campos son obligatorios");
+                return;
+              }
+
               final success = await ApiService.updateVideoCategory(
                 category["id"],
-                titleController.text,
-                descriptionController.text,
+                title,
+                description,
               );
 
               if (success) {
-                Navigator.pop(context);
-                loadCategories();
-                _showSnack("Categoría actualizada");
+                showSnack(context, "Categoría actualizada", isSuccess: true);
+              } else {
+                showSnack(context, "Error al actualizar", isError: true);
               }
             },
           ),
@@ -160,15 +177,7 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
   }
 
   void _showSnack(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
+    showSnack(context, "Todos los campos son obligatorios", isError: true);
   }
 
   @override
@@ -240,8 +249,12 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
                                   );
 
                                   if (success) {
+                                    showSnack(context, "Categoría eliminada",
+                                        isSuccess: true);
                                     loadCategories();
-                                    _showSnack("Categoría eliminada");
+                                  } else {
+                                    showSnack(context, "Error al eliminar",
+                                        isError: true);
                                   }
                                 },
                               ),

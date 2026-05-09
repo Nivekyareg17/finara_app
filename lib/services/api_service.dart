@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl = "https://finara-api-1lmd.onrender.com";
 
+  //Login
   static Future<String?> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
 
@@ -22,6 +23,7 @@ class ApiService {
     }
   }
 
+  // Registro
   static Future<bool> register(
       String name, String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/register");
@@ -38,6 +40,7 @@ class ApiService {
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
+  // Obtener datos del usuario
   static Future<Map<String, dynamic>?> getUser(String token) async {
     final url = Uri.parse("$baseUrl/users/me");
 
@@ -53,6 +56,7 @@ class ApiService {
     return null;
   }
 
+  // Transacciones
   static Future<bool> createTransaction(
     String token,
     String type,
@@ -101,6 +105,7 @@ class ApiService {
     return [];
   }
 
+  // Update y Delete Transacción
   static Future<bool> updateTransaction(
     String token,
     int id,
@@ -140,35 +145,33 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getTransactionCategories(String token) async {
+    try {
+      // CAMBIO AQUÍ: Solo una vez la palabra categories y sin barra final
+      final url = Uri.parse("$baseUrl/categories");
 
-  try {
-    // CAMBIO AQUÍ: Solo una vez la palabra categories y sin barra final
-    final url = Uri.parse("$baseUrl/categories"); 
+      final response = await http.get(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
 
-    final response = await http.get(
-
-      url,
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      print("Error en GET: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print("Error en GET: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("Excepción en GET: $e");
       return [];
     }
-  } catch (e) {
-    print("Excepción en GET: $e");
-    return [];
   }
-}
-
 
   // 2. CREAR CATEGORÍA (POST)
-  static Future<bool> createCategory(String token, String name, String type) async {
+  static Future<bool> createCategory(
+      String token, String name, String type) async {
     try {
       final url = Uri.parse("$baseUrl/categories"); // Solo una vez categories
 
@@ -185,47 +188,49 @@ class ApiService {
         }),
       );
 
-      print("🚀 Enviando creación a: $url");
-      print("📊 Status del Backend: ${response.statusCode}");
-      print("📄 Body del Backend: ${response.body}");
+      print("Enviando creación a: $url");
+      print(" Status del Backend: ${response.statusCode}");
+      print(" Body del Backend: ${response.body}");
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print("❌ Error de red: $e");
+      print("Error de red: $e");
       return false;
     }
-  
-}
-
+  }
 
 // --- ACTUALIZAR CATEGORÍA (PUT) ---
-  static Future<bool> updateCategory(String token, int id, String name, String type) async {
-  try {
-    // Aseguramos que la URL sea limpia: base + /categories/ + id
-    final baseUrlClean = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
-    final url = Uri.parse("$baseUrlClean/categories/$id");
+  static Future<bool> updateCategory(
+      String token, int id, String name, String type) async {
+    try {
+      // Aseguramos que la URL sea limpia: base + /categories/ + id
+      final baseUrlClean = baseUrl.endsWith('/')
+          ? baseUrl.substring(0, baseUrl.length - 1)
+          : baseUrl;
+      final url = Uri.parse("$baseUrlClean/categories/$id");
 
-    print("🚀 Intentando PUT a: $url");
+      print("🚀 Intentando PUT a: $url");
 
-    final response = await http.put(
-      url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "name": name,
-        "type": type,
-      }),
-    );
+      final response = await http.put(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "name": name,
+          "type": type,
+        }),
+      );
 
-    print("📊 Status del Backend: ${response.statusCode}");
-    return response.statusCode == 200;
-  } catch (e) {
-    print("❌ Error de red: $e");
-    return false;
+      print("Status del Backend: ${response.statusCode}");
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error de red: $e");
+      return false;
+    }
   }
-}
+
   // --- ELIMINAR (DELETE) ---
   static Future<bool> deleteCategory(String token, int id) async {
     try {
@@ -255,6 +260,7 @@ class ApiService {
     }
   }
 
+  //RESTABLECER CONTRASEÑA
   static Future<bool> resetPassword(String token, String newPassword) async {
     final url = Uri.parse("$baseUrl/auth/reset-password");
 
@@ -277,6 +283,7 @@ class ApiService {
     }
   }
 
+  // OLVIDÉ MI CONTRASEÑA
   static Future<bool> forgotPassword(String email) async {
     final url = Uri.parse("$baseUrl/auth/forgot-password");
 
@@ -296,6 +303,7 @@ class ApiService {
     }
   }
 
+  // ADMIN - USUARIOS
   static Future<List<dynamic>> getUsers(String token) async {
     final url = Uri.parse("$baseUrl/users/all");
 
@@ -305,6 +313,7 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
+  // ADMIN - USUARIOS - ACCIONES
   static Future<void> deleteUser(String token, int id) async {
     await http.delete(
       Uri.parse("$baseUrl/users/delete/$id"),
@@ -326,6 +335,7 @@ class ApiService {
     );
   }
 
+  // Videos
   static Future<List<dynamic>> getCategories() async {
     final response = await http.get(Uri.parse("$baseUrl/videos/categories"));
 
@@ -347,18 +357,25 @@ class ApiService {
     }
   }
 
+  // CRUD Categorías y Videos
   static Future<bool> createVideoCategory(
     String title,
     String description,
   ) async {
+    //VALIDACIÓN
+    if (title.trim().isEmpty || description.trim().isEmpty) {
+      print("Error: campos vacíos en createVideoCategory");
+      return false;
+    }
+
     final response = await http.post(
       Uri.parse("$baseUrl/videos/categories"),
       headers: {
         "Content-Type": "application/json",
       },
       body: jsonEncode({
-        "title": title,
-        "description": description,
+        "title": title.trim(),
+        "description": description.trim(),
       }),
     );
 
@@ -370,14 +387,20 @@ class ApiService {
     String title,
     String description,
   ) async {
+    //VALIDACIÓN
+    if (title.trim().isEmpty || description.trim().isEmpty) {
+      print("Error: campos vacíos en updateVideoCategory");
+      return false;
+    }
+
     final response = await http.put(
       Uri.parse("$baseUrl/videos/categories/$id"),
       headers: {
         "Content-Type": "application/json",
       },
       body: jsonEncode({
-        "title": title,
-        "description": description,
+        "title": title.trim(),
+        "description": description.trim(),
       }),
     );
 
@@ -392,6 +415,7 @@ class ApiService {
     return response.statusCode == 200;
   }
 
+  // CRUD Videos
   static Future<bool> createVideo(
     String title,
     String url,
@@ -441,6 +465,7 @@ class ApiService {
     return response.statusCode == 200;
   }
 
+  // Lecturas
   Future<List<dynamic>> obtenerLecturas() async {
     final response = await http
         .get(Uri.parse("https://finara-api-1lmd.onrender.com/api/lecturas/"));
@@ -464,36 +489,36 @@ class ApiService {
     }
   }
 
- static Future<bool> createLectura(
-  String titulo,
-  String contenido,
-  String tiempoLectura,
-) async {
-  // 🚨 VALIDACIÓN
-  if (titulo.trim().isEmpty ||
-      contenido.trim().isEmpty ||
-      tiempoLectura.trim().isEmpty) {
-    print("Error: campos vacíos en createLectura");
-    return false;
+  static Future<bool> createLectura(
+    String titulo,
+    String contenido,
+    String tiempoLectura,
+  ) async {
+    // VALIDACIÓN
+    if (titulo.trim().isEmpty ||
+        contenido.trim().isEmpty ||
+        tiempoLectura.trim().isEmpty) {
+      print("Error: campos vacíos en createLectura");
+      return false;
+    }
+
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/lecturas/"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "titulo": titulo.trim(),
+        "contenido": contenido.trim(),
+        "tiempo_lectura": tiempoLectura.trim(),
+      }),
+    );
+
+    print("CREATE LECTURA STATUS: ${response.statusCode}");
+    print("CREATE LECTURA BODY: ${response.body}");
+
+    return response.statusCode == 200 || response.statusCode == 201;
   }
-
-  final response = await http.post(
-    Uri.parse("$baseUrl/api/lecturas/"),
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: jsonEncode({
-      "titulo": titulo.trim(),
-      "contenido": contenido.trim(),
-      "tiempo_lectura": tiempoLectura.trim(),
-    }),
-  );
-
-  print("CREATE LECTURA STATUS: ${response.statusCode}");
-  print("CREATE LECTURA BODY: ${response.body}");
-
-  return response.statusCode == 200 || response.statusCode == 201;
-}
 
   //Delete y Update Lectura
 
@@ -509,32 +534,32 @@ class ApiService {
   }
 
   static Future<bool> updateLectura(
-  int id,
-  String titulo,
-  String contenido,
-  String tiempoLectura,
-) async {
-  if (titulo.trim().isEmpty ||
-      contenido.trim().isEmpty ||
-      tiempoLectura.trim().isEmpty) {
-    print("Error: campos vacíos en updateLectura");
-    return false;
+    int id,
+    String titulo,
+    String contenido,
+    String tiempoLectura,
+  ) async {
+    if (titulo.trim().isEmpty ||
+        contenido.trim().isEmpty ||
+        tiempoLectura.trim().isEmpty) {
+      print("Error: campos vacíos en updateLectura");
+      return false;
+    }
+
+    final response = await http.put(
+      Uri.parse("$baseUrl/api/lecturas/$id"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "titulo": titulo.trim(),
+        "contenido": contenido.trim(),
+        "tiempo_lectura": tiempoLectura.trim(),
+      }),
+    );
+
+    return response.statusCode == 200;
   }
-
-  final response = await http.put(
-    Uri.parse("$baseUrl/api/lecturas/$id"),
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: jsonEncode({
-      "titulo": titulo.trim(),
-      "contenido": contenido.trim(),
-      "tiempo_lectura": tiempoLectura.trim(),
-    }),
-  );
-
-  return response.statusCode == 200;
-}
 
   // Mensajes
   static Future<List<dynamic>> getMessages(String token, int userId) async {
@@ -574,6 +599,4 @@ class ApiService {
 
     return jsonDecode(res.body);
   }
-
-  
 }

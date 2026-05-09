@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/translate_widget.dart';
+import '../../utils/snackbar.dart';
 
 const primaryColor = Color.fromARGB(255, 10, 109, 82);
 
@@ -86,14 +87,10 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                     final contenido = contenidoController.text.trim();
                     final tiempo = tiempoController.text.trim();
 
-                    // 🚨 VALIDACIÓN
+                    //VALIDACIÓN
                     if (titulo.isEmpty || contenido.isEmpty || tiempo.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Todos los campos son obligatorios"),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      showSnack(context, "Todos los campos son obligatorios",
+                          isError: true);
                       return;
                     }
 
@@ -104,14 +101,9 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                     );
 
                     if (success) {
-                      Navigator.pop(context);
-                      loadLecturas();
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Lectura creada correctamente"),
-                        ),
-                      );
+                      showSnack(context, "Lectura creada", isSuccess: true);
+                    } else {
+                      showSnack(context, "Campos inválidos", isError: true);
                     }
                   },
                   child: const Text("Guardar"),
@@ -176,12 +168,8 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
               final tiempo = tiempoController.text.trim();
 
               if (titulo.isEmpty || contenido.isEmpty || tiempo.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Todos los campos son obligatorios"),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                showSnack(context, "Todos los campos son obligatorios",
+                    isError: true);
                 return;
               }
 
@@ -193,14 +181,9 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
               );
 
               if (success) {
-                Navigator.pop(context);
-                loadLecturas();
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Lectura actualizada correctamente"),
-                  ),
-                );
+                showSnack(context, "Lectura actualizada", isSuccess: true);
+              } else {
+                showSnack(context, "Error al actualizar", isError: true);
               }
             },
             child: const Text("Guardar"),
@@ -308,13 +291,12 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                                   );
 
                                   if (success) {
+                                    showSnack(context, "Lectura eliminada",
+                                        isSuccess: true);
                                     loadLecturas();
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Lectura eliminada"),
-                                      ),
-                                    );
+                                  } else {
+                                    showSnack(context, "Error al eliminar",
+                                        isError: true);
                                   }
                                 }
                               },
