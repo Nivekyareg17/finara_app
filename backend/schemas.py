@@ -102,11 +102,11 @@ class VideoResponse(BaseModel):
     class Config:
         orm_mode = True
 
-
+# LECTURAS
 class LecturaCreate(BaseModel):
-    titulo: str
-    contenido: str
-    tiempo_lectura: str
+    titulo: str = Field(..., min_length=3, max_length=100)
+    contenido: str = Field(..., min_length=10)
+    tiempo_lectura: str = Field(..., min_length=1)
 
 class LecturaResponse(BaseModel):
     id: int
