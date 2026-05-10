@@ -33,10 +33,10 @@ class CurrencyInputFormatter extends TextInputFormatter {
       TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.selection.baseOffset == 0) return newValue;
 
-    // Quita cualquier cosa que no sea nÃºmero
+    // Quita cualquier cosa que no sea numero
     String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Convierte a nÃºmero y formatea (ejemplo: 1000 -> 1.000)
+    // Convierte a numero y formatea (ejemplo: 1000 -> 1.000)
     double value = double.parse(newText) / 100; // Divide por 100 para centavos
     final formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
     String formatted = formatter.format(value).trim();
@@ -49,7 +49,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 }
 
 Map<String, dynamic> _getCategoryData(String description) {
-  // Comparamos la descripciÃ³n para asignar icono y color
+  // Comparamos la descripcion para asignar icono y color
   String desc = description.toLowerCase();
   if (desc.contains("mercado")) {
     return {'icon': Icons.shopping_basket_rounded, 'color': Colors.orange};
@@ -289,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(
-                    12), // Bordes mÃ¡s redondeados son tendencia
+                    12), // Bordes mas redondeados son tendencia
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF00C853).withOpacity(0.3),
@@ -315,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  "Mi Perfil", // SubtÃ­tulo indicativo
+                  "Mi Perfil", // Subti­tulo indicativo
                   style: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey[600],
                     fontSize: 12,
@@ -366,10 +366,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: AnimatedContainer(
-                        // PequeÃ±a animaciÃ³n al tocar
+                        // Pequeña animacion al tocar
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(
-                            6), // Un poquito mÃ¡s grande para el dedo
+                            6), // Un poquito más grande para el dedo
                         decoration: BoxDecoration(
                           color: const Color(0xFF00C853),
                           shape: BoxShape.circle,
@@ -1607,6 +1607,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+
   Future<void> _downloadMovementsPdf() async {
     if (transactions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1692,7 +1693,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // 1. Seleccionar la imagen
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 50, // Comprimimos un poco para que suba mÃ¡s rÃ¡pido
+      imageQuality: 50, // Comprimimos un poco para que suba mas rapido
     );
 
     if (image == null) return;
@@ -1727,7 +1728,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      // Quitar el cÃ­rculo de carga
+      // Quitar el ci­rculo de carga
       if (!mounted) return;
 
       if (loadingDialogOpen) {
@@ -1743,7 +1744,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Foto de perfil actualizada âœ…")),
+          const SnackBar(content: Text("Foto de perfil actualizada")),
         );
       } else {
         throw "Error del servidor: ${response.statusCode}";
@@ -1818,7 +1819,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          //TÃTULO
+                          //TITULO
                           const Center(
                             child: Text(
                               "Nueva meta de ahorro",

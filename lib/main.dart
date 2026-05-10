@@ -13,6 +13,7 @@ import 'screens/splash_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/theme_provider.dart';
 import 'screens/video_screen.dart';
+import '../providers/finance_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => FinanceProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
