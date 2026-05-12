@@ -230,33 +230,53 @@ class ApiService {
 
   static Future<bool> deleteCategory(String token, int id) async {
     try {
-      final cleanBaseUrl =
-          baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
-      final urls = [
-        Uri.parse("$cleanBaseUrl/categories/categories/$id"),
-        Uri.parse("$cleanBaseUrl/categories/$id"),
-      ];
+      final cleanBaseUrl = baseUrl.endsWith("/") 
+          ? baseUrl.substring(0, baseUrl.length - 1) 
+          : baseUrl;
+      
+      print("🕵️‍♂️ --- INICIANDO BORRADO DE CATEGORÍA ID: $id ---");
 
-      for (final url in urls) {
-        final response = await http.delete(url, headers: _jsonHeaders(token));
+      // Primer intento: Sin barra al final
+      final urlSinSlash = Uri.parse("$cleanBaseUrl/categories/$id");
+      print("👉 Intento 1 | URL: $urlSinSlash");
+      
+      var response = await http.delete(urlSinSlash, headers: _jsonHeaders(token));
+      print("📡 Intento 1 | STATUS: ${response.statusCode}");
+      print("📦 Intento 1 | BODY: ${response.body}");
 
-        if (response.statusCode == 200 || response.statusCode == 204) {
-          return true;
-        }
-        if (response.statusCode != 404 && response.statusCode != 405) {
-          print("DELETE CATEGORY STATUS: ${response.statusCode}");
-          print("DELETE CATEGORY BODY: ${response.body}");
-          return false;
-        }
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print("✅ ¡Categoría borrada con éxito en el intento 1!");
+        return true;
+      }
+
+      // Si nos dio error, intentamos con la barra al final (por si FastAPI pide el 307)
+      print("🔄 Falló el intento 1. Probando con barra final (/) ...");
+      final urlConSlash = Uri.parse("$cleanBaseUrl/categories/$id/");
+      print("👉 Intento 2 | URL: $urlConSlash");
+
+      response = await http.delete(urlConSlash, headers: _jsonHeaders(token));
+      print("📡 Intento 2 | STATUS: ${response.statusCode}");
+      print("📦 Intento 2 | BODY: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print("✅ ¡Categoría borrada con éxito en el intento 2!");
+        return true;
+      }
+
+      print("❌ Ningún intento funcionó. Revisa los códigos de error de arriba.");
+      
+      // Una posible razón es que la categoría tenga transacciones asociadas (Error 500 o 400)
+      if (response.statusCode == 500 || response.statusCode == 400) {
+        print("⚠️ CUIDADO: Puede que no te deje borrarla porque hay transacciones usando esta categoría.");
       }
 
       return false;
+
     } catch (e) {
-      print("DELETE CATEGORY ERROR: $e");
+      print("🚨 ERROR FATAL AL ELIMINAR CATEGORÍA: $e");
       return false;
     }
   }
-
   static Future<bool> resetPassword(String token, String newPassword) async {
     try {
       final response = await http
