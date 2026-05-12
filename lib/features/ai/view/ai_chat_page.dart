@@ -160,7 +160,21 @@ class _AIChatPageState extends State<AIChatPage> {
   }
 
   // --- LÓGICA DE GUARDADO MEJORADA ---
+  // --- LÓGICA DE GUARDADO MEJORADA CON VALIDACIÓN ---
   void _guardarCambiosNota() async {
+    // VALIDACIÓN PROFESIONAL: El título no puede estar vacío
+    if (_noteTitleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("⚠️ El título es obligatorio para guardar el apunte"),
+          backgroundColor: Colors.orangeAccent,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return; // Detenemos la ejecución
+    }
+
     print("💾 --- INICIANDO PROCESO DE GUARDADO ---");
     
     final success = await _noteService.saveNote(
@@ -197,21 +211,49 @@ class _AIChatPageState extends State<AIChatPage> {
     }
   }
 
-  // --- LÓGICA DE ELIMINACIÓN MEJORADA ---
-  void _confirmarEliminar(int id) async {
-    print("🕵️‍♂️ --- INTENTANDO ELIMINAR APUNTE ID: $id ---");
-    
+  // --- LÓGICA DE ELIMINACIÓN CON CONFIRMACIÓN ---
+  void _confirmarEliminar(int id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("¿Eliminar apunte?", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text("Esta acción es permanente y se borrará de la base de datos. ¿Deseas continuar?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCELAR", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                Navigator.pop(context); // Cerramos el diálogo
+                _ejecutarEliminacion(id); // Llamamos a la lógica de borrado real
+              },
+              child: const Text("ELIMINAR", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Lógica técnica de borrado (se llama tras confirmar)
+  void _ejecutarEliminacion(int id) async {
+    print("🕵️‍♂️ --- ELIMINANDO APUNTE ID: $id ---");
     final success = await _noteService.deleteNote(id);
     
-    print("📡 RESPUESTA DEL SERVIDOR (ELIMINAR): $success");
-
     if (!mounted) return;
 
     if (success) {
       print("✅ ¡Apunte eliminado con éxito!");
       setState(() {});
-      Navigator.pop(context); 
-      _verListadoNotas(); 
+      Navigator.pop(context); // Cierra el listado actual
+      _verListadoNotas(); // Recarga el listado actualizado
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Apunte eliminado correctamente"), 

@@ -15,7 +15,7 @@ from routers import (
     transaction_routes,
     user_routes,
     video_routes,
-    notes_routes, # <-- 1. ¡AGREGAMOS ESTO AQUÍ!
+    notes_routes, 
 )
 from routers.news_routes import news_router
 
