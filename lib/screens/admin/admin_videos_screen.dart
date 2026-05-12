@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/translate_widget.dart';
 import '../../utils/snackbar.dart';
+import 'admin_category_videos_screen.dart';
 
 const primaryColor = Color.fromARGB(255, 10, 109, 82);
 
@@ -215,8 +216,20 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AdminCategoryVideosScreen(
+                                  categoryId: category["id"],
+                                ),
+                              ),
+                            );
+                          },
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
                           title: Text(
                             category["title"] ?? "",
                             style: const TextStyle(
