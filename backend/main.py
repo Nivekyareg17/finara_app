@@ -15,6 +15,7 @@ from routers import (
     transaction_routes,
     user_routes,
     video_routes,
+    notes_routes, # <-- 1. ¡AGREGAMOS ESTO AQUÍ!
 )
 from routers.news_routes import news_router
 
@@ -45,6 +46,7 @@ app.include_router(stock_routes.router)
 app.include_router(category_routes.router)
 app.include_router(message_routes.router)
 app.include_router(news_router)
+app.include_router(notes_routes.router) 
 
 
 @app.get("/")
