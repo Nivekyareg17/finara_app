@@ -1298,11 +1298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-<<<<<<< HEAD
-                                                  "Selecciona una categoría")),
-=======
-                                                  "Selecciona una categor­a")),
->>>>>>> eba9a40cf471aa95b81f81dc4d5a5c7285058de3
+                                                  "Selecciona una categoria")),
                                         );
                                         return;
                                       }
@@ -1493,9 +1489,6 @@ void confirmDelete(TransactionModel t) {
                   onPressed: isDeleting
                       ? null
                       : () async {
-<<<<<<< HEAD
-                          // ... tu lógica de borrado que ya tienes ...
-=======
                           // 1. Activar el estado de carga (el circulito)
                           setStateDialog(() => isDeleting = true);
 
@@ -1517,7 +1510,6 @@ void confirmDelete(TransactionModel t) {
                             setStateDialog(() => isDeleting = false); // Quita el circulito
                             _showFloatingMessage("Error al eliminar", isError: true);
                           }
->>>>>>> eba9a40cf471aa95b81f81dc4d5a5c7285058de3
                         },
                   child: isDeleting
                       ? const SizedBox(
