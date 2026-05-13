@@ -6,9 +6,69 @@ import '../providers/languaje_provider.dart';
 import '../widgets/translate_widget.dart';
 import '../services/pdf_service.dart';
 import '../providers/finance_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
+
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
+
+class _AppDrawerState extends State<AppDrawer> {
+  String? profileImageUrl;
+  String name = "";
+  String email = "";
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  void loadUser() async {
+    final auth = context.read<AuthProvider>();
+    final data = await auth.getUserData();
+
+    if (!mounted) return;
+
+    setState(() {
+      name = data?["name"] ?? "Sin nombre";
+      email = data?["email"] ?? "Sin email";
+      profileImageUrl = data?["profile_image_url"];
+    });
+  }
+
+  ImageProvider? _profileImageProvider() {
+    final imageUrl = profileImageUrl;
+
+    if (imageUrl == null || imageUrl.isEmpty) return null;
+
+    if (imageUrl.startsWith("data:image")) {
+      try {
+        final commaIndex = imageUrl.indexOf(",");
+        return MemoryImage(
+          base64Decode(imageUrl.substring(commaIndex + 1)),
+        );
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return NetworkImage(imageUrl);
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
+    if (picked == null) return;
+
+    setState(() {
+      profileImageUrl = picked.path;
+    });
+  }
 
   Widget _buildDrawerItem({
     required IconData icon,
@@ -45,14 +105,51 @@ class AppDrawer extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Color(0xFF064E3B)),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: TranslatedText(
-                "Opciones",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
+          UserAccountsDrawerHeader(
+            decoration: const BoxDecoration(
+              color: Color(0xFF064E3B),
+            ),
+            currentAccountPicture: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.white12,
+                  backgroundImage: _profileImageProvider(),
+                  child: (profileImageUrl == null || profileImageUrl!.isEmpty)
+                      ? const Icon(Icons.person,
+                          size: 40, color: Colors.white54)
+                      : null,
+                ),
+
+                // BTN CAMBIAR FOTO
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF00C853),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.camera_alt,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            accountName: Text(
+              name.isEmpty ? "Cargando..." : name,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.white),
+            ),
+            accountEmail: Text(
+              email.isEmpty ? "Cargando..." : email,
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
 

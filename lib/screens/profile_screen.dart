@@ -523,9 +523,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // TARJETA DE BALANCE MEJORADA
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24), // Un poco mÃ¡s de aire
+              padding: const EdgeInsets.all(24), // Un poco mas de aire
               decoration: BoxDecoration(
-                // Un degradado sutil lo hace ver mÃ¡s "Premium"
+                // Un degradado sutil lo hace ver mas "Premium"
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -569,17 +569,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    formatCurrency(getBalance()), // <-- Usando la funciÃ³n nueva
+                    formatCurrency(getBalance()), // <-- Usando la funcion nueva
                     style: TextStyle(
-                      fontSize: 36, // Un poco mÃ¡s grande
-                      fontWeight: FontWeight.w900, // MÃ¡s grueso
+                      fontSize: 36, // Un poco mas grande
+                      fontWeight: FontWeight.w900, // Mas grueso
                       letterSpacing:
-                          -1, // Un poco mÃ¡s juntas las letras se ve pro
+                          -1, // Un poco mas juntas las letras se ve pro
                       color: isDark ? Colors.white : const Color(0xFF1B4332),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Un pequeÃ±o indicador extra le da el toque final
+                  // Un pequeno indicador extra le da el toque final
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -600,7 +600,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            //SECCIÃ“N METAS
+            //SECCION METAS
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -620,7 +620,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               height: 180,
               child: metas.isEmpty
-                  ? const Center(child: Text("No hay metas aÃºn"))
+                  ? const Center(child: Text("No hay metas aun"))
                   : ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: metas.length,
@@ -699,7 +699,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            //TÃTULO Y BOTÃ“N AGREGAR
+            //TITULO Y BOTOn AGREGAR MOVIMIENTO
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -760,7 +760,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Row(
                       children: [
-                        //ICON SEGÃšN LA IMAGEN
+                        //ICON SEGUN LA IMAGEN
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -772,7 +772,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(width: 15),
 
-                        //DESCRIPCIÃ“N Y FECHA
+                        //DESCRIPCION Y FECHA
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -996,22 +996,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          // SELECTOR CATEGORÃA
-                          const TranslatedText("CategorÃ­a",
+                          // SELECTOR CATEGORIA
+                          const TranslatedText("Categor­ia",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
 
-// 1. BotÃ³n para crear nueva
-                          // 1. BotÃ³n para crear nueva
+                          // 1. Btn para crear nueva
                           TextButton(
                             onPressed: () async {
                               String? nueva =
                                   await _mostrarDialogoNuevaCategoria();
 
                               if (nueva != null && nueva.isNotEmpty) {
-                                // ValidaciÃ³n local: Usamos ignoreCase para mayor seguridad
+                                // Validación local: Usamos ignoreCase para mayor seguridad
                                 if (localCategories.any((c) =>
                                     c.name.toLowerCase() ==
                                     nueva.toLowerCase())) {
@@ -1020,7 +1019,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
 
                                 final auth = context.read<AuthProvider>();
-                                // Asumimos que la API devuelve el objeto creado o al menos confirma el Ã©xito
+                                // Asumimos que la API devuelve el objeto creado o al menos confirma el Exito
                                 bool success = await ApiService.createCategory(
                                     auth.token!, nueva, type);
 
@@ -1028,8 +1027,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await loadCategories(); // Recarga la lista global 'categories'
 
                                   setStateDialog(() {
-                                    // ACTUALIZACIÃ“N CRÃTICA:
-                                    // 1. Sincronizamos la lista local con la global reciÃ©n cargada
+                                    // ACTUALIZACIÓN CRÍTICA:
+                                    // 1. Sincronizamos la lista local con la global recién cargada
                                     localCategories = List.from(categories);
 
                                     // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
@@ -1052,11 +1051,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               }
                             },
-                            child: const Text("Agregar categorÃ­a",
+                            child: const Text("Agregar categoria",
                                 style: TextStyle(color: Colors.green)),
                           ),
 
-// 2. Fila con Dropdown + Editar + Eliminar
+                          // 2. Fila con Dropdown + Editar + Eliminar
                           Row(
                             children: [
                               Expanded(
@@ -1077,11 +1076,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     underline: const SizedBox(),
                                     icon: const Icon(Icons.keyboard_arrow_down),
                                     // IMPORTANTE: AsegÃºrate de que filteredCategories se re-calcule
-                                    // antes de este punto en el build del diÃ¡logo.
+                                    // antes de este punto en el build del dia logo.
                                     items: localCategories
                                         .where((c) =>
                                             c.type ==
-                                            type) // Filtramos aquÃ­ directamente para evitar desfases
+                                            type) // Filtramos aqui­ directamente para evitar desfases
                                         .map((cat) {
                                       return DropdownMenuItem<int>(
                                         value: int.parse(cat.id),
@@ -1096,7 +1095,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               if (selectedCategoryId != null) ...[
-                                // BOTÃ“N EDITAR
+                                // BTN EDITAR
                                 IconButton(
                                   icon: const Icon(Icons.edit_outlined,
                                       color: Colors.blueAccent),
@@ -1140,7 +1139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     }
                                   },
                                 ),
-                                // BOTÃ“N ELIMINAR
+                                // BTN ELIMINAR
                                 IconButton(
                                   icon: const Icon(Icons.delete_outline,
                                       color: Colors.redAccent),
@@ -1149,9 +1148,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title:
-                                            const Text("Â¿Eliminar categorÃ­a?"),
+                                            const Text("¿Eliminar categoria?"),
                                         content: const Text(
-                                            "Esta acciÃ³n no se puede deshacer."),
+                                            "Esta accion no se puede deshacer."),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
@@ -1197,7 +1196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          //AQUÃ REGRESA LA FECHA
+                          //AQUÍ REGRESA LA FECHA
                           const TranslatedText("Fecha",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1268,9 +1267,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 35),
-                          // BOTÃ“N GUARDAR
+                          // BTN GUARDAR
 
-                          //(SizedBox despuÃ©s del TextField de Notas)
+                          //(SizedBox despues del TextField de Notas)
                           const SizedBox(height: 30),
 
                           SizedBox(
@@ -1286,7 +1285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onPressed: isLoadingDialog
                                   ? null
                                   : () async {
-                                      // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
+                                      // 1. Validar que el monto no esté vacío o sea 0
                                       String cleanText = amount.text
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
@@ -1299,7 +1298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Selecciona una categor­a")),
+                                                  "Selecciona una categoria")),
                                         );
                                         return;
                                       }
@@ -1311,7 +1310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa un monto vÃ¡lido")),
+                                                  "Por favor ingresa un monto válido")),
                                         );
                                         return;
                                       }
@@ -1321,7 +1320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa una descripciÃ³n")),
+                                                  "Por favor ingresa una descripción")),
                                         );
                                         return;
                                       }
@@ -1349,7 +1348,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   montoFinal);
                                         }
                                       } else {
-                                        // ES EDICIÃ“N
+                                        // ES EDICION
                                         success =
                                             await ApiService.updateTransaction(
                                           auth.token!,
@@ -1370,8 +1369,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           SnackBar(
                                               content: Text(edit == null
-                                                  ? "Creado con Ã©xito"
-                                                  : "Actualizado con Ã©xito")),
+                                                  ? "Creado con Exito"
+                                                  : "Actualizado con Exito")),
                                         );
                                       } else {
                                         setStateDialog(
@@ -1535,7 +1534,7 @@ void confirmDelete(TransactionModel t) {
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const TranslatedText("Nueva categorÃ­a"),
+        title: const TranslatedText("Nueva categoria"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -1558,7 +1557,7 @@ void confirmDelete(TransactionModel t) {
     );
   }
 
-  // Constructor de items para el menÃº
+  // Constructor de items para el menu
   Widget _buildDrawerItem(
       {required IconData icon,
       required String title,
@@ -1982,7 +1981,6 @@ void confirmDelete(TransactionModel t) {
                                   );
                                   return;
                                 }
-
                                 final objetivo = _parseAmount(montoMeta.text);
                                 if (objetivo <= 0) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1992,7 +1990,6 @@ void confirmDelete(TransactionModel t) {
                                   );
                                   return;
                                 }
-
                                 await context.read<AuthProvider>().addMeta(
                                       MetaAhorro(
                                         nombre: nombre.text,
@@ -2003,7 +2000,6 @@ void confirmDelete(TransactionModel t) {
                                             _parseAmount(ahorroMensual.text),
                                       ),
                                     );
-
                                 Navigator.pop(context);
                               },
                               child: const Text(
