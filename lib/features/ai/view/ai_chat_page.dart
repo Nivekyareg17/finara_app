@@ -1,6 +1,5 @@
 // INICIO DE IMPORTACIONES
 import 'package:flutter/material.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
 import '../model/chat_message.dart';
 import '../service/ai_service.dart';
 import '../../../widgets/custom_bottom_nav.dart';
@@ -8,10 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../models/note.dart'; 
 import '../../../services/notes_services.dart'; 
-
 // FIN DE IMPORTACIONES
-
-
 
 // INICIO DE DEFINICIÓN DEL WIDGET PRINCIPAL
 class AIChatPage extends StatefulWidget {
@@ -20,18 +16,12 @@ class AIChatPage extends StatefulWidget {
   @override
   State<AIChatPage> createState() => _AIChatPageState();
 }
-
 // FIN DE DEFINICIÓN DEL WIDGET PRINCIPAL
-
-
-
 
 // INICIO DEL ESTADO DEL WIDGET (LÓGICA Y UI)
 class _AIChatPageState extends State<AIChatPage> {
   
-  
   // INICIO DE VARIABLES DE ESTADO Y CONTROLADORES
-
   final List<ChatMessage> _messages = [];
   final TextEditingController _chatController = TextEditingController();
   final AIService _aiService = AIService();
@@ -40,24 +30,22 @@ class _AIChatPageState extends State<AIChatPage> {
   bool _isLoading = false;
   String _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
 
+  // Herramienta seleccionada para el selector de la UI
+  String _selectedTool = "Rápido";
+
   // Controladores para el Libro/Notas
   final TextEditingController _noteTitleController = TextEditingController();
   final TextEditingController _noteContentController = TextEditingController();
-  int? _editingNoteId; // Para saber si estamos editando o creando
+  int? _editingNoteId; 
 
   final Color primaryGreen = const Color(0xFF10B981);
   final Color accentGreen = const Color(0xFF059669);
   final Color bookColor = const Color(0xFFF4EAD5);
-
   // FIN DE VARIABLES DE ESTADO Y CONTROLADORES
 
-
-
-  
   // INICIO DE LÓGICA DE NOTAS (LISTADO Y CRUD)
-
   
-  //INTERFAZ: LISTADO DE NOTAS (ESTILO XIAOMI)
+  // INTERFAZ: LISTADO DE NOTAS (ESTILO XIAOMI)
   void _verListadoNotas() {
     showModalBottomSheet(
       context: context,
@@ -100,7 +88,7 @@ class _AIChatPageState extends State<AIChatPage> {
                             icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                             onPressed: () => _confirmarEliminar(nota.id!),
                           ),
-                          onTap: () => _abrirEditorNota(nota), // 2. METODO PARA ENTRAR Y EDITAR
+                          onTap: () => _abrirEditorNota(nota),
                         ),
                       );
                     },
@@ -114,7 +102,7 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  // EDITOR DE NOTAS (CRUD: CREAR/EDITAR) ---
+  // EDITOR DE NOTAS (CRUD: CREAR/EDITAR)
   void _abrirEditorNota([Note? nota]) {
     if (nota != null) {
       _editingNoteId = nota.id;
@@ -171,7 +159,24 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
+  // --- LÓGICA DE GUARDADO MEJORADA ---
+  // --- LÓGICA DE GUARDADO MEJORADA CON VALIDACIÓN ---
   void _guardarCambiosNota() async {
+    // VALIDACIÓN PROFESIONAL: El título no puede estar vacío
+    if (_noteTitleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("⚠️ El título es obligatorio para guardar el apunte"),
+          backgroundColor: Colors.orangeAccent,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return; // Detenemos la ejecución
+    }
+
+    print("💾 --- INICIANDO PROCESO DE GUARDADO ---");
+    
     final success = await _noteService.saveNote(
       Note(
         id: _editingNoteId, 
@@ -180,29 +185,94 @@ class _AIChatPageState extends State<AIChatPage> {
         categoryName: "General"
       ),
     );
-    if (success && mounted) {
+    
+    print("📡 RESPUESTA DEL SERVIDOR (GUARDAR): $success");
+
+    if (!mounted) return;
+
+    if (success) {
+      print("✅ ¡Nota guardada exitosamente!");
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cambios guardados")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Cambios guardados con éxito"),
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
       setState(() {});
+    } else {
+      print("❌ ERROR: El servidor no pudo procesar el guardado.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error al guardar: Revisa la consola para más detalles"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
-  void _confirmarEliminar(int id) async {
+  // --- LÓGICA DE ELIMINACIÓN CON CONFIRMACIÓN ---
+  void _confirmarEliminar(int id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("¿Eliminar apunte?", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text("Esta acción es permanente y se borrará de la base de datos. ¿Deseas continuar?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCELAR", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                Navigator.pop(context); // Cerramos el diálogo
+                _ejecutarEliminacion(id); // Llamamos a la lógica de borrado real
+              },
+              child: const Text("ELIMINAR", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Lógica técnica de borrado (se llama tras confirmar)
+  void _ejecutarEliminacion(int id) async {
+    print("🕵️‍♂️ --- ELIMINANDO APUNTE ID: $id ---");
     final success = await _noteService.deleteNote(id);
-    if (success && mounted) {
+    
+    if (!mounted) return;
+
+    if (success) {
+      print("✅ ¡Apunte eliminado con éxito!");
       setState(() {});
-      Navigator.pop(context); // Cierra el listado para refrescar
-      _verListadoNotas(); // Reabre el listado actualizado
+      Navigator.pop(context); // Cierra el listado actual
+      _verListadoNotas(); // Recarga el listado actualizado
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Apunte eliminado correctamente"), 
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
+    } else {
+      print("❌ ERROR: Falló la eliminación.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error al eliminar el apunte"), 
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
-
   // FIN DE LÓGICA DE NOTAS
 
-
-
-
   // INICIO DE LÓGICA DE CHAT E HISTORIAL
-  
   void _sendMessage() async {
     if (_chatController.text.isEmpty) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -215,12 +285,8 @@ class _AIChatPageState extends State<AIChatPage> {
     setState(() { _messages.insert(0, response); _isLoading = false; });
   }
   // FIN DE LÓGICA DE CHAT E HISTORIAL
-   
-
-
 
   // INICIO DE COMPONENTES AUXILIARES DE UI (DRAWER ITEMS)
-
   Widget _buildToolItem(String title, String desc, IconData icon, bool isActive) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -239,13 +305,9 @@ class _AIChatPageState extends State<AIChatPage> {
       ),
     );
   }
-
   // FIN DE COMPONENTES AUXILIARES DE UI
 
-
-
   // INICIO DEL MÉTODO BUILD (CONSTRUCCIÓN PRINCIPAL DE LA PANTALLA)
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -264,7 +326,7 @@ class _AIChatPageState extends State<AIChatPage> {
           ),
           const SizedBox(height: 12),
           Padding(
-            padding: const EdgeInsets.only(bottom: 220), // Ajustado por el nuevo alto de la barra
+            padding: const EdgeInsets.only(bottom: 220), 
             child: FloatingActionButton(
               heroTag: "btnEdit",
               onPressed: () => _abrirEditorNota(),
@@ -282,7 +344,6 @@ class _AIChatPageState extends State<AIChatPage> {
               decoration: BoxDecoration(gradient: LinearGradient(colors: [primaryGreen, accentGreen])),
               child: const Center(child: Icon(Icons.auto_awesome, color: Colors.white, size: 40)),
             ),
-            // Solo Historial Reciente como solicitaste
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 10),
               child: Text("HISTORIAL RECIENTE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
@@ -327,11 +388,9 @@ class _AIChatPageState extends State<AIChatPage> {
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 2),
     );
   }
+  // FIN DEL MÉTODO BUILD
 
-// FIN DEL MÉTODO BUILD
-
-// INICIO DE COMPONENTES DE UI DEL CHAT (BURBUJAS Y CAJA DE TEXTO)
-
+  // INICIO DE COMPONENTES DE UI DEL CHAT (BURBUJAS Y CAJA DE TEXTO)
   Widget _buildBubble(ChatMessage msg, bool isDark) {
     bool isUser = msg.sender == MessageSender.user;
     return Align(
@@ -353,25 +412,13 @@ class _AIChatPageState extends State<AIChatPage> {
       padding: const EdgeInsets.all(15),
       child: Column(
         children: [
-          // Apartado de herramientas (Chips inspirados en Gemini)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildToolChip(Icons.trending_up, "Bolsa", isDark),
-                _buildToolChip(Icons.account_balance_wallet, "Gastos", isDark),
-                _buildToolChip(Icons.code, "Código", isDark),
-                _buildToolChip(Icons.history, "Historial", isDark),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          // Caja de texto
           Row(
             children: [
+              _buildToolSelector(isDark),
+              const SizedBox(width: 8),
               Expanded(
                 child: TextField(
-                  controller: _chatController, 
+                  controller: _chatController,
                   decoration: InputDecoration(
                     hintText: "Escribe a Daiko...",
                     filled: true,
@@ -388,7 +435,7 @@ class _AIChatPageState extends State<AIChatPage> {
               CircleAvatar(
                 backgroundColor: primaryGreen,
                 child: IconButton(
-                  onPressed: _sendMessage, 
+                  onPressed: _sendMessage,
                   icon: const Icon(Icons.send, color: Colors.white, size: 20),
                 ),
               ),
@@ -399,19 +446,58 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  // Widget auxiliar para los chips de herramientas
-  Widget _buildToolChip(IconData icon, String label, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ActionChip(
-        avatar: Icon(icon, size: 16, color: primaryGreen),
-        label: Text(label, style: const TextStyle(fontSize: 12)),
-        onPressed: () => _chatController.text = "/$label ",
-        backgroundColor: isDark ? Colors.white10 : Colors.white,
-        shape: StadiumBorder(side: BorderSide(color: Colors.grey.withOpacity(0.2))),
+  Widget _buildToolSelector(bool isDark) {
+    return PopupMenuButton<String>(
+      offset: const Offset(0, -220),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white10 : Colors.grey[200],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Text(_selectedTool, style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black87)),
+            const Icon(Icons.keyboard_arrow_down, size: 18),
+          ],
+        ),
       ),
+      onSelected: (String value) {
+        setState(() {
+          _selectedTool = value; 
+        });
+      },
+      itemBuilder: (BuildContext context) => [
+        _buildPopupItem("Rápido", "Responde rápidamente", Icons.bolt, _selectedTool == "Rápido", isDark),
+        _buildPopupItem("Pensar", "Resuelve problemas complejos", Icons.psychology, _selectedTool == "Pensar", isDark),
+        _buildPopupItem("Bolsa", "Análisis de mercado avanzado", Icons.trending_up, _selectedTool == "Bolsa", isDark),
+        _buildPopupItem("Gastos", "Gestión financiera detallada", Icons.account_balance_wallet, _selectedTool == "Gastos", isDark),
+      ],
     );
   }
 
-// FIN DE COMPONENTES DE UI DEL CHAT
+  PopupMenuItem<String> _buildPopupItem(String title, String subtitle, IconData icon, bool isSelected, bool isDark) {
+    return PopupMenuItem<String>(
+      value: title,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: isSelected ? primaryGreen : Colors.grey),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black87)),
+                Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
+          ),
+          if (isSelected) Icon(Icons.check_circle, size: 18, color: primaryGreen),
+        ],
+      ),
+    );
+  }
 }

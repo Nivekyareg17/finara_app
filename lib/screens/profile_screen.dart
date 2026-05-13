@@ -462,7 +462,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12)),
                 tileColor: Colors.red.withOpacity(0.1),
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const TranslatedText("Cerrar sesiÃ³n",
+                title: const TranslatedText("Cerrar sesión",
                     style: TextStyle(
                         color: Colors.red, fontWeight: FontWeight.bold)),
                 onTap: () async {
@@ -1298,7 +1298,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
+<<<<<<< HEAD
                                                   "Selecciona una categoría")),
+=======
+                                                  "Selecciona una categor­a")),
+>>>>>>> eba9a40cf471aa95b81f81dc4d5a5c7285058de3
                                         );
                                         return;
                                       }
@@ -1450,7 +1454,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void confirmDelete(TransactionModel t) {
+void confirmDelete(TransactionModel t) {
     showDialog(
       context: context,
       builder: (_) {
@@ -1489,7 +1493,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: isDeleting
                       ? null
                       : () async {
+<<<<<<< HEAD
                           // ... tu lógica de borrado que ya tienes ...
+=======
+                          // 1. Activar el estado de carga (el circulito)
+                          setStateDialog(() => isDeleting = true);
+
+                          // 2. Llamar a la API para borrar
+                          final auth = context.read<AuthProvider>();
+                          bool success = await ApiService.deleteTransaction(
+                            auth.token!,
+                            t.id!, 
+                          );
+
+                          if (!context.mounted) return;
+
+                          // 3. Acciones tras la respuesta del servidor
+                          if (success) {
+                            Navigator.pop(context); // Cierra la alerta
+                            loadTransactions(); // Recarga la lista en pantalla
+                            _showFloatingMessage("Movimiento eliminado");
+                          } else {
+                            setStateDialog(() => isDeleting = false); // Quita el circulito
+                            _showFloatingMessage("Error al eliminar", isError: true);
+                          }
+>>>>>>> eba9a40cf471aa95b81f81dc4d5a5c7285058de3
                         },
                   child: isDeleting
                       ? const SizedBox(
