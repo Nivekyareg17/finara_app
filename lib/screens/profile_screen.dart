@@ -73,6 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
   bool showAllMovements = false;
+  String movementFilter = "todos";
 
   void _showFloatingMessage(String message, {bool isError = false}) {
     final overlay = Overlay.of(context, rootOverlay: true);
@@ -145,7 +146,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final loadedTransactions =
           data.map((e) => TransactionModel.fromMap(e)).toList();
-      loadedTransactions.sort((a, b) => b.date.compareTo(a.date));
+      loadedTransactions.sort((a, b) {
+        final dateCompare = b.date.compareTo(a.date);
+        if (dateCompare != 0) return dateCompare;
+        return (b.id ?? 0).compareTo(a.id ?? 0);
+      });
 
       print("TRANSACCIONES OK");
 
@@ -207,13 +212,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.read<AuthProvider>();
     if (auth.token == null || auth.token!.isEmpty) return;
 
-    final data = await ApiService.getTransactionCategories(auth.token!);
+    var data = await ApiService.getTransactionCategories(auth.token!);
+    data = await _ensureDefaultCategories(auth.token!, data);
 
     if (!mounted) return;
 
     setState(() {
       categories = data.map((e) => CategoryModel.fromMap(e)).toList();
     });
+  }
+
+  Future<List<dynamic>> _ensureDefaultCategories(
+    String token,
+    List<dynamic> current,
+  ) async {
+    const defaults = [
+      {"name": "Salario", "type": "ingreso"},
+      {"name": "Otros ingresos", "type": "ingreso"},
+      {"name": "Comida", "type": "gasto"},
+      {"name": "Transporte", "type": "gasto"},
+    ];
+
+    var created = false;
+    for (final category in defaults) {
+      final exists = current.any((item) {
+        final data = Map<String, dynamic>.from(item);
+        return (data["name"] ?? "").toString().toLowerCase() ==
+                category["name"]!.toLowerCase() &&
+            (data["type"] ?? "").toString() == category["type"];
+      });
+
+      if (!exists) {
+        final ok = await ApiService.createCategory(
+          token,
+          category["name"]!,
+          category["type"]!,
+        );
+        created = created || ok;
+      }
+    }
+
+    if (!created) return current;
+    return ApiService.getTransactionCategories(token);
   }
 
   String getCategoryName(int categoryId) {
@@ -249,6 +289,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return NetworkImage(imageUrl);
   }
 
+  ImageProvider? _memoryImageFromData(String? imageData) {
+    if (imageData == null || imageData.isEmpty) return null;
+
+    try {
+      final commaIndex = imageData.indexOf(",");
+      final raw =
+          commaIndex == -1 ? imageData : imageData.substring(commaIndex + 1);
+      return MemoryImage(base64Decode(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _pickMetaImageData() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 55,
+      maxWidth: 900,
+    );
+
+    if (image == null) return null;
+
+    final bytes = await image.readAsBytes();
+    return "data:image/jpeg;base64,${base64Encode(bytes)}";
+  }
+
+  DateTime _dateWithCurrentTime(DateTime date) {
+    final now = DateTime.now();
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      now.hour,
+      now.minute,
+      now.second,
+      now.millisecond,
+      now.microsecond,
+    );
+  }
+
   double getBalance() {
     double total = 0;
 
@@ -263,11 +344,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
+  Widget _movementFilterButton({
+    required String value,
+    required String label,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    final selected = movementFilter == value;
+
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () {
+          setState(() {
+            movementFilter = value;
+            showAllMovements = false;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? const Color(0xFF10B981)
+                : (isDark ? const Color(0xFF10231F) : Colors.white),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? const Color(0xFF10B981)
+                  : (isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: selected
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : const Color(0xFF064E3B)),
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : const Color(0xFF064E3B)),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final metas = context.watch<AuthProvider>().metas;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color primaryColor = Color(0xFF064E3B);
+    final filteredMovements = transactions.where((transaction) {
+      if (movementFilter == "todos") return true;
+      return transaction.type == movementFilter;
+    }).toList();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -619,7 +767,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
 
             SizedBox(
-              height: 250,
+              height: 320,
               child: metas.isEmpty
                   ? const Center(child: Text("No hay metas aun"))
                   : ListView.builder(
@@ -627,9 +775,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       itemCount: metas.length,
                       itemBuilder: (context, index) {
                         final meta = metas[index];
+                        final metaImage = _memoryImageFromData(meta.imageData);
 
                         return Container(
-                          width: 250,
+                          width: 270,
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
@@ -648,15 +797,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Container(
+                                  height: 105,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981)
+                                        .withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(16),
+                                    image: metaImage == null
+                                        ? null
+                                        : DecorationImage(
+                                            image: metaImage,
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
+                                  child: metaImage == null
+                                      ? const Center(
+                                          child: Icon(
+                                            Icons.flag_rounded,
+                                            color: Color(0xFF10B981),
+                                            size: 34,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(height: 10),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(meta.nombre,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
+                                      child: Text(
+                                        meta.nombre,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
                                     ),
                                     Row(
                                       children: [
@@ -753,8 +932,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 10),
 
+            Row(
+              children: [
+                _movementFilterButton(
+                  value: "todos",
+                  label: "Todos",
+                  icon: Icons.list_rounded,
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 8),
+                _movementFilterButton(
+                  value: "ingreso",
+                  label: "Ingresos",
+                  icon: Icons.trending_up_rounded,
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 8),
+                _movementFilterButton(
+                  value: "gasto",
+                  label: "Gastos",
+                  icon: Icons.trending_down_rounded,
+                  isDark: isDark,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
             //LISTA DE TRANSACCIONES
-            if (transactions.isEmpty)
+            if (filteredMovements.isEmpty)
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -762,7 +968,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: const Center(
-                  child: Text("No hay movimientos registrados"),
+                  child: Text("No hay movimientos para mostrar"),
                 ),
               )
             else
@@ -770,12 +976,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: showAllMovements
-                  ? transactions.length
-                  : transactions.take(4).length,
+                  ? filteredMovements.length
+                  : filteredMovements.take(4).length,
               separatorBuilder: (context, index) =>
                   const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final t = transactions[index];
+                final t = filteredMovements[index];
                 final bool isIngreso = t.type == "ingreso";
                 final categoryName =
                     getCategoryName(int.tryParse(t.categoryId) ?? 0);
@@ -869,7 +1075,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               },
             ),
-            if (transactions.length > 4) ...[
+            if (filteredMovements.length > 4) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
@@ -1399,6 +1605,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       }
 
                                       int categoryId = selectedCategoryId!;
+                                      final transactionDate = edit == null
+                                          ? _dateWithCurrentTime(fechaFinal!)
+                                          : fechaFinal!;
 
                                       setStateDialog(
                                           () => isLoadingDialog = true);
@@ -1415,7 +1624,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          fechaFinal!,
+                                          transactionDate,
                                         );
                                         if (type == "ingreso") {
                                           await context
@@ -1433,7 +1642,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          fechaFinal!,
+                                          transactionDate,
                                         );
                                       }
 
@@ -1874,13 +2083,13 @@ void confirmDelete(TransactionModel t) {
 
   String _formatDate(DateTime date) {
     if (date.year == 2026 && date.month == 4 && date.day == 14) {
-      return "Fecha no registrada";
+      return DateFormat("dd/MM/yyyy").format(DateTime.now());
     }
-    return DateFormat("dd/MM/yyyy", "es_CO").format(date.toLocal());
+    return DateFormat("dd/MM/yyyy").format(date.toLocal());
   }
 
   String _formatDateTime(DateTime date) {
-    return DateFormat("dd/MM/yyyy - h:mm a", "es_CO").format(date.toLocal());
+    return DateFormat("dd/MM/yyyy - h:mm a").format(date.toLocal());
   }
 
   void _agregarDineroMeta(int index) {
@@ -1966,6 +2175,7 @@ void confirmDelete(TransactionModel t) {
                   icon: Icons.attach_money_rounded,
                   isDark: isDark,
                   keyboardType: TextInputType.number,
+                  prefixText: "\$ ",
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     CurrencyInputFormatter(),
@@ -2025,6 +2235,7 @@ void confirmDelete(TransactionModel t) {
     TextEditingController montoMeta = TextEditingController();
     TextEditingController montoActual = TextEditingController();
     TextEditingController ahorroMensual = TextEditingController();
+    String? metaImageData;
 
     showModalBottomSheet(
       context: context,
@@ -2081,6 +2292,40 @@ void confirmDelete(TransactionModel t) {
 
                           const SizedBox(height: 30),
 
+                          Center(
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 38,
+                                  backgroundColor:
+                                      const Color(0xFF10B981).withOpacity(0.15),
+                                  backgroundImage:
+                                      _memoryImageFromData(metaImageData),
+                                  child: metaImageData == null
+                                      ? const Icon(
+                                          Icons.image_outlined,
+                                          color: Color(0xFF10B981),
+                                          size: 30,
+                                        )
+                                      : null,
+                                ),
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    final imageData =
+                                        await _pickMetaImageData();
+                                    if (imageData == null) return;
+                                    setStateDialog(
+                                        () => metaImageData = imageData);
+                                  },
+                                  icon: const Icon(Icons.add_photo_alternate),
+                                  label: const Text("Foto opcional"),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
                           //NOMBRE
                           const Text(
                             "Nombre",
@@ -2123,6 +2368,7 @@ void confirmDelete(TransactionModel t) {
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.trending_up,
                                   color: Color(0xFF064E3B)),
+                              prefixText: "\$ ",
                               hintText: "0.00",
                               filled: true,
                               fillColor:
@@ -2155,6 +2401,7 @@ void confirmDelete(TransactionModel t) {
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.attach_money,
                                   color: Color(0xFF064E3B)),
+                              prefixText: "\$ ",
                               hintText: "0.00",
                               filled: true,
                               fillColor:
@@ -2187,6 +2434,7 @@ void confirmDelete(TransactionModel t) {
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.savings,
                                   color: Color(0xFF064E3B)),
+                              prefixText: "\$ ",
                               hintText: "Opcional",
                               filled: true,
                               fillColor:
@@ -2239,6 +2487,7 @@ void confirmDelete(TransactionModel t) {
                                             _parseAmount(montoActual.text),
                                         ahorroMensual:
                                             _parseAmount(ahorroMensual.text),
+                                        imageData: metaImageData,
                                       ),
                                     );
                                 Navigator.pop(context);
@@ -2271,11 +2520,12 @@ void confirmDelete(TransactionModel t) {
 
     TextEditingController nombre = TextEditingController(text: meta.nombre);
     TextEditingController montoMeta =
-        TextEditingController(text: formatMoneyInput(meta.montoMeta));
+        TextEditingController(text: formatCurrency(meta.montoMeta));
     TextEditingController montoActual =
-        TextEditingController(text: formatMoneyInput(meta.montoActual));
+        TextEditingController(text: formatCurrency(meta.montoActual));
     TextEditingController ahorroMensual =
-        TextEditingController(text: formatMoneyInput(meta.ahorroMensual));
+        TextEditingController(text: formatCurrency(meta.ahorroMensual));
+    String? metaImageData = meta.imageData;
 
     showModalBottomSheet(
       context: context,
@@ -2370,6 +2620,40 @@ void confirmDelete(TransactionModel t) {
                             ),
                           ),
                           const SizedBox(height: 22),
+                          Center(
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 38,
+                                  backgroundColor:
+                                      const Color(0xFF10B981).withOpacity(0.15),
+                                  backgroundImage:
+                                      _memoryImageFromData(metaImageData),
+                                  child: metaImageData == null
+                                      ? const Icon(
+                                          Icons.image_outlined,
+                                          color: Color(0xFF10B981),
+                                          size: 30,
+                                        )
+                                      : null,
+                                ),
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    final imageData =
+                                        await _pickMetaImageData();
+                                    if (imageData == null) return;
+                                    setStateDialog(
+                                        () => metaImageData = imageData);
+                                  },
+                                  icon: const Icon(Icons.add_photo_alternate),
+                                  label: Text(metaImageData == null
+                                      ? "Foto opcional"
+                                      : "Cambiar foto"),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           _metaTextField(
                             controller: nombre,
                             label: "Nombre",
@@ -2386,6 +2670,7 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.track_changes_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            prefixText: "\$ ",
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               CurrencyInputFormatter(),
@@ -2400,6 +2685,7 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.trending_up_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            prefixText: "\$ ",
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               CurrencyInputFormatter(),
@@ -2414,6 +2700,7 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.calendar_month_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            prefixText: "\$ ",
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               CurrencyInputFormatter(),
@@ -2455,6 +2742,7 @@ void confirmDelete(TransactionModel t) {
                                         ahorroMensual:
                                             _parseAmount(ahorroMensual.text),
                                         aportes: meta.aportes,
+                                        imageData: metaImageData,
                                       ),
                                     );
 
@@ -2571,6 +2859,7 @@ void confirmDelete(TransactionModel t) {
     required IconData icon,
     required bool isDark,
     TextInputType keyboardType = TextInputType.text,
+    String? prefixText,
     List<TextInputFormatter>? inputFormatters,
     ValueChanged<String>? onChanged,
   }) {
@@ -2592,6 +2881,7 @@ void confirmDelete(TransactionModel t) {
           onChanged: onChanged,
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: const Color(0xFF10B981)),
+            prefixText: prefixText,
             hintText: hint,
             filled: true,
             fillColor: isDark ? const Color(0xFF10231F) : Colors.grey[50],

@@ -74,7 +74,7 @@ def get_transactions(
 
     transactions = db.query(Transaction).filter(
         Transaction.user_id == user.id
-    ).all()
+    ).order_by(Transaction.date.desc(), Transaction.id.desc()).all()
 
     return transactions
 
