@@ -68,7 +68,7 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
+              backgroundColor: const Color.fromARGB(255, 17, 146, 112),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -132,7 +132,7 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
+              backgroundColor: const Color.fromARGB(255, 17, 146, 112),
             ),
             icon: const Icon(Icons.check, color: Colors.white),
             label: const Text("Actualizar"),

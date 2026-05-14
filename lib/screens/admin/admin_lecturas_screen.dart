@@ -77,7 +77,7 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
+                    backgroundColor: const Color.fromARGB(255, 12, 83, 64),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -106,7 +106,10 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                       showSnack(context, "Campos inválidos", isError: true);
                     }
                   },
-                  child: const Text("Guardar"),
+                  child: const Text(
+                    "Guardar",
+                    style: TextStyle(color: Color.fromARGB(255, 17, 146, 112)),
+                  ),
                 ),
               ],
             ));
@@ -203,7 +206,7 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: primaryColor),
+        labelStyle: const TextStyle(color: Color.fromARGB(255, 26, 129, 102)),
         filled: true,
         fillColor: Colors.grey.withOpacity(0.08),
         enabledBorder: OutlineInputBorder(

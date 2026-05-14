@@ -15,7 +15,7 @@ void showSnack(
     backgroundColor = isDark ? Colors.red.shade400 : Colors.red;
     icon = Icons.error_outline;
   } else if (isSuccess) {
-    backgroundColor = isDark ? Colors.green.shade400 : Colors.green;
+    backgroundColor = isDark ? Colors.green.shade400 : const Color.fromARGB(255, 41, 114, 43);
     icon = Icons.check_circle_outline;
   } else {
     backgroundColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
