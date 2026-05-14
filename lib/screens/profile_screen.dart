@@ -207,13 +207,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.read<AuthProvider>();
     if (auth.token == null || auth.token!.isEmpty) return;
 
-    final data = await ApiService.getTransactionCategories(auth.token!);
+    var data = await ApiService.getTransactionCategories(auth.token!);
+    data = await _ensureDefaultCategories(auth.token!, data);
 
     if (!mounted) return;
 
     setState(() {
       categories = data.map((e) => CategoryModel.fromMap(e)).toList();
     });
+  }
+
+  Future<List<dynamic>> _ensureDefaultCategories(
+    String token,
+    List<dynamic> current,
+  ) async {
+    const defaults = [
+      {"name": "Salario", "type": "ingreso"},
+      {"name": "Otros ingresos", "type": "ingreso"},
+      {"name": "Comida", "type": "gasto"},
+      {"name": "Transporte", "type": "gasto"},
+    ];
+
+    var created = false;
+    for (final category in defaults) {
+      final exists = current.any((item) {
+        final data = Map<String, dynamic>.from(item);
+        return (data["name"] ?? "").toString().toLowerCase() ==
+                category["name"]!.toLowerCase() &&
+            (data["type"] ?? "").toString() == category["type"];
+      });
+
+      if (!exists) {
+        final ok = await ApiService.createCategory(
+          token,
+          category["name"]!,
+          category["type"]!,
+        );
+        created = created || ok;
+      }
+    }
+
+    if (!created) return current;
+    return ApiService.getTransactionCategories(token);
   }
 
   String getCategoryName(int categoryId) {
@@ -1874,13 +1909,13 @@ void confirmDelete(TransactionModel t) {
 
   String _formatDate(DateTime date) {
     if (date.year == 2026 && date.month == 4 && date.day == 14) {
-      return DateFormat("dd/MM/yyyy", "es_CO").format(DateTime.now());
+      return DateFormat("dd/MM/yyyy").format(DateTime.now());
     }
-    return DateFormat("dd/MM/yyyy", "es_CO").format(date.toLocal());
+    return DateFormat("dd/MM/yyyy").format(date.toLocal());
   }
 
   String _formatDateTime(DateTime date) {
-    return DateFormat("dd/MM/yyyy - h:mm a", "es_CO").format(date.toLocal());
+    return DateFormat("dd/MM/yyyy - h:mm a").format(date.toLocal());
   }
 
   void _agregarDineroMeta(int index) {

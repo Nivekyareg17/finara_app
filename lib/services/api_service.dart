@@ -156,13 +156,13 @@ class ApiService {
   static Future<List<dynamic>> getTransactionCategories(String token) async {
     try {
       final response = await http.get(
-        Uri.parse("$baseUrl/categories"),
+        Uri.parse("$baseUrl/categories/"),
         headers: _jsonHeaders(token),
       );
 
       if (response.statusCode == 404 || response.statusCode == 405) {
         final fallbackResponse = await http.get(
-          Uri.parse("$baseUrl/categories/"),
+          Uri.parse("$baseUrl/categories"),
           headers: _jsonHeaders(token),
         );
         return _decodeList(fallbackResponse, "GET CATEGORIES FALLBACK");
