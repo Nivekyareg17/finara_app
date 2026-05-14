@@ -146,7 +146,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final loadedTransactions =
           data.map((e) => TransactionModel.fromMap(e)).toList();
-      loadedTransactions.sort((a, b) => b.date.compareTo(a.date));
+      loadedTransactions.sort((a, b) {
+        final dateCompare = b.date.compareTo(a.date);
+        if (dateCompare != 0) return dateCompare;
+        return (b.id ?? 0).compareTo(a.id ?? 0);
+      });
 
       print("TRANSACCIONES OK");
 
@@ -310,6 +314,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final bytes = await image.readAsBytes();
     return "data:image/jpeg;base64,${base64Encode(bytes)}";
+  }
+
+  DateTime _dateWithCurrentTime(DateTime date) {
+    final now = DateTime.now();
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      now.hour,
+      now.minute,
+      now.second,
+      now.millisecond,
+      now.microsecond,
+    );
   }
 
   double getBalance() {
@@ -749,7 +767,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
 
             SizedBox(
-              height: 250,
+              height: 320,
               child: metas.isEmpty
                   ? const Center(child: Text("No hay metas aun"))
                   : ListView.builder(
@@ -760,7 +778,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final metaImage = _memoryImageFromData(meta.imageData);
 
                         return Container(
-                          width: 250,
+                          width: 270,
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
@@ -779,29 +797,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Container(
+                                  height: 105,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981)
+                                        .withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(16),
+                                    image: metaImage == null
+                                        ? null
+                                        : DecorationImage(
+                                            image: metaImage,
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
+                                  child: metaImage == null
+                                      ? const Center(
+                                          child: Icon(
+                                            Icons.flag_rounded,
+                                            color: Color(0xFF10B981),
+                                            size: 34,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(height: 10),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    CircleAvatar(
-                                      radius: 18,
-                                      backgroundColor:
-                                          const Color(0xFF10B981).withOpacity(0.15),
-                                      backgroundImage: metaImage,
-                                      child: metaImage == null
-                                          ? const Icon(
-                                              Icons.flag_rounded,
-                                              color: Color(0xFF10B981),
-                                              size: 18,
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
                                     Expanded(
-                                      child: Text(meta.nombre,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
+                                      child: Text(
+                                        meta.nombre,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
                                     ),
                                     Row(
                                       children: [
@@ -1571,6 +1605,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       }
 
                                       int categoryId = selectedCategoryId!;
+                                      final transactionDate = edit == null
+                                          ? _dateWithCurrentTime(fechaFinal!)
+                                          : fechaFinal!;
 
                                       setStateDialog(
                                           () => isLoadingDialog = true);
@@ -1587,7 +1624,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          fechaFinal!,
+                                          transactionDate,
                                         );
                                         if (type == "ingreso") {
                                           await context
@@ -1605,7 +1642,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          fechaFinal!,
+                                          transactionDate,
                                         );
                                       }
 
