@@ -13,6 +13,8 @@ import '../widgets/app_drawer.dart';
 import 'chat_screen.dart';
 import '../widgets/calculators_card.dart';
 import 'calculators/calculators_screen.dart';
+import '../providers/auth_provider.dart';
+import 'admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 1. Obtenemos el provider sin escuchar cambios constantes aquí (listen: false)
     final langProvider = Provider.of<LanguageProvider>(context, listen: false);
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final auth = context.watch<AuthProvider>();
 
     return FutureBuilder(
       // 2. Ejecutamos la carga inicial del idioma
@@ -46,6 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           );
+        }
+
+        if (auth.isAdmin && auth.isAdminView) {
+          return const AdminScreen();
         }
 
         // 4. UNA VEZ CARGADO: Mostramos la UI real

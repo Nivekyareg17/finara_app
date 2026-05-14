@@ -101,6 +101,7 @@ class _AppDrawerState extends State<AppDrawer> {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final auth = context.watch<AuthProvider>();
 
     return Drawer(
       child: Column(
@@ -252,6 +253,21 @@ class _AppDrawerState extends State<AppDrawer> {
           ),
 
           const Divider(height: 20),
+
+          if (auth.isAdmin)
+            _buildDrawerItem(
+              icon: Icons.swap_horiz,
+              title: auth.isAdminView
+                  ? "Cambiar a vista cliente"
+                  : "Volver a vista admin",
+              color: Colors.purple,
+              onTap: () {
+                auth.toggleView();
+                Navigator.pop(context);
+              },
+            ),
+
+          
 
           //LOGOUT
           _buildDrawerItem(

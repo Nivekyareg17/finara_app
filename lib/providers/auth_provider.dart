@@ -11,6 +11,7 @@ class AuthProvider extends ChangeNotifier {
   final storage = const FlutterSecureStorage();
 
   String? _token;
+  Map<String, dynamic>? _user;
   List<MetaAhorro> _metas = [];
 
   AuthProvider() {
@@ -20,6 +21,7 @@ class AuthProvider extends ChangeNotifier {
   String? get token => _token;
   bool get isAuthenticated => _token != null;
   List<MetaAhorro> get metas => _metas;
+  bool get isAdmin => _user?["role"] == "admin";//admin-vs-usuario
 
   Future<bool> login(String email, String password) async {
     final token = await ApiService.login(email, password);
@@ -27,6 +29,9 @@ class AuthProvider extends ChangeNotifier {
     if (token != null) {
       _token = token;
       await storage.write(key: "jwt_token", value: token);
+
+      _user = await ApiService.getUser(token);
+
       notifyListeners();
       return true;
     }
@@ -49,6 +54,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     _token = null;
+     _user = null;
     await storage.delete(key: "jwt_token");
     notifyListeners();
   }
@@ -60,11 +66,24 @@ class AuthProvider extends ChangeNotifier {
 
     if (user == null) {
       await logout();
+    }else{
+      _user = user;
     }
 
     return user;
   }
 
+  // Lógica para alternar entre vista de admin y usuario
+  bool _isAdminView = true;
+
+  bool get isAdminView => _isAdminView;
+
+  void toggleView() {
+    _isAdminView = !_isAdminView;
+    notifyListeners();
+  }
+
+  // Métodos relacionados con metas de ahorro
   Future<void> loadMetas() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString("metas_ahorro");
