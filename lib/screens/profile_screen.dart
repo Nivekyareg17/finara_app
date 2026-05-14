@@ -73,6 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
   bool showAllMovements = false;
+  String movementFilter = "todos";
 
   void _showFloatingMessage(String message, {bool isError = false}) {
     final overlay = Overlay.of(context, rootOverlay: true);
@@ -298,11 +299,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
+  Widget _movementFilterButton({
+    required String value,
+    required String label,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    final selected = movementFilter == value;
+
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () {
+          setState(() {
+            movementFilter = value;
+            showAllMovements = false;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? const Color(0xFF10B981)
+                : (isDark ? const Color(0xFF10231F) : Colors.white),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? const Color(0xFF10B981)
+                  : (isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: selected
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : const Color(0xFF064E3B)),
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : const Color(0xFF064E3B)),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final metas = context.watch<AuthProvider>().metas;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color primaryColor = Color(0xFF064E3B);
+    final filteredMovements = transactions.where((transaction) {
+      if (movementFilter == "todos") return true;
+      return transaction.type == movementFilter;
+    }).toList();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -788,8 +856,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 10),
 
+            Row(
+              children: [
+                _movementFilterButton(
+                  value: "todos",
+                  label: "Todos",
+                  icon: Icons.list_rounded,
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 8),
+                _movementFilterButton(
+                  value: "ingreso",
+                  label: "Ingresos",
+                  icon: Icons.trending_up_rounded,
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 8),
+                _movementFilterButton(
+                  value: "gasto",
+                  label: "Gastos",
+                  icon: Icons.trending_down_rounded,
+                  isDark: isDark,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
             //LISTA DE TRANSACCIONES
-            if (transactions.isEmpty)
+            if (filteredMovements.isEmpty)
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -797,7 +892,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: const Center(
-                  child: Text("No hay movimientos registrados"),
+                  child: Text("No hay movimientos para mostrar"),
                 ),
               )
             else
@@ -805,12 +900,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: showAllMovements
-                  ? transactions.length
-                  : transactions.take(4).length,
+                  ? filteredMovements.length
+                  : filteredMovements.take(4).length,
               separatorBuilder: (context, index) =>
                   const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final t = transactions[index];
+                final t = filteredMovements[index];
                 final bool isIngreso = t.type == "ingreso";
                 final categoryName =
                     getCategoryName(int.tryParse(t.categoryId) ?? 0);
@@ -904,7 +999,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               },
             ),
-            if (transactions.length > 4) ...[
+            if (filteredMovements.length > 4) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
