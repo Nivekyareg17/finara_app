@@ -13,13 +13,21 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
+  final searchController = TextEditingController();
   List users = [];
   bool isLoading = true;
+  String searchQuery = "";
 
   @override
   void initState() {
     super.initState();
     loadUsers();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   Future<void> loadUsers() async {
@@ -44,6 +52,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final filteredUsers = users.where((user) {
+      final data = Map<String, dynamic>.from(user);
+      final name = (data["name"] ?? "").toString().toLowerCase();
+      return name.contains(searchQuery.toLowerCase().trim());
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -86,16 +99,97 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     ),
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: users.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final user = Map<String, dynamic>.from(users[index]);
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (value) {
+                          setState(() => searchQuery = value);
+                        },
+                        decoration: InputDecoration(
+                          hintText: "Buscar usuarios por nombre",
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: searchQuery.isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: "Limpiar busqueda",
+                                  onPressed: () {
+                                    searchController.clear();
+                                    setState(() => searchQuery = "");
+                                  },
+                                  icon: const Icon(Icons.close_rounded),
+                                ),
+                          filled: true,
+                          fillColor:
+                              isDark ? const Color(0xFF1F2937) : Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: isDark ? Colors.white10 : Colors.black12,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: isDark ? Colors.white10 : Colors.black12,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF087F5B),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: filteredUsers.isEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(28),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 34,
+                                      backgroundColor:
+                                          const Color(0xFF087F5B)
+                                              .withOpacity(0.12),
+                                      child: const Icon(
+                                        Icons.person_search_rounded,
+                                        color: Color(0xFF087F5B),
+                                        size: 32,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    const Text(
+                                      "No se encontraron usuarios",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : ListView.separated(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                              itemCount: filteredUsers.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 10),
+                              itemBuilder: (context, index) {
+                                final user = Map<String, dynamic>.from(
+                                    filteredUsers[index]);
                     final name = (user["name"] ?? "Usuario").toString();
                     final initial = name.isNotEmpty ? name[0].toUpperCase() : "?";
 
-                    return Material(
+                                return Material(
                       color: isDark ? const Color(0xFF1F2937) : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       elevation: isDark ? 0 : 1,
@@ -158,8 +252,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           ),
                         ),
                       ),
-                    );
-                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
                 ),
     );
   }

@@ -619,7 +619,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
 
             SizedBox(
-              height: 215,
+              height: 250,
               child: metas.isEmpty
                   ? const Center(child: Text("No hay metas aun"))
                   : ListView.builder(
@@ -629,7 +629,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final meta = metas[index];
 
                         return Container(
-                          width: 220,
+                          width: 250,
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
@@ -660,15 +660,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                     Row(
                                       children: [
-                                        GestureDetector(
-                                          onTap: () => _agregarDineroMeta(index),
-                                          child: const Icon(
-                                            Icons.add_circle_outline_rounded,
-                                            size: 20,
-                                            color: Color(0xFF10B981),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
                                         GestureDetector(
                                           onTap: () => _editarMeta(index),
                                           child: const Icon(Icons.edit,
@@ -707,6 +698,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   "Faltan: ${meta.mesesRestantes} meses",
                                   style: const TextStyle(
                                       fontSize: 12, color: Colors.grey),
+                                ),
+                                const Spacer(),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 38,
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          const Color(0xFF10B981),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: () =>
+                                        _agregarDineroMeta(index),
+                                    icon: const Icon(
+                                        Icons.add_circle_outline_rounded,
+                                        size: 18),
+                                    label: const Text(
+                                      "Añadir dinero",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w800),
+                                    ),
+                                  ),
                                 ),
                               ]),
                         );
@@ -886,8 +904,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : DateFormat("MM/dd/yyyy").format(DateTime.now()));
 
     final desc = TextEditingController(text: edit?.description);
-    final amount =
-        TextEditingController(text: edit != null ? edit.amount.toString() : "");
+    final amount = TextEditingController(
+        text: edit != null ? formatMoneyInput(edit.amount) : "");
     String type = edit?.type ?? "gasto";
     int? selectedCategoryId;
 
@@ -897,6 +915,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         bool isLoadingDialog = false;
+        String? amountError;
+        String? categoryError;
+        String? dateError;
+        String? descError;
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
@@ -967,6 +989,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     type,
                                     (v) => setStateDialog(() {
                                           type = v;
+                                          categoryError = null;
                                         }),
                                     isDark),
                                 _buildTypeButton(
@@ -974,6 +997,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     type,
                                     (v) => setStateDialog(() {
                                           type = v;
+                                          categoryError = null;
                                         }),
                                     isDark),
                               ],
@@ -1003,10 +1027,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF064E3B),
                             ),
-                            decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.attach_money,
+                            onChanged: (_) {
+                              if (amountError != null) {
+                                setStateDialog(() => amountError = null);
+                              }
+                            },
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.attach_money,
                                   size: 35, color: Color(0xFF064E3B)),
                               hintText: "0.00",
+                              errorText: amountError,
                               border: InputBorder.none,
                             ),
                           ),
@@ -1105,8 +1135,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       );
                                     }).toList(),
                                     onChanged: (v) {
-                                      setStateDialog(
-                                          () => selectedCategoryId = v);
+                                  setStateDialog(
+                                          () {
+                                        selectedCategoryId = v;
+                                        categoryError = null;
+                                      });
                                     },
                                   ),
                                 ),
@@ -1210,6 +1243,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ],
                           ),
+                          if (categoryError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              categoryError!,
+                              style: const TextStyle(
+                                  color: Colors.redAccent, fontSize: 12),
+                            ),
+                          ],
 
                           const SizedBox(height: 25),
 
@@ -1235,6 +1276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               if (picked != null) {
                                 setStateDialog(() => dateController.text =
                                     DateFormat("MM/dd/yyyy").format(picked));
+                                setStateDialog(() => dateError = null);
                               }
                             },
                             child: Container(
@@ -1243,7 +1285,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color:
                                     isDark ? Colors.black12 : Colors.grey[50],
                                 borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: Colors.grey[200]!),
+                                border: Border.all(
+                                  color: dateError == null
+                                      ? Colors.grey[200]!
+                                      : Colors.redAccent,
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -1255,6 +1301,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ),
+                          if (dateError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              dateError!,
+                              style: const TextStyle(
+                                  color: Colors.redAccent, fontSize: 12),
+                            ),
+                          ],
 
                           const SizedBox(height: 25),
 
@@ -1266,8 +1320,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: desc,
+                            onChanged: (_) {
+                              if (descError != null) {
+                                setStateDialog(() => descError = null);
+                              }
+                            },
                             decoration: InputDecoration(
                               hintText: "Escribe una nota...",
+                              errorText: descError,
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
@@ -1307,40 +1367,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
                                           double.tryParse(cleanText) ?? 0.0;
-                                      DateTime fechaFinal =
-                                          DateFormat("MM/dd/yyyy")
-                                              .parse(dateController.text);
-                                      if (selectedCategoryId == null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "Selecciona una categoria")),
+                                      DateTime? fechaFinal = DateFormat(
+                                              "MM/dd/yyyy")
+                                          .tryParse(dateController.text);
+
+                                      setStateDialog(() {
+                                        amountError = montoFinal <= 0
+                                            ? "Ingresa un monto mayor a 0"
+                                            : null;
+                                        categoryError =
+                                            selectedCategoryId == null
+                                                ? "Selecciona una categoria"
+                                                : null;
+                                        dateError = fechaFinal == null
+                                            ? "Selecciona una fecha"
+                                            : null;
+                                        descError = desc.text.trim().isEmpty
+                                            ? "Escribe una descripcion"
+                                            : null;
+                                      });
+
+                                      if (amountError != null ||
+                                          categoryError != null ||
+                                          dateError != null ||
+                                          descError != null) {
+                                        _showFloatingMessage(
+                                          "Completa los campos obligatorios",
+                                          isError: true,
                                         );
                                         return;
                                       }
 
                                       int categoryId = selectedCategoryId!;
-
-                                      if (montoFinal <= 0) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: TranslatedText(
-                                                  "Por favor ingresa un monto válido")),
-                                        );
-                                        return;
-                                      }
-
-                                      if (desc.text.trim().isEmpty) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: TranslatedText(
-                                                  "Por favor ingresa una descripción")),
-                                        );
-                                        return;
-                                      }
 
                                       setStateDialog(
                                           () => isLoadingDialog = true);
@@ -1357,7 +1415,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          fechaFinal,
+                                          fechaFinal!,
                                         );
                                         if (type == "ingreso") {
                                           await context
@@ -1375,7 +1433,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          fechaFinal,
+                                          fechaFinal!,
                                         );
                                       }
 
@@ -1487,7 +1545,7 @@ void confirmDelete(TransactionModel t) {
                 children: [
                   Text("Se eliminará '${t.description}'"),
                   const SizedBox(height: 8),
-                  Text("Monto: \$${t.amount.toStringAsFixed(2)}",
+                  Text("Monto: ${formatCurrency(t.amount)}",
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.redAccent)),
@@ -1805,12 +1863,19 @@ void confirmDelete(TransactionModel t) {
     return formatter.format(amount);
   }
 
+  String formatMoneyInput(double amount) {
+    return NumberFormat("#,##0.00", "en_US").format(amount);
+  }
+
   double _parseAmount(String value) {
-    final normalized = value.replaceAll(",", "").trim();
+    final normalized = value.replaceAll(RegExp(r'[^0-9.]'), '').trim();
     return double.tryParse(normalized) ?? 0;
   }
 
   String _formatDate(DateTime date) {
+    if (date.year == 2026 && date.month == 4 && date.day == 14) {
+      return "Fecha no registrada";
+    }
     return DateFormat("dd/MM/yyyy", "es_CO").format(date.toLocal());
   }
 
@@ -1901,6 +1966,10 @@ void confirmDelete(TransactionModel t) {
                   icon: Icons.attach_money_rounded,
                   isDark: isDark,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    CurrencyInputFormatter(),
+                  ],
                 ),
                 const SizedBox(height: 22),
                 SizedBox(
@@ -2047,6 +2116,10 @@ void confirmDelete(TransactionModel t) {
                           TextField(
                             controller: montoActual,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CurrencyInputFormatter(),
+                            ],
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.trending_up,
                                   color: Color(0xFF064E3B)),
@@ -2075,6 +2148,10 @@ void confirmDelete(TransactionModel t) {
                           TextField(
                             controller: montoMeta,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CurrencyInputFormatter(),
+                            ],
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.attach_money,
                                   color: Color(0xFF064E3B)),
@@ -2103,6 +2180,10 @@ void confirmDelete(TransactionModel t) {
                           TextField(
                             controller: ahorroMensual,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CurrencyInputFormatter(),
+                            ],
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.savings,
                                   color: Color(0xFF064E3B)),
@@ -2190,11 +2271,11 @@ void confirmDelete(TransactionModel t) {
 
     TextEditingController nombre = TextEditingController(text: meta.nombre);
     TextEditingController montoMeta =
-        TextEditingController(text: meta.montoMeta.toString());
+        TextEditingController(text: formatMoneyInput(meta.montoMeta));
     TextEditingController montoActual =
-        TextEditingController(text: meta.montoActual.toString());
+        TextEditingController(text: formatMoneyInput(meta.montoActual));
     TextEditingController ahorroMensual =
-        TextEditingController(text: meta.ahorroMensual.toString());
+        TextEditingController(text: formatMoneyInput(meta.ahorroMensual));
 
     showModalBottomSheet(
       context: context,
@@ -2305,6 +2386,10 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.track_changes_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CurrencyInputFormatter(),
+                            ],
                             onChanged: (_) => setStateDialog(() {}),
                           ),
                           const SizedBox(height: 16),
@@ -2315,6 +2400,10 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.trending_up_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CurrencyInputFormatter(),
+                            ],
                             onChanged: (_) => setStateDialog(() {}),
                           ),
                           const SizedBox(height: 16),
@@ -2325,6 +2414,10 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.calendar_month_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CurrencyInputFormatter(),
+                            ],
                           ),
                           const SizedBox(height: 18),
                           _metaAportesList(meta, isDark),
@@ -2478,6 +2571,7 @@ void confirmDelete(TransactionModel t) {
     required IconData icon,
     required bool isDark,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     ValueChanged<String>? onChanged,
   }) {
     return Column(
@@ -2494,6 +2588,7 @@ void confirmDelete(TransactionModel t) {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           onChanged: onChanged,
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: const Color(0xFF10B981)),
