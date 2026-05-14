@@ -29,13 +29,10 @@ class AuthProvider extends ChangeNotifier {
     if (token != null) {
       _token = token;
       await storage.write(key: "jwt_token", value: token);
-<<<<<<< HEAD
 
       _user = await ApiService.getUser(token);
 
-=======
       await loadMetas();
->>>>>>> 9f42f5e01138364b5f58deb5035576b6ea08ec61
       notifyListeners();
       return true;
     }
