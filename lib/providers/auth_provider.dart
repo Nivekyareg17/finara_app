@@ -27,6 +27,7 @@ class AuthProvider extends ChangeNotifier {
     if (token != null) {
       _token = token;
       await storage.write(key: "jwt_token", value: token);
+      await loadMetas();
       notifyListeners();
       return true;
     }
@@ -92,7 +93,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> addMeta(MetaAhorro meta) async {
-    _metas.add(meta);
+    _metas = [..._metas, meta];
+    notifyListeners();
     await _saveMetas();
     notifyListeners();
   }

@@ -1874,7 +1874,7 @@ void confirmDelete(TransactionModel t) {
 
   String _formatDate(DateTime date) {
     if (date.year == 2026 && date.month == 4 && date.day == 14) {
-      return "Fecha no registrada";
+      return DateFormat("dd/MM/yyyy", "es_CO").format(DateTime.now());
     }
     return DateFormat("dd/MM/yyyy", "es_CO").format(date.toLocal());
   }
@@ -1966,6 +1966,7 @@ void confirmDelete(TransactionModel t) {
                   icon: Icons.attach_money_rounded,
                   isDark: isDark,
                   keyboardType: TextInputType.number,
+                  prefixText: "\$ ",
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     CurrencyInputFormatter(),
@@ -2123,6 +2124,7 @@ void confirmDelete(TransactionModel t) {
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.trending_up,
                                   color: Color(0xFF064E3B)),
+                              prefixText: "\$ ",
                               hintText: "0.00",
                               filled: true,
                               fillColor:
@@ -2155,6 +2157,7 @@ void confirmDelete(TransactionModel t) {
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.attach_money,
                                   color: Color(0xFF064E3B)),
+                              prefixText: "\$ ",
                               hintText: "0.00",
                               filled: true,
                               fillColor:
@@ -2187,6 +2190,7 @@ void confirmDelete(TransactionModel t) {
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.savings,
                                   color: Color(0xFF064E3B)),
+                              prefixText: "\$ ",
                               hintText: "Opcional",
                               filled: true,
                               fillColor:
@@ -2271,11 +2275,11 @@ void confirmDelete(TransactionModel t) {
 
     TextEditingController nombre = TextEditingController(text: meta.nombre);
     TextEditingController montoMeta =
-        TextEditingController(text: formatMoneyInput(meta.montoMeta));
+        TextEditingController(text: formatCurrency(meta.montoMeta));
     TextEditingController montoActual =
-        TextEditingController(text: formatMoneyInput(meta.montoActual));
+        TextEditingController(text: formatCurrency(meta.montoActual));
     TextEditingController ahorroMensual =
-        TextEditingController(text: formatMoneyInput(meta.ahorroMensual));
+        TextEditingController(text: formatCurrency(meta.ahorroMensual));
 
     showModalBottomSheet(
       context: context,
@@ -2386,6 +2390,7 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.track_changes_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            prefixText: "\$ ",
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               CurrencyInputFormatter(),
@@ -2400,6 +2405,7 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.trending_up_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            prefixText: "\$ ",
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               CurrencyInputFormatter(),
@@ -2414,6 +2420,7 @@ void confirmDelete(TransactionModel t) {
                             icon: Icons.calendar_month_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
+                            prefixText: "\$ ",
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               CurrencyInputFormatter(),
@@ -2571,6 +2578,7 @@ void confirmDelete(TransactionModel t) {
     required IconData icon,
     required bool isDark,
     TextInputType keyboardType = TextInputType.text,
+    String? prefixText,
     List<TextInputFormatter>? inputFormatters,
     ValueChanged<String>? onChanged,
   }) {
@@ -2592,6 +2600,7 @@ void confirmDelete(TransactionModel t) {
           onChanged: onChanged,
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: const Color(0xFF10B981)),
+            prefixText: prefixText,
             hintText: hint,
             filled: true,
             fillColor: isDark ? const Color(0xFF10231F) : Colors.grey[50],
