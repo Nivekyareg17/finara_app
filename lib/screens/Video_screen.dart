@@ -4,6 +4,10 @@ import '../widgets/custom_bottom_nav.dart';
 import 'video_list_screen.dart';
 import '../widgets/translate_widget.dart';
 import '../widgets/app_drawer.dart';
+import '../providers/auth_provider.dart';
+import 'package:provider/src/consumer.dart';
+import 'package:provider/provider.dart';
+import 'admin_screen.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -36,7 +40,12 @@ class _VideoScreenState extends State<VideoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (auth.isAdmin && auth.isAdminView) {
+    return const AdminScreen();
+  }
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B1220) : Colors.grey[50],
@@ -65,6 +74,24 @@ class _VideoScreenState extends State<VideoScreen> {
             ),
           ],
         ),
+
+        
+        actions: [
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              if (!auth.isAdmin) return const SizedBox();
+
+              return IconButton(
+                icon: Icon(
+                  auth.isAdminView ? Icons.person : Icons.admin_panel_settings,
+                ),
+                onPressed: () {
+                  auth.toggleView();
+                },
+              );
+            },
+          ),
+        ],
       ),
       drawer: const AppDrawer(),
       body: isLoading
@@ -149,7 +176,11 @@ class _VideoScreenState extends State<VideoScreen> {
                           ),
 
                           // Flecha
-                          Icon(Icons.arrow_forward_ios_rounded,color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, size: 16),
+                          Icon(Icons.arrow_forward_ios_rounded,
+                              color: isDark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                              size: 16),
                         ],
                       ),
                     ),

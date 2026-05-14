@@ -268,7 +268,6 @@ class _AppDrawerState extends State<AppDrawer> {
             ),
 
           
-
           //LOGOUT
           _buildDrawerItem(
             icon: Icons.logout,

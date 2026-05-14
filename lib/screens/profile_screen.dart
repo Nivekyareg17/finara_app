@@ -17,6 +17,7 @@ import 'dart:convert';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'admin_screen.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 
@@ -89,7 +90,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: isError ? const Color(0xFFB91C1C) : const Color(0xFF047857),
+              color:
+                  isError ? const Color(0xFFB91C1C) : const Color(0xFF047857),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
@@ -416,6 +418,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (movementFilter == "todos") return true;
       return transaction.type == movementFilter;
     }).toList();
+    final auth = Provider.of<AuthProvider>(context);
+
+    if (auth.isAdmin && auth.isAdminView) {
+      return const AdminScreen();
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -475,6 +482,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
+
+        actions: [
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              if (!auth.isAdmin) return const SizedBox();
+
+              return IconButton(
+                icon: Icon(
+                  auth.isAdminView ? Icons.person : Icons.admin_panel_settings,
+                ),
+                onPressed: () {
+                  auth.toggleView();
+                },
+              );
+            },
+          ),
+        ],
       ),
 
       //DRAWER (MENU)
@@ -884,17 +908,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   height: 38,
                                   child: ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          const Color(0xFF10B981),
+                                      backgroundColor: const Color(0xFF10B981),
                                       foregroundColor: Colors.white,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
-                                    onPressed: () =>
-                                        _agregarDineroMeta(index),
+                                    onPressed: () => _agregarDineroMeta(index),
                                     icon: const Icon(
                                         Icons.add_circle_outline_rounded,
                                         size: 18),
@@ -972,21 +993,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               )
             else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: showAllMovements
-                  ? filteredMovements.length
-                  : filteredMovements.take(4).length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final t = filteredMovements[index];
-                final bool isIngreso = t.type == "ingreso";
-                final categoryName =
-                    getCategoryName(int.tryParse(t.categoryId) ?? 0);
-                final catData = _getCategoryData(categoryName);
-                return Container(
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: showAllMovements
+                    ? filteredMovements.length
+                    : filteredMovements.take(4).length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final t = filteredMovements[index];
+                  final bool isIngreso = t.type == "ingreso";
+                  final categoryName =
+                      getCategoryName(int.tryParse(t.categoryId) ?? 0);
+                  final catData = _getCategoryData(categoryName);
+                  return Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -1072,9 +1093,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
             if (filteredMovements.length > 4) ...[
               const SizedBox(height: 12),
               SizedBox(
@@ -1267,7 +1288,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 if (localCategories.any((c) =>
                                     c.name.toLowerCase() ==
                                     nueva.toLowerCase())) {
-                                  _showFloatingMessage("Esa categoria ya existe", isError: true);
+                                  _showFloatingMessage(
+                                      "Esa categoria ya existe",
+                                      isError: true);
                                   return;
                                 }
 
@@ -1341,8 +1364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       );
                                     }).toList(),
                                     onChanged: (v) {
-                                  setStateDialog(
-                                          () {
+                                      setStateDialog(() {
                                         selectedCategoryId = v;
                                         categoryError = null;
                                       });
@@ -1439,9 +1461,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           selectedCategoryId =
                                               null; // Reset de selecciÃ³n
                                         });
-                                        _showFloatingMessage("Categoria eliminada con exito");
+                                        _showFloatingMessage(
+                                            "Categoria eliminada con exito");
                                       } else {
-                                        _showFloatingMessage("Error al eliminar la categoria", isError: true);
+                                        _showFloatingMessage(
+                                            "Error al eliminar la categoria",
+                                            isError: true);
                                       }
                                     }
                                   },
@@ -1573,9 +1598,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
                                           double.tryParse(cleanText) ?? 0.0;
-                                      DateTime? fechaFinal = DateFormat(
-                                              "MM/dd/yyyy")
-                                          .tryParse(dateController.text);
+                                      DateTime? fechaFinal =
+                                          DateFormat("MM/dd/yyyy")
+                                              .tryParse(dateController.text);
 
                                       setStateDialog(() {
                                         amountError = montoFinal <= 0
@@ -1736,7 +1761,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-void confirmDelete(TransactionModel t) {
+  void confirmDelete(TransactionModel t) {
     showDialog(
       context: context,
       builder: (_) {
@@ -1782,7 +1807,7 @@ void confirmDelete(TransactionModel t) {
                           final auth = context.read<AuthProvider>();
                           bool success = await ApiService.deleteTransaction(
                             auth.token!,
-                            t.id!, 
+                            t.id!,
                           );
 
                           if (!context.mounted) return;
@@ -1793,8 +1818,10 @@ void confirmDelete(TransactionModel t) {
                             loadTransactions(); // Recarga la lista en pantalla
                             _showFloatingMessage("Movimiento eliminado");
                           } else {
-                            setStateDialog(() => isDeleting = false); // Quita el circulito
-                            _showFloatingMessage("Error al eliminar", isError: true);
+                            setStateDialog(
+                                () => isDeleting = false); // Quita el circulito
+                            _showFloatingMessage("Error al eliminar",
+                                isError: true);
                           }
                         },
                   child: isDeleting
@@ -1911,7 +1938,6 @@ void confirmDelete(TransactionModel t) {
       },
     );
   }
-
 
   Future<void> _downloadMovementsPdf() async {
     if (transactions.isEmpty) {
