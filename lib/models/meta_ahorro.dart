@@ -29,12 +29,14 @@ class MetaAhorro {
   double montoActual;
   double ahorroMensual;
   List<MetaAporte> aportes;
+  String? imageData;
 
   MetaAhorro({
     required this.nombre,
     required this.montoMeta,
     this.montoActual = 0,
     this.ahorroMensual = 0,
+    this.imageData,
     List<MetaAporte>? aportes,
   }) : aportes = aportes ?? [];
 
@@ -58,6 +60,7 @@ class MetaAhorro {
       "montoMeta": montoMeta,
       "montoActual": montoActual,
       "ahorroMensual": ahorroMensual,
+      "imageData": imageData,
       "aportes": aportes.map((aporte) => aporte.toJson()).toList(),
     };
   }
@@ -70,6 +73,7 @@ class MetaAhorro {
       montoMeta: (json["montoMeta"] as num?)?.toDouble() ?? 0,
       montoActual: (json["montoActual"] as num?)?.toDouble() ?? 0,
       ahorroMensual: (json["ahorroMensual"] as num?)?.toDouble() ?? 0,
+      imageData: json["imageData"]?.toString(),
       aportes: rawAportes is List
           ? rawAportes
               .map((e) => MetaAporte.fromJson(Map<String, dynamic>.from(e)))

@@ -285,6 +285,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return NetworkImage(imageUrl);
   }
 
+  ImageProvider? _memoryImageFromData(String? imageData) {
+    if (imageData == null || imageData.isEmpty) return null;
+
+    try {
+      final commaIndex = imageData.indexOf(",");
+      final raw =
+          commaIndex == -1 ? imageData : imageData.substring(commaIndex + 1);
+      return MemoryImage(base64Decode(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _pickMetaImageData() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 55,
+      maxWidth: 900,
+    );
+
+    if (image == null) return null;
+
+    final bytes = await image.readAsBytes();
+    return "data:image/jpeg;base64,${base64Encode(bytes)}";
+  }
+
   double getBalance() {
     double total = 0;
 
@@ -730,6 +757,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       itemCount: metas.length,
                       itemBuilder: (context, index) {
                         final meta = metas[index];
+                        final metaImage = _memoryImageFromData(meta.imageData);
 
                         return Container(
                           width: 250,
@@ -755,6 +783,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
+                                    CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor:
+                                          const Color(0xFF10B981).withOpacity(0.15),
+                                      backgroundImage: metaImage,
+                                      child: metaImage == null
+                                          ? const Icon(
+                                              Icons.flag_rounded,
+                                              color: Color(0xFF10B981),
+                                              size: 18,
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(meta.nombre,
                                           style: const TextStyle(
@@ -2156,6 +2198,7 @@ void confirmDelete(TransactionModel t) {
     TextEditingController montoMeta = TextEditingController();
     TextEditingController montoActual = TextEditingController();
     TextEditingController ahorroMensual = TextEditingController();
+    String? metaImageData;
 
     showModalBottomSheet(
       context: context,
@@ -2211,6 +2254,40 @@ void confirmDelete(TransactionModel t) {
                           ),
 
                           const SizedBox(height: 30),
+
+                          Center(
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 38,
+                                  backgroundColor:
+                                      const Color(0xFF10B981).withOpacity(0.15),
+                                  backgroundImage:
+                                      _memoryImageFromData(metaImageData),
+                                  child: metaImageData == null
+                                      ? const Icon(
+                                          Icons.image_outlined,
+                                          color: Color(0xFF10B981),
+                                          size: 30,
+                                        )
+                                      : null,
+                                ),
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    final imageData =
+                                        await _pickMetaImageData();
+                                    if (imageData == null) return;
+                                    setStateDialog(
+                                        () => metaImageData = imageData);
+                                  },
+                                  icon: const Icon(Icons.add_photo_alternate),
+                                  label: const Text("Foto opcional"),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
 
                           //NOMBRE
                           const Text(
@@ -2373,6 +2450,7 @@ void confirmDelete(TransactionModel t) {
                                             _parseAmount(montoActual.text),
                                         ahorroMensual:
                                             _parseAmount(ahorroMensual.text),
+                                        imageData: metaImageData,
                                       ),
                                     );
                                 Navigator.pop(context);
@@ -2410,6 +2488,7 @@ void confirmDelete(TransactionModel t) {
         TextEditingController(text: formatCurrency(meta.montoActual));
     TextEditingController ahorroMensual =
         TextEditingController(text: formatCurrency(meta.ahorroMensual));
+    String? metaImageData = meta.imageData;
 
     showModalBottomSheet(
       context: context,
@@ -2504,6 +2583,40 @@ void confirmDelete(TransactionModel t) {
                             ),
                           ),
                           const SizedBox(height: 22),
+                          Center(
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 38,
+                                  backgroundColor:
+                                      const Color(0xFF10B981).withOpacity(0.15),
+                                  backgroundImage:
+                                      _memoryImageFromData(metaImageData),
+                                  child: metaImageData == null
+                                      ? const Icon(
+                                          Icons.image_outlined,
+                                          color: Color(0xFF10B981),
+                                          size: 30,
+                                        )
+                                      : null,
+                                ),
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    final imageData =
+                                        await _pickMetaImageData();
+                                    if (imageData == null) return;
+                                    setStateDialog(
+                                        () => metaImageData = imageData);
+                                  },
+                                  icon: const Icon(Icons.add_photo_alternate),
+                                  label: Text(metaImageData == null
+                                      ? "Foto opcional"
+                                      : "Cambiar foto"),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           _metaTextField(
                             controller: nombre,
                             label: "Nombre",
@@ -2592,6 +2705,7 @@ void confirmDelete(TransactionModel t) {
                                         ahorroMensual:
                                             _parseAmount(ahorroMensual.text),
                                         aportes: meta.aportes,
+                                        imageData: metaImageData,
                                       ),
                                     );
 
