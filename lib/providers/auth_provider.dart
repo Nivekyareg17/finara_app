@@ -99,7 +99,11 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> actualizarMetasConIngreso(double ingreso) async {
     for (var meta in _metas) {
-      meta.montoActual += ingreso * 0.1;
+      final aporte = ingreso * 0.1;
+      meta.montoActual += aporte;
+      if (aporte > 0) {
+        meta.aportes.insert(0, MetaAporte(monto: aporte));
+      }
     }
     await _saveMetas();
     notifyListeners();
@@ -118,6 +122,16 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> editarMeta(int index, MetaAhorro nueva) async {
     _metas[index] = nueva;
+    await _saveMetas();
+    notifyListeners();
+  }
+
+  Future<void> agregarDineroMeta(int index, double monto) async {
+    if (index < 0 || index >= _metas.length || monto <= 0) return;
+
+    _metas[index].montoActual += monto;
+    _metas[index].aportes.insert(0, MetaAporte(monto: monto));
+
     await _saveMetas();
     notifyListeners();
   }

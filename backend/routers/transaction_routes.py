@@ -5,6 +5,7 @@ from models import Transaction, User, Category
 from auth import verify_token
 from fastapi.security import OAuth2PasswordBearer
 import schemas
+from datetime import datetime
 
 router = APIRouter(
     prefix="/transactions",
@@ -32,7 +33,7 @@ def create_transaction(
 
     category = db.query(Category).filter(
         Category.id == transaction.category_id
-    ).first
+    ).first()
 
     if not category:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
@@ -51,6 +52,7 @@ def create_transaction(
         amount=transaction.amount,
         type=transaction.type,
         description=transaction.description,
+        date=transaction.date or datetime.utcnow(),
         category_id=transaction.category_id,
         user_id=user.id
     )
@@ -116,6 +118,7 @@ def update_transaction(
     db_transaction.amount = transaction.amount
     db_transaction.type = transaction.type
     db_transaction.description = transaction.description
+    db_transaction.date = transaction.date or db_transaction.date
     db_transaction.category_id = transaction.category_id
 
     db.commit()

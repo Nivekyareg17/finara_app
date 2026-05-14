@@ -49,8 +49,11 @@ class TransactionModel {
         map["category"] ??
         "General",
 
-   date: map["date"] != null
-    ? (DateTime.tryParse(map["date"].toString()) ?? DateTime.now())
+   date: (map["date"] ?? map["created_at"] ?? map["timestamp"]) != null
+    ? (DateTime.tryParse(
+            (map["date"] ?? map["created_at"] ?? map["timestamp"]).toString(),
+          ) ??
+          DateTime.now())
     : DateTime.now(),
 
     imagePath: map["imagePath"]?.toString(),

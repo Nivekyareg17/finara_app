@@ -89,12 +89,14 @@ class ApiService {
     double amount,
     String description,
     int categoryId,
+    DateTime date,
   ) async {
     final body = jsonEncode({
       "type": type.toLowerCase(),
       "amount": amount,
       "description": description,
       "category_id": categoryId,
+      "date": date.toIso8601String(),
     });
 
     final response = await http.post(
@@ -125,6 +127,7 @@ class ApiService {
     double amount,
     String description,
     int categoryId,
+    DateTime date,
   ) async {
     final response = await http.put(
       Uri.parse("$baseUrl/transactions/$id"),
@@ -134,6 +137,7 @@ class ApiService {
         "amount": amount,
         "description": description,
         "category_id": categoryId,
+        "date": date.toIso8601String(),
       }),
     );
 
@@ -495,15 +499,42 @@ class ApiService {
     return _decodeList(response, "GET MESSAGES");
   }
 
-  static Future<bool> isUserBlocked(String token, int userId) async {
+  static Future<Map<String, bool>> getBlockStatus(
+    String token,
+    int userId,
+  ) async {
     final response = await http.get(
       Uri.parse("$baseUrl/messages/blocked/$userId"),
       headers: _jsonHeaders(token),
     );
 
-    if (response.statusCode != 200) return false;
+    if (response.statusCode != 200) {
+      return {
+        "blocked": false,
+        "blocked_by_me": false,
+        "blocked_me": false,
+      };
+    }
+
     final data = _decode(response);
-    return data is Map && data["blocked"] == true;
+    if (data is! Map) {
+      return {
+        "blocked": false,
+        "blocked_by_me": false,
+        "blocked_me": false,
+      };
+    }
+
+    return {
+      "blocked": data["blocked"] == true,
+      "blocked_by_me": data["blocked_by_me"] == true,
+      "blocked_me": data["blocked_me"] == true,
+    };
+  }
+
+  static Future<bool> isUserBlocked(String token, int userId) async {
+    final status = await getBlockStatus(token, userId);
+    return status["blocked"] == true;
   }
 
   static Future<bool> blockUser(String token, int userId) async {

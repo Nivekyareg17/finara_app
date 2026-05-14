@@ -34,12 +34,45 @@ def get_user_from_token(token: str, db: Session) -> User:
     return user
 
 
+DEFAULT_CATEGORIES = (
+    {"name": "Salario", "type": "ingreso"},
+    {"name": "Otros ingresos", "type": "ingreso"},
+    {"name": "Comida", "type": "gasto"},
+    {"name": "Transporte", "type": "gasto"},
+)
+
+
+def ensure_default_categories(user: User, db: Session) -> None:
+    existing = db.query(Category).filter(Category.user_id == user.id).all()
+    existing_keys = {
+        (category.name.strip().lower(), category.type)
+        for category in existing
+    }
+
+    created = False
+    for category in DEFAULT_CATEGORIES:
+        key = (category["name"].lower(), category["type"])
+        if key in existing_keys:
+            continue
+
+        db.add(Category(
+            name=category["name"],
+            type=category["type"],
+            user_id=user.id,
+        ))
+        created = True
+
+    if created:
+        db.commit()
+
+
 @router.get("/")
 def get_categories(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
     user = get_user_from_token(token, db)
+    ensure_default_categories(user, db)
 
     return db.query(Category).filter(
         Category.user_id == user.id

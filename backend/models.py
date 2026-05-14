@@ -49,6 +49,7 @@ class Transaction(Base):
     amount = Column(Float)
     type = Column(String)
     description = Column(String)
+    date = Column(DateTime, default=datetime.utcnow)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="transactions")

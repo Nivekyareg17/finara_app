@@ -29,6 +29,9 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isLoading = true;
   bool isSending = false;
   bool isBlocked = false;
+  bool blockedByMe = false;
+  bool blockedMe = false;
+  bool isUpdatingBlock = false;
 
   @override
   void initState() {
@@ -45,9 +48,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final token = auth.token;
     if (token == null || token.isEmpty) return;
 
-    final blocked = await ApiService.isUserBlocked(token, widget.userId);
+    final status = await ApiService.getBlockStatus(token, widget.userId);
     if (!mounted) return;
-    setState(() => isBlocked = blocked);
+    setState(() {
+      isBlocked = status["blocked"] == true;
+      blockedByMe = status["blocked_by_me"] == true;
+      blockedMe = status["blocked_me"] == true;
+    });
   }
 
   @override
@@ -145,24 +152,45 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> toggleBlock() async {
     final auth = context.read<AuthProvider>();
     final token = auth.token;
-    if (token == null || token.isEmpty) return;
+    if (token == null || token.isEmpty || isUpdatingBlock) return;
 
-    final success = isBlocked
+    if (blockedMe && !blockedByMe) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Este usuario te bloqueo. No puedes desbloquearlo."),
+        ),
+      );
+      return;
+    }
+
+    setState(() => isUpdatingBlock = true);
+
+    final shouldUnblock = blockedByMe;
+    final success = shouldUnblock
         ? await ApiService.unblockUser(token, widget.userId)
         : await ApiService.blockUser(token, widget.userId);
 
     if (!mounted) return;
 
     if (success) {
-      setState(() => isBlocked = !isBlocked);
+      final status = await ApiService.getBlockStatus(token, widget.userId);
+      if (!mounted) return;
+      setState(() {
+        isBlocked = status["blocked"] == true;
+        blockedByMe = status["blocked_by_me"] == true;
+        blockedMe = status["blocked_me"] == true;
+        isUpdatingBlock = false;
+      });
       await loadMessages();
+    } else {
+      setState(() => isUpdatingBlock = false);
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           success
-              ? (isBlocked ? "Usuario bloqueado" : "Usuario desbloqueado")
+              ? (shouldUnblock ? "Usuario desbloqueado" : "Usuario bloqueado")
               : "No se pudo actualizar el bloqueo",
         ),
       ),
@@ -293,7 +321,11 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 Text(widget.userName),
                 Text(
-                  "Chat privado",
+                  blockedMe
+                      ? "Te bloquearon"
+                      : blockedByMe
+                          ? "Bloqueado por ti"
+                          : "Chat privado",
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? Colors.white60 : Colors.black54,
@@ -309,14 +341,22 @@ class _ChatScreenState extends State<ChatScreen> {
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: "block",
+                enabled: !isUpdatingBlock && (!blockedMe || blockedByMe),
                 child: Row(
                   children: [
-                    Icon(
-                      isBlocked ? Icons.lock_open : Icons.block,
-                      size: 20,
-                    ),
+                    if (isUpdatingBlock)
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      Icon(
+                        blockedByMe ? Icons.lock_open : Icons.block,
+                        size: 20,
+                      ),
                     const SizedBox(width: 10),
-                    Text(isBlocked ? "Desbloquear" : "Bloquear"),
+                    Text(blockedByMe ? "Desbloquear" : "Bloquear"),
                   ],
                 ),
               ),
@@ -372,9 +412,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       textInputAction: TextInputAction.newline,
                       decoration: InputDecoration(
                         hintText: "Escribe un mensaje...",
-                        helperText: isBlocked
-                            ? "Desbloquea este chat para enviar mensajes"
-                            : null,
+                        helperText: blockedMe
+                            ? "Este usuario te bloqueo"
+                            : blockedByMe
+                                ? "Desbloquea este chat para enviar mensajes"
+                                : null,
                         filled: true,
                         fillColor: isDark ? const Color(0xFF1F2937) : Colors.white,
                         contentPadding: const EdgeInsets.symmetric(

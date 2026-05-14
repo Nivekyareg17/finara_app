@@ -46,12 +46,20 @@ def get_block_status(
     db: Session = Depends(get_db),
 ):
     current_user = get_current_user(token, db)
-    blocked = db.query(BlockedUser).filter(
+    blocked_by_me = db.query(BlockedUser).filter(
         BlockedUser.blocker_id == current_user.id,
         BlockedUser.blocked_id == user_id,
     ).first()
+    blocked_me = db.query(BlockedUser).filter(
+        BlockedUser.blocker_id == user_id,
+        BlockedUser.blocked_id == current_user.id,
+    ).first()
 
-    return {"blocked": blocked is not None}
+    return {
+        "blocked": blocked_by_me is not None or blocked_me is not None,
+        "blocked_by_me": blocked_by_me is not None,
+        "blocked_me": blocked_me is not None,
+    }
 
 
 @router.post("/block/{user_id}")

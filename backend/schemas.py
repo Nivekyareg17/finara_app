@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, validator
-from typing import Literal
+from typing import Literal, Optional
 from datetime import datetime
 import re
 
@@ -61,6 +61,7 @@ class TransactionCreate(BaseModel):
     type: str # "ingreso" o "gasto"
     description: str = Field(..., min_length=1, max_length=100)
     category_id: int  # <--- ESTE ES EL CAMPO QUE FALTABA
+    date: Optional[datetime] = None
 
 class TransactionResponse(BaseModel):
     id: int
@@ -68,6 +69,7 @@ class TransactionResponse(BaseModel):
     type: str
     description: str
     category_id: int
+    date: datetime
 
     class Config:
         orm_mode = True

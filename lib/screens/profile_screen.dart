@@ -145,6 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final loadedTransactions =
           data.map((e) => TransactionModel.fromMap(e)).toList();
+      loadedTransactions.sort((a, b) => b.date.compareTo(a.date));
 
       print("TRANSACCIONES OK");
 
@@ -618,7 +619,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
 
             SizedBox(
-              height: 180,
+              height: 215,
               child: metas.isEmpty
                   ? const Center(child: Text("No hay metas aun"))
                   : ListView.builder(
@@ -660,6 +661,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     Row(
                                       children: [
                                         GestureDetector(
+                                          onTap: () => _agregarDineroMeta(index),
+                                          child: const Icon(
+                                            Icons.add_circle_outline_rounded,
+                                            size: 20,
+                                            color: Color(0xFF10B981),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
                                           onTap: () => _editarMeta(index),
                                           child: const Icon(Icons.edit,
                                               size: 18,
@@ -685,6 +695,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 const SizedBox(height: 8),
                                 Text(
                                     "${meta.porcentaje.toStringAsFixed(1)}% completado"),
+                                const SizedBox(height: 5),
+                                Text(
+                                  "${formatCurrency(meta.montoActual)} de ${formatCurrency(meta.montoMeta)}",
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700),
+                                ),
                                 const SizedBox(height: 5),
                                 Text(
                                   "Faltan: ${meta.mesesRestantes} meses",
@@ -790,7 +807,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "14/04/2026",
+                                _formatDate(t.date),
                                 style: TextStyle(
                                     color: Colors.grey[500], fontSize: 12),
                               ),
@@ -865,8 +882,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     List<CategoryModel> localCategories = List.from(categories);
     final dateController = TextEditingController(
         text: edit != null
-            ? "10/27/2023"
-            : "${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}");
+            ? DateFormat("MM/dd/yyyy").format(edit.date)
+            : DateFormat("MM/dd/yyyy").format(DateTime.now()));
 
     final desc = TextEditingController(text: edit?.description);
     final amount =
@@ -1340,6 +1357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
+                                          fechaFinal,
                                         );
                                         if (type == "ingreso") {
                                           await context
@@ -1357,6 +1375,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
+                                          fechaFinal,
                                         );
                                       }
 
@@ -1791,6 +1810,147 @@ void confirmDelete(TransactionModel t) {
     return double.tryParse(normalized) ?? 0;
   }
 
+  String _formatDate(DateTime date) {
+    return DateFormat("dd/MM/yyyy", "es_CO").format(date.toLocal());
+  }
+
+  String _formatDateTime(DateTime date) {
+    return DateFormat("dd/MM/yyyy - h:mm a", "es_CO").format(date.toLocal());
+  }
+
+  void _agregarDineroMeta(int index) {
+    final meta = context.read<AuthProvider>().metas[index];
+    final montoController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F2A25) : Colors.white,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(30)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 52,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF064E3B), Color(0xFF10B981)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.add_circle_outline_rounded,
+                              color: Colors.white),
+                          SizedBox(width: 10),
+                          Text(
+                            "Añadir dinero",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        meta.nombre,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _metaTextField(
+                  controller: montoController,
+                  label: "Monto a añadir",
+                  hint: "0.00",
+                  icon: Icons.attach_money_rounded,
+                  isDark: isDark,
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final monto = _parseAmount(montoController.text);
+                      if (monto <= 0) {
+                        _showFloatingMessage(
+                          "Ingresa un monto mayor a 0",
+                          isError: true,
+                        );
+                        return;
+                      }
+
+                      await context
+                          .read<AuthProvider>()
+                          .agregarDineroMeta(index, monto);
+
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                      _showFloatingMessage("Dinero añadido a la meta");
+                    },
+                    icon: const Icon(Icons.savings_rounded),
+                    label: const Text(
+                      "Añadir a meta",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _crearMeta() {
     TextEditingController nombre = TextEditingController();
     TextEditingController montoMeta = TextEditingController();
@@ -2166,6 +2326,8 @@ void confirmDelete(TransactionModel t) {
                             isDark: isDark,
                             keyboardType: TextInputType.number,
                           ),
+                          const SizedBox(height: 18),
+                          _metaAportesList(meta, isDark),
                           const SizedBox(height: 26),
                           SizedBox(
                             width: double.infinity,
@@ -2199,6 +2361,7 @@ void confirmDelete(TransactionModel t) {
                                             _parseAmount(montoActual.text),
                                         ahorroMensual:
                                             _parseAmount(ahorroMensual.text),
+                                        aportes: meta.aportes,
                                       ),
                                     );
 
@@ -2226,6 +2389,85 @@ void confirmDelete(TransactionModel t) {
           },
         );
       },
+    );
+  }
+
+  Widget _metaAportesList(MetaAhorro meta, bool isDark) {
+    final aportes = meta.aportes.take(5).toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF10231F) : const Color(0xFFF7FAF8),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.receipt_long_rounded,
+                  color: Color(0xFF10B981), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "Añadidos recientes",
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (aportes.isEmpty)
+            Text(
+              "Aun no has añadido dinero manualmente.",
+              style: TextStyle(
+                color: isDark ? Colors.white60 : Colors.grey[600],
+                fontSize: 12,
+              ),
+            )
+          else
+            ...aportes.map(
+              (aporte) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _formatDateTime(aporte.fecha),
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.grey[700],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      "+ ${formatCurrency(aporte.monto)}",
+                      style: const TextStyle(
+                        color: Color(0xFF10B981),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
