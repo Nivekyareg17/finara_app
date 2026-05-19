@@ -290,3 +290,27 @@ def get_messages(
     return messages
 
 
+@router.get("/search")
+def search_user(
+    email: str,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    current_user = get_current_user(token, db)
+
+    user = db.query(User).filter(
+        User.email == email,
+        User.id != current_user.id
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuario no encontrado"
+        )
+
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+    }

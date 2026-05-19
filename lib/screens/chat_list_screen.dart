@@ -49,6 +49,96 @@ class _ChatListScreenState extends State<ChatListScreen> {
     });
   }
 
+  Future<void> openSearchDialog() async {
+    final auth = context.read<AuthProvider>();
+    final token = auth.token;
+
+    if (token == null || token.isEmpty) return;
+
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        Map<String, dynamic>? foundUser;
+        bool searching = false;
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: const Text("Buscar por correo"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      hintText: "correo@ejemplo.com",
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      setModalState(() {
+                        searching = true;
+                      });
+
+                      final result = await ApiService.searchUserByEmail(
+                        token,
+                        controller.text.trim(),
+                      );
+
+                      setModalState(() {
+                        foundUser = result;
+                        searching = false;
+                      });
+                    },
+                    child: searching
+                        ? const CircularProgressIndicator()
+                        : const Text("Buscar"),
+                  ),
+                  const SizedBox(height: 16),
+                  if (foundUser != null)
+                    Column(
+                      children: [
+                        Text(foundUser!["name"]),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final success = await ApiService.sendMessageRequest(
+                              token,
+                              foundUser!["id"],
+                            );
+
+                            if (!mounted) return;
+
+                            Navigator.pop(context);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? "Solicitud enviada"
+                                      : "No se pudo enviar",
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Enviar solicitud",
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -60,11 +150,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Chats",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
-        ),
-        elevation: 0,
+        title: const Text("Chats"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_search),
+            onPressed: openSearchDialog,
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -77,7 +169,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       children: [
                         CircleAvatar(
                           radius: 36,
-                          backgroundColor: const Color(0xFF087F5B).withOpacity(0.12),
+                          backgroundColor:
+                              const Color(0xFF087F5B).withOpacity(0.12),
                           child: const Icon(
                             Icons.forum_outlined,
                             color: Color(0xFF087F5B),
@@ -87,7 +180,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         const SizedBox(height: 14),
                         const Text(
                           "No hay chats disponibles",
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 17),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -156,9 +250,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                   children: [
                                     CircleAvatar(
                                       radius: 34,
-                                      backgroundColor:
-                                          const Color(0xFF087F5B)
-                                              .withOpacity(0.12),
+                                      backgroundColor: const Color(0xFF087F5B)
+                                          .withOpacity(0.12),
                                       child: const Icon(
                                         Icons.person_search_rounded,
                                         color: Color(0xFF087F5B),
@@ -178,80 +271,89 @@ class _ChatListScreenState extends State<ChatListScreen> {
                               ),
                             )
                           : ListView.separated(
-                              padding:
-                                  const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                               itemCount: filteredUsers.length,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final user = Map<String, dynamic>.from(
                                     filteredUsers[index]);
-                    final name = (user["name"] ?? "Usuario").toString();
-                    final initial = name.isNotEmpty ? name[0].toUpperCase() : "?";
+                                final name =
+                                    (user["name"] ?? "Usuario").toString();
+                                final initial = name.isNotEmpty
+                                    ? name[0].toUpperCase()
+                                    : "?";
 
                                 return Material(
-                      color: isDark ? const Color(0xFF1F2937) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      elevation: isDark ? 0 : 1,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatScreen(
-                                userId: user["id"],
-                                userName: name,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 26,
-                                backgroundColor: const Color(0xFF087F5B),
-                                child: Text(
-                                  initial,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 16,
+                                  color: isDark
+                                      ? const Color(0xFF1F2937)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  elevation: isDark ? 0 : 1,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(16),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ChatScreen(
+                                            userId: user["id"],
+                                            userName: name,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 26,
+                                            backgroundColor:
+                                                const Color(0xFF087F5B),
+                                            child: Text(
+                                              initial,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  name,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 3),
+                                                Text(
+                                                  "Toca para chatear",
+                                                  style: TextStyle(
+                                                      color:
+                                                          Colors.grey.shade600),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Icon(
+                                            Icons.chevron_right_rounded,
+                                            color: Color(0xFF087F5B),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      "Toca para chatear",
-                                      style: TextStyle(color: Colors.grey.shade600),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(
-                                Icons.chevron_right_rounded,
-                                color: Color(0xFF087F5B),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                                  ),
                                 );
                               },
                             ),
