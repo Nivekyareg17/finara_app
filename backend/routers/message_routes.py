@@ -164,7 +164,23 @@ def get_requests(
         MessageRequest.status == "pending"
     ).all()
 
-    return requests
+    result = []
+
+    for req in requests:
+
+        sender = db.query(User).filter(
+            User.id == req.sender_id
+        ).first()
+
+        result.append({
+            "id": req.id,
+            "sender_id": req.sender_id,
+            "sender_name": sender.name,
+            "sender_email": sender.email,
+            "status": req.status,
+        })
+
+    return result
 
 
 @router.post("/request/{request_id}/accept")
