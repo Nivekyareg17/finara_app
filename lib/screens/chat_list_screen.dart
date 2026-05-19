@@ -194,7 +194,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       body: TabBarView(
         controller: tabController,
         children: [
-          // TAB CHATS
+          // TAB CHATS CAUSA pe
           users.isEmpty
               ? const Center(
                   child: Text(
@@ -235,7 +235,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                   },
                 ),
 
-          // TAB SOLICITUDES
+          // TAB SOLICITUDES chamo
           requests.isEmpty
               ? const Center(
                   child: Text(
@@ -251,10 +251,10 @@ class _ChatListScreenState extends State<ChatListScreen>
 
                     return ListTile(
                       title: Text(
-                        "Solicitud #${request["id"]}",
+                        request["sender_name"] ?? "Usuario",
                       ),
                       subtitle: Text(
-                        "Sender: ${request["sender_id"]}",
+                        request["sender_email"] ?? "",
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
