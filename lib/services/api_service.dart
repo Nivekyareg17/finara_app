@@ -622,8 +622,8 @@ class ApiService {
       }),
     );
 
-    print("SEND REQUEST STATUS: ${response.statusCode}");
-    print("SEND REQUEST BODY: ${response.body}");
+    print("REQUEST STATUS: ${response.statusCode}");
+    print("REQUEST BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
   }
@@ -659,5 +659,21 @@ class ApiService {
     );
 
     return response.statusCode == 200;
+  }
+
+  static Future<List<dynamic>> getChats(
+    String token,
+  ) async {
+    final response = await http.get(
+      Uri.parse(
+        "$baseUrl/messages/chats",
+      ),
+      headers: _jsonHeaders(token),
+    );
+
+    return _decodeList(
+      response,
+      "GET CHATS",
+    );
   }
 }

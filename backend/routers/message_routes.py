@@ -290,6 +290,45 @@ def search_user(
         "email": user.email,
     }
 
+@router.get("/chats")
+def get_chats(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    current_user = get_current_user(token, db)
+
+    requests = db.query(MessageRequest).filter(
+        (
+            (MessageRequest.sender_id == current_user.id)
+            |
+            (MessageRequest.receiver_id == current_user.id)
+        ),
+        MessageRequest.status == "accepted"
+    ).all()
+
+    chats = []
+
+    for req in requests:
+
+        other_id = (
+            req.receiver_id
+            if req.sender_id == current_user.id
+            else req.sender_id
+        )
+
+        user = db.query(User).filter(
+            User.id == other_id
+        ).first()
+
+        if user:
+            chats.append({
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+            })
+
+    return chats
+
 
 @router.get("/{user_id}")
 def get_messages(
