@@ -131,7 +131,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                         const SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: () async {
-                            final success = await ApiService.sendMessageRequest(
+                            final result = await ApiService.sendMessageRequest(
                               token,
                               foundUser!["id"],
                             );
@@ -143,9 +143,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  success
-                                      ? "Solicitud enviada"
-                                      : "No se pudo enviar",
+                                  result["message"],
                                 ),
                               ),
                             );

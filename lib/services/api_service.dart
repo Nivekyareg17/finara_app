@@ -610,7 +610,7 @@ class ApiService {
     return data is Map<String, dynamic> ? data : null;
   }
 
-  static Future<bool> sendMessageRequest(
+  static Future<Map<String, dynamic>> sendMessageRequest(
     String token,
     int receiverId,
   ) async {
@@ -625,7 +625,19 @@ class ApiService {
     print("REQUEST STATUS: ${response.statusCode}");
     print("REQUEST BODY: ${response.body}");
 
-    return response.statusCode == 200 || response.statusCode == 201;
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return {
+        "success": true,
+        "message": "Solicitud enviada",
+      };
+    }
+
+    final data = jsonDecode(response.body);
+
+    return {
+      "success": false,
+      "message": data["detail"] ?? "Error desconocido",
+    };
   }
 
   static Future<List<dynamic>> getRequests(String token) async {
