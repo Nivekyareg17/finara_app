@@ -3,6 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 import models
 from database import engine
@@ -37,6 +38,23 @@ os.makedirs("static/profile_pics", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 models.Base.metadata.create_all(bind=engine)
+
+
+def apply_schema_updates():
+    statements = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image_url TEXT",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+    ]
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
+
+
+try:
+    apply_schema_updates()
+except Exception as exc:
+    print(f"Schema update skipped/failed: {exc}")
 
 app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
