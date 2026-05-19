@@ -220,9 +220,30 @@ class _ChatListScreenState extends State<ChatListScreen>
                           name[0].toUpperCase(),
                         ),
                       ),
-                      title: Text(name),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            user["last_time"] != null
+                                ? user["last_time"].toString().substring(11, 16)
+                                : "",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
                       subtitle: Text(
-                        user["email"] ?? "",
+                        user["last_message"] ?? "",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       onTap: () {
                         Navigator.push(
