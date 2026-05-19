@@ -133,3 +133,19 @@ class MessageResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class MessageRequestCreate(BaseModel):
+    receiver_id: int
+
+
+class MessageRequestResponse(BaseModel):
+    id: int
+    sender_id: int
+    receiver_id: int
+    status: str
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+        

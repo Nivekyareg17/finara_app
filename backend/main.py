@@ -17,6 +17,7 @@ from routers import (
     video_routes,
     notes_routes, 
 )
+
 from routers.news_routes import news_router
 
 app = FastAPI(

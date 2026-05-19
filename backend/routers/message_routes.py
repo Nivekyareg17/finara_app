@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 import schemas
 from auth import verify_token
 from database import SessionLocal
-from models import BlockedUser, Message, User
+from models import BlockedUser, Message, MessageRequest, User
 
 router = APIRouter(prefix="/messages", tags=["Messages"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -108,6 +108,119 @@ def unblock_user(
     return {"blocked": False}
 
 
+@router.post("/request")
+def send_request(
+    request: schemas.MessageRequestCreate,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    current_user = get_current_user(token, db)
+
+    if current_user.id == request.receiver_id:
+        raise HTTPException(
+            status_code=400,
+            detail="No puedes enviarte solicitud a ti mismo"
+        )
+
+    existing = db.query(MessageRequest).filter(
+        (
+            (MessageRequest.sender_id == current_user.id) &
+            (MessageRequest.receiver_id == request.receiver_id)
+        ) |
+        (
+            (MessageRequest.sender_id == request.receiver_id) &
+            (MessageRequest.receiver_id == current_user.id)
+        )
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Ya existe una solicitud o conversacion"
+        )
+
+    new_request = MessageRequest(
+        sender_id=current_user.id,
+        receiver_id=request.receiver_id,
+        status="pending"
+    )
+
+    db.add(new_request)
+    db.commit()
+    db.refresh(new_request)
+
+    return new_request
+
+
+@router.get("/requests")
+def get_requests(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    current_user = get_current_user(token, db)
+
+    requests = db.query(MessageRequest).filter(
+        MessageRequest.receiver_id == current_user.id,
+        MessageRequest.status == "pending"
+    ).all()
+
+    return requests
+
+
+@router.post("/request/{request_id}/accept")
+def accept_request(
+    request_id: int,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    current_user = get_current_user(token, db)
+
+    request = db.query(MessageRequest).filter(
+        MessageRequest.id == request_id,
+        MessageRequest.receiver_id == current_user.id
+    ).first()
+
+    if not request:
+        raise HTTPException(
+            status_code=404,
+            detail="Solicitud no encontrada"
+        )
+
+    request.status = "accepted"
+
+    db.commit()
+    db.refresh(request)
+
+    return request
+
+
+@router.post("/request/{request_id}/reject")
+def reject_request(
+    request_id: int,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    current_user = get_current_user(token, db)
+
+    request = db.query(MessageRequest).filter(
+        MessageRequest.id == request_id,
+        MessageRequest.receiver_id == current_user.id
+    ).first()
+
+    if not request:
+        raise HTTPException(
+            status_code=404,
+            detail="Solicitud no encontrada"
+        )
+
+    request.status = "rejected"
+
+    db.commit()
+    db.refresh(request)
+
+    return request
+
+
 @router.post("/")
 def send_message(
     msg: schemas.MessageCreate,
@@ -115,6 +228,24 @@ def send_message(
     db: Session = Depends(get_db),
 ):
     sender = get_current_user(token, db)
+
+    allowed_chat = db.query(MessageRequest).filter(
+        (
+            (MessageRequest.sender_id == sender.id) &
+            (MessageRequest.receiver_id == msg.receiver_id)
+        ) |
+        (
+            (MessageRequest.sender_id == msg.receiver_id) &
+            (MessageRequest.receiver_id == sender.id)
+        ),
+        MessageRequest.status == "accepted"
+    ).first()
+
+    if not allowed_chat:
+        raise HTTPException(
+            status_code=403,
+            detail="Debes tener una solicitud aceptada para chatear"
+        )
 
     if is_blocked_between(db, sender.id, msg.receiver_id):
         raise HTTPException(status_code=403, detail="Chat bloqueado")
@@ -157,3 +288,5 @@ def get_messages(
     ).order_by(Message.timestamp).all()
 
     return messages
+
+
