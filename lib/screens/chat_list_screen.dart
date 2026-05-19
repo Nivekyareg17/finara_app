@@ -177,9 +177,15 @@ class _ChatListScreenState extends State<ChatListScreen>
         title: const Text("Chats"),
         bottom: TabBar(
           controller: tabController,
-          tabs: const [
-            Tab(text: "Chats"),
-            Tab(text: "Solicitudes"),
+          tabs: [
+            const Tab(
+              text: "Chats",
+            ),
+            Tab(
+              text: requests.isEmpty
+                  ? "Solicitudes"
+                  : "Solicitudes (${requests.length})",
+            ),
           ],
         ),
         actions: [

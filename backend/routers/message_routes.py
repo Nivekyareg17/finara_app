@@ -337,10 +337,32 @@ def get_chats(
         ).first()
 
         if user:
+            last_message = db.query(Message).filter(
+                (
+                    (Message.sender_id == current_user.id) &
+                    (Message.receiver_id == other_id)
+                )
+                |
+                (
+                    (Message.sender_id == other_id) &
+                    (Message.receiver_id == current_user.id)
+                )
+            ).order_by(
+                Message.timestamp.desc()
+            ).first()
+
             chats.append({
                 "id": user.id,
                 "name": user.name,
                 "email": user.email,
+                "last_message":
+                    last_message.content
+                    if last_message
+                    else "Sin mensajes",
+                "last_time":
+                    last_message.timestamp.isoformat()
+                    if last_message
+                    else None,
             })
 
     return chats
