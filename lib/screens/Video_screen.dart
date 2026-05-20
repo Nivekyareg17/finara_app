@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'video_list_screen.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/translate_widget.dart';
-import '../widgets/custom_bottom_nav.dart';
 import '../widgets/app_drawer.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -163,9 +162,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 );
               },
             ),
-      bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 3,
-      ),
+
     );
   }
 }

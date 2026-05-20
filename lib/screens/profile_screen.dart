@@ -1,5 +1,6 @@
 ﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
+import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
-import '../widgets/custom_bottom_nav.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
@@ -1031,6 +1031,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         topTitles: const AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
                         ),
+                        leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                          ),
+                        ),
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
@@ -1219,10 +1224,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ),
-      ),
-
-      bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 4,
       ),
     );
   }
@@ -1515,8 +1516,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     bool? confirmar = await showDialog<bool>(
                                       context: context,
                                       builder: (ctx) => AlertDialog(
-                                        title:
-                                            const Text("Â¿Eliminar categorÃ­a?"),
+                                        title: const Text(
+                                            "Â¿Eliminar categorÃ­a?"),
                                         content: const Text(
                                             "Esta acciÃ³n no se puede deshacer."),
                                         actions: [
@@ -1997,7 +1998,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
                       : const Text("Eliminar"),
-          
                 ),
               ],
             );

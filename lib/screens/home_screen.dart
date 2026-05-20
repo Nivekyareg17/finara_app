@@ -11,7 +11,6 @@ import '../widgets/statcard.dart';
 import 'chat_screen.dart';
 import '../widgets/calculators_card.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/custom_bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -206,9 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 80),
             ],
-          ),
-          bottomNavigationBar: const CustomBottomNav(
-            selectedIndex: 0,
           ),
         );
       },
