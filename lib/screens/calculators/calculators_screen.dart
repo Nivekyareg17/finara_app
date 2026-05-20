@@ -323,7 +323,7 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
           "+" => _storedValue! + current,
           "-" => _storedValue! - current,
           "x" => _storedValue! * current,
-          "/" => current == 0 ? 0 : _storedValue! / current,
+          "/" => current == 0 ? 0.0 : _storedValue! / current,
           _ => current,
         };
         _display = _format(result);
