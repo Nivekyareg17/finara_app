@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import text
-from database import SessionLocal, engine
+from database import SessionLocal
 from models import Transaction, User, Category
 from auth import verify_token
 from fastapi.security import OAuth2PasswordBearer
-import schemas
 from datetime import datetime
+import schemas
 
 router = APIRouter(
     prefix="/transactions",
@@ -14,26 +13,6 @@ router = APIRouter(
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
-
-def ensure_transaction_date_column():
-    try:
-        with engine.begin() as connection:
-            connection.execute(
-                text(
-                    "ALTER TABLE transactions "
-                    "ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-                )
-            )
-    except Exception as exc:
-        print(f"Could not ensure transactions.date column: {exc}")
-
-
-def serialize_transaction_row(row):
-    data = dict(row)
-    if data.get("date") is None:
-        data["date"] = datetime.utcnow()
-    return data
 
 def get_db():
     db = SessionLocal()
@@ -49,7 +28,6 @@ def create_transaction(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    ensure_transaction_date_column()
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
@@ -74,9 +52,9 @@ def create_transaction(
         amount=transaction.amount,
         type=transaction.type,
         description=transaction.description,
-        date=transaction.date or datetime.utcnow(),
         category_id=transaction.category_id,
-        user_id=user.id
+        user_id=user.id,
+        date=transaction.date or datetime.utcnow()
     )
 
     db.add(new_transaction)
@@ -91,56 +69,14 @@ def get_transactions(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    ensure_transaction_date_column()
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    transactions = db.query(Transaction).filter(
+        Transaction.user_id == user.id
+    ).all()
 
-    try:
-        transactions = db.query(Transaction).filter(
-            Transaction.user_id == user.id
-        ).order_by(Transaction.date.desc(), Transaction.id.desc()).all()
-
-        return transactions
-    except Exception as exc:
-        print(f"ORM transactions query failed: {exc}")
-        db.rollback()
-
-    try:
-        rows = db.execute(
-            text(
-                """
-                SELECT id, amount, type, description, category_id, user_id,
-                       COALESCE(date, CURRENT_TIMESTAMP) AS date
-                FROM transactions
-                WHERE user_id = :user_id
-                ORDER BY COALESCE(date, CURRENT_TIMESTAMP) DESC, id DESC
-                """
-            ),
-            {"user_id": user.id},
-        ).mappings().all()
-
-        return [serialize_transaction_row(row) for row in rows]
-    except Exception as exc:
-        print(f"Date fallback transactions query failed: {exc}")
-        db.rollback()
-
-    rows = db.execute(
-        text(
-            """
-            SELECT id, amount, type, description, category_id, user_id,
-                   CURRENT_TIMESTAMP AS date
-            FROM transactions
-            WHERE user_id = :user_id
-            ORDER BY id DESC
-            """
-        ),
-        {"user_id": user.id},
-    ).mappings().all()
-
-    return [serialize_transaction_row(row) for row in rows]
+    return transactions
 
 
 @router.put("/{id}")
@@ -150,7 +86,6 @@ def update_transaction(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    ensure_transaction_date_column()
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
@@ -183,8 +118,8 @@ def update_transaction(
     db_transaction.amount = transaction.amount
     db_transaction.type = transaction.type
     db_transaction.description = transaction.description
-    db_transaction.date = transaction.date or db_transaction.date
     db_transaction.category_id = transaction.category_id
+    db_transaction.date = transaction.date or db_transaction.date
 
     db.commit()
     db.refresh(db_transaction)

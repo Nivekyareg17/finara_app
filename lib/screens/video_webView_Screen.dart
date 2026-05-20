@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import '../widgets/custom_bottom_nav.dart';
 import '../widgets/translate_widget.dart';
 
 
@@ -25,9 +24,6 @@ class VideoWebViewScreen extends StatelessWidget {
         initialUrlRequest: URLRequest(
           url: WebUri(url),
         ),
-      ),
-      bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 3,
       ),
     );
   }

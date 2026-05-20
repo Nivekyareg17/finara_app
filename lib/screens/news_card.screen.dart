@@ -1,17 +1,9 @@
 import 'package:finara_app_v1/services/news_services.dart';
 import 'package:flutter/material.dart';
 import '../../models/news_model.dart';
-import '../widgets/custom_bottom_nav.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:finara_app_v1/services/translation_service.dart';
 import '../widgets/translate_widget.dart';
-import '../widgets/app_drawer.dart';
-import '../providers/auth_provider.dart';
-import 'package:provider/src/consumer.dart';
-import 'admin_screen.dart';
-import 'package:provider/provider.dart';
-
-
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
@@ -56,11 +48,6 @@ class NewsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Datos de ejemplo que vendrían de tu API
     final newsService = NewsService();
-    final auth = Provider.of<AuthProvider>(context);
-
-      if (auth.isAdmin && auth.isAdminView) {
-        return const AdminScreen();
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -86,24 +73,7 @@ class NewsScreen extends StatelessWidget {
             ),
           ],
         ),
-        actions: [
-          Consumer<AuthProvider>(
-            builder: (context, auth, _) {
-              if (!auth.isAdmin) return const SizedBox();
-
-              return IconButton(
-                icon: Icon(
-                  auth.isAdminView ? Icons.person : Icons.admin_panel_settings,
-                ),
-                onPressed: () {
-                  auth.toggleView();
-                },
-              );
-            },
-          ),
-        ],
       ),
-      drawer: const AppDrawer(),
       body: Column(
         children: [
           _buildStockTicker(),
@@ -146,9 +116,6 @@ class NewsScreen extends StatelessWidget {
             ),
           )
         ],
-      ),
-      bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 1, //NEWS
       ),
     );
   }

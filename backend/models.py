@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Float, Boolean, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Float, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -32,7 +32,7 @@ class User(Base):
     name = Column(String)
     email = Column(String, unique=True, index=True)
     password = Column(String)
-    profile_image_url = Column(Text, nullable=True)
+    profile_image_url = Column(String, nullable=True)
 
     role_id = Column(Integer, ForeignKey("roles.id"))
     role = relationship("Role", back_populates="users")
@@ -49,13 +49,13 @@ class Transaction(Base):
     amount = Column(Float)
     type = Column(String)
     description = Column(String)
-    date = Column(DateTime, default=datetime.utcnow)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="transactions")
 
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="transactions")
+    date = Column(DateTime, default=datetime.utcnow)
 
 
 # 5. RESET TOKEN
@@ -118,32 +118,6 @@ class Message(Base):
 
     sender = relationship("User", foreign_keys=[sender_id])
     receiver = relationship("User", foreign_keys=[receiver_id])
-
-class MessageRequest(Base):
-    __tablename__ = "message_requests"
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    status = Column(String, default="pending")
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    sender = relationship("User", foreign_keys=[sender_id])
-    receiver = relationship("User", foreign_keys=[receiver_id])
-
-
-class BlockedUser(Base):
-    __tablename__ = "blocked_users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    blocker_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    blocked_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    blocker = relationship("User", foreign_keys=[blocker_id])
-    blocked = relationship("User", foreign_keys=[blocked_id])
 
 class Note(Base):
     __tablename__ = "notes"

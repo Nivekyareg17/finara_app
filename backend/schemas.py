@@ -30,6 +30,7 @@ class TransactionCreate(BaseModel):
     type: Literal["ingreso", "gasto"]
     description: str = Field(..., min_length=1, max_length=100)
     category_id: int
+    date: Optional[datetime] = None
 
 
 # --- CATEGORÍAS (Para Gastos e Ingresos) ---
@@ -69,7 +70,7 @@ class TransactionResponse(BaseModel):
     type: str
     description: str
     category_id: int
-    date: datetime
+    date: Optional[datetime] = None
 
     class Config:
         orm_mode = True
@@ -104,11 +105,11 @@ class VideoResponse(BaseModel):
     class Config:
         orm_mode = True
 
-# LECTURAS
+
 class LecturaCreate(BaseModel):
-    titulo: str = Field(..., min_length=3, max_length=100)
-    contenido: str = Field(..., min_length=10)
-    tiempo_lectura: str = Field(..., min_length=1)
+    titulo: str
+    contenido: str
+    tiempo_lectura: str
 
 class LecturaResponse(BaseModel):
     id: int
@@ -133,19 +134,3 @@ class MessageResponse(BaseModel):
 
     class Config:
         orm_mode = True
-
-class MessageRequestCreate(BaseModel):
-    receiver_id: int
-
-
-class MessageRequestResponse(BaseModel):
-    id: int
-    sender_id: int
-    receiver_id: int
-    status: str
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
-
-        

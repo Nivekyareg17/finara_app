@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/translate_widget.dart';
-import '../widgets/app_drawer.dart';
 
 import 'admin/admin_users_screen.dart';
 import 'admin/admin_lecturas_screen.dart';
@@ -56,7 +55,6 @@ class AdminScreen extends StatelessWidget {
           ),
         ],
       ),
-      drawer: const AppDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

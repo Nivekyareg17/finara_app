@@ -1,180 +1,106 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'package:intl/intl.dart';
+import 'calculator_widgets.dart';
 
 class CompoundInterestScreen extends StatefulWidget {
   const CompoundInterestScreen({super.key});
 
   @override
-  State<CompoundInterestScreen> createState() =>
-      _CompoundInterestScreenState();
+  State<CompoundInterestScreen> createState() => _CompoundInterestScreenState();
 }
 
 class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
   final TextEditingController capitalController = TextEditingController();
   final TextEditingController rateController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
-
   final formatter = NumberFormat("#,##0.00", "es_CO");
 
   double? total;
   double? interest;
 
   void calculate() {
-    final double P = double.tryParse(
-          capitalController.text.replaceAll('.', ''),
-        ) ??
-        0;
-
-    final double r = (double.tryParse(rateController.text) ?? 0) / 100;
-    final double t = double.tryParse(timeController.text) ?? 0;
+    final capital =
+        double.tryParse(capitalController.text.replaceAll('.', '')) ?? 0;
+    final rate = (double.tryParse(rateController.text) ?? 0) / 100;
+    final time = double.tryParse(timeController.text) ?? 0;
 
     setState(() {
-      total = P * pow((1 + r), t);
-      interest = total! - P;
+      total = capital * pow(1 + rate, time);
+      interest = total! - capital;
     });
-  }
-
-  void _showHelp() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Interés compuesto"),
-        content: const Text(
-          "Calcula cómo crece tu dinero reinvirtiendo intereses.\n\n"
-          "• Capital: dinero inicial\n"
-          "• Tasa: porcentaje anual (%)\n"
-          "• Tiempo: años\n\n"
-          "Los intereses también generan ganancias.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Entendido"),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _moneyInput(
-      String label, String hint, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          MoneyInputFormatter(
-            thousandSeparator: ThousandSeparator.Period,
-            mantissaLength: 0,
-          ),
-        ],
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          prefixText: "\$ ",
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _input(
-      String label, String hint, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Interés compuesto")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    return CalculatorScaffold(
+      title: "Interes compuesto",
+      subtitle: "Proyecta crecimiento cuando las ganancias se reinvierten.",
+      icon: Icons.show_chart_rounded,
+      accentColor: const Color(0xFF2563EB),
+      children: [
+        CalculatorPanel(
           children: [
-            /// INPUTS
-            Card(
-              elevation: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _moneyInput(
-                        "Capital (COP)", "Ej: 1.000.000", capitalController),
-                    _input("Tasa anual (%)", "Ej: 10", rateController),
-                    _input("Tiempo (años)", "Ej: 2", timeController),
-                  ],
+            TextField(
+              controller: capitalController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                MoneyInputFormatter(
+                  thousandSeparator: ThousandSeparator.Period,
+                  mantissaLength: 0,
                 ),
+              ],
+              decoration: calculatorInputDecoration(
+                label: "Capital inicial",
+                hint: "Ej: 1.000.000",
+                icon: Icons.payments_rounded,
+                prefixText: "\$ ",
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            /// AYUDA
-            TextButton.icon(
-              onPressed: _showHelp,
-              icon: const Icon(Icons.info_outline),
-              label: const Text("¿Qué es esto?"),
-            ),
-
-            const SizedBox(height: 10),
-
-            /// BOTÓN
-            ElevatedButton(
-              onPressed: calculate,
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
+            const SizedBox(height: 14),
+            TextField(
+              controller: rateController,
+              keyboardType: TextInputType.number,
+              decoration: calculatorInputDecoration(
+                label: "Tasa anual (%)",
+                hint: "Ej: 12",
+                icon: Icons.percent_rounded,
               ),
-              child: const Text("Calcular"),
             ),
-
-            const SizedBox(height: 20),
-
-            /// RESULTADO
-            if (total != null)
-              Card(
-                elevation: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Interés generado: \$ ${formatter.format(interest)}",
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Total acumulado: \$ ${formatter.format(total)}",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
+            const SizedBox(height: 14),
+            TextField(
+              controller: timeController,
+              keyboardType: TextInputType.number,
+              decoration: calculatorInputDecoration(
+                label: "Tiempo en anos",
+                hint: "Ej: 5",
+                icon: Icons.timelapse_rounded,
+              ),
+            ),
+            const SizedBox(height: 18),
+            CalculatorButton(label: "Proyectar crecimiento", onTap: calculate),
           ],
         ),
-      ),
+        const SizedBox(height: 16),
+        if (total != null)
+          ResultCard(
+            title: "Total acumulado",
+            value: "\$ ${formatter.format(total)}",
+            caption: "Ganancia estimada: \$ ${formatter.format(interest)}",
+            icon: Icons.auto_graph_rounded,
+            accentColor: const Color(0xFF2563EB),
+          )
+        else
+          const ResultCard(
+            title: "Crecimiento",
+            value: "Intereses sobre intereses",
+            caption: "Ideal para inversiones de mediano y largo plazo.",
+            icon: Icons.insights_rounded,
+            accentColor: Color(0xFF2563EB),
+          ),
+      ],
     );
   }
 }

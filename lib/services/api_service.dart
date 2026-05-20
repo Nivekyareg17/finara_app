@@ -1,64 +1,34 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 class ApiService {
   static const String baseUrl = "https://finara-api-1lmd.onrender.com";
 
-  static Map<String, String> _jsonHeaders([String? token]) {
-    return {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
-    };
-  }
-
-  static dynamic _decode(http.Response response) {
-    if (response.body.isEmpty) return null;
-    try {
-      return jsonDecode(response.body);
-    } catch (e) {
-      print("JSON DECODE ERROR: $e");
-      print("BODY: ${response.body}");
-      return null;
-    }
-  }
-
-  static List<dynamic> _decodeList(http.Response response, String label) {
-    if (response.statusCode != 200) {
-      print("$label STATUS: ${response.statusCode}");
-      print("$label BODY: ${response.body}");
-      return [];
-    }
-
-    final data = _decode(response);
-    if (data is List) return data;
-
-    print("$label esperaba una lista y recibio: $data");
-    return [];
-  }
-
   static Future<String?> login(String email, String password) async {
+    final url = Uri.parse("$baseUrl/auth/login");
+
     final response = await http.post(
-      Uri.parse("$baseUrl/auth/login"),
-      headers: _jsonHeaders(),
+      url,
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "password": password}),
     );
 
     if (response.statusCode == 200) {
-      final data = _decode(response);
-      return data is Map ? data["access_token"] : null;
+      final data = jsonDecode(response.body);
+      return data["access_token"];
+    } else {
+      print("Error login: ${response.body}");
+      return null;
     }
-
-    print("Error login: ${response.body}");
-    return null;
   }
 
   static Future<bool> register(
       String name, String email, String password) async {
+    final url = Uri.parse("$baseUrl/auth/register");
+
     final response = await http.post(
-      Uri.parse("$baseUrl/auth/register"),
-      headers: _jsonHeaders(),
+      url,
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode({"name": name, "email": email, "password": password}),
     );
 
@@ -69,18 +39,17 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>?> getUser(String token) async {
+    final url = Uri.parse("$baseUrl/users/me");
+
     final response = await http.get(
-      Uri.parse("$baseUrl/users/me"),
-      headers: _jsonHeaders(token),
+      url,
+      headers: {"Authorization": "Bearer $token"},
     );
 
     if (response.statusCode == 200) {
-      final data = _decode(response);
-      return data is Map<String, dynamic> ? data : null;
+      return jsonDecode(response.body);
     }
 
-    print("GET USER STATUS: ${response.statusCode}");
-    print("GET USER BODY: ${response.body}");
     return null;
   }
 
@@ -92,6 +61,8 @@ class ApiService {
     int categoryId,
     DateTime date,
   ) async {
+    final url = Uri.parse("$baseUrl/transactions/");
+
     final body = jsonEncode({
       "type": type.toLowerCase(),
       "amount": amount,
@@ -100,30 +71,36 @@ class ApiService {
       "date": date.toIso8601String(),
     });
 
+    print("CREATE BODY: $body");
+
     final response = await http.post(
-      Uri.parse("$baseUrl/transactions/"),
-      headers: _jsonHeaders(token),
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
       body: body,
     );
 
-    print("CREATE TRANSACTION STATUS: ${response.statusCode}");
-    print("CREATE TRANSACTION BODY: ${response.body}");
+    print("STATUS: ${response.statusCode}");
+    print("BODY: ${response.body}");
 
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
   static Future<List<dynamic>> getTransactions(String token) async {
-    try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/transactions/"),
-        headers: _jsonHeaders(token),
-      );
+    final url = Uri.parse("$baseUrl/transactions/");
 
-      return _decodeList(response, "GET TRANSACTIONS");
-    } catch (e) {
-      print("GET TRANSACTIONS ERROR: $e");
-      return [];
+    final response = await http.get(
+      url,
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
     }
+
+    return [];
   }
 
   static Future<bool> updateTransaction(
@@ -135,9 +112,14 @@ class ApiService {
     int categoryId,
     DateTime date,
   ) async {
+    final url = Uri.parse("$baseUrl/transactions/$id");
+
     final response = await http.put(
-      Uri.parse("$baseUrl/transactions/$id"),
-      headers: _jsonHeaders(token),
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
       body: jsonEncode({
         "type": type.toLowerCase(),
         "amount": amount,
@@ -151,227 +133,237 @@ class ApiService {
   }
 
   static Future<bool> deleteTransaction(String token, int id) async {
+    final url = Uri.parse("$baseUrl/transactions/$id");
+
     final response = await http.delete(
-      Uri.parse("$baseUrl/transactions/$id"),
-      headers: _jsonHeaders(token),
+      url,
+      headers: {"Authorization": "Bearer $token"},
     );
 
     return response.statusCode == 200;
   }
 
   static Future<List<dynamic>> getTransactionCategories(String token) async {
-    try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/categories/"),
-        headers: _jsonHeaders(token),
-      );
 
-      if (response.statusCode == 404 || response.statusCode == 405) {
-        final fallbackResponse = await http.get(
-          Uri.parse("$baseUrl/categories"),
-          headers: _jsonHeaders(token),
-        );
-        return _decodeList(fallbackResponse, "GET CATEGORIES FALLBACK");
-      }
+  try {
+    // CAMBIO AQUÍ: Solo una vez la palabra categories y sin barra final
+    final url = Uri.parse("$baseUrl/categories"); 
 
-      return _decodeList(response, "GET CATEGORIES");
-    } catch (e) {
-      print("GET CATEGORIES ERROR: $e");
+    final response = await http.get(
+
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("Error en GET: ${response.statusCode}");
       return [];
     }
+  } catch (e) {
+    print("Excepción en GET: $e");
+    return [];
   }
+}
 
-  static Future<bool> createCategory(
-      String token, String name, String type) async {
+
+  // 2. CREAR CATEGORÍA (POST)
+  static Future<bool> createCategory(String token, String name, String type) async {
     try {
+      final url = Uri.parse("$baseUrl/categories"); // Solo una vez categories
+
       final response = await http.post(
-        Uri.parse("$baseUrl/categories/"),
-        headers: _jsonHeaders(token),
-        body: jsonEncode({"name": name, "type": type}),
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({
+          "name": name,
+          "type": type,
+        }),
       );
 
-      print("CREATE CATEGORY STATUS: ${response.statusCode}");
-      print("CREATE CATEGORY BODY: ${response.body}");
+      print("🚀 Enviando creación a: $url");
+      print("📊 Status del Backend: ${response.statusCode}");
+      print("📄 Body del Backend: ${response.body}");
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print("CREATE CATEGORY ERROR: $e");
+      print("❌ Error de red: $e");
       return false;
     }
+  
+}
+
+
+// --- ACTUALIZAR CATEGORÍA (PUT) ---
+  static Future<bool> updateCategory(String token, int id, String name, String type) async {
+  try {
+    // Aseguramos que la URL sea limpia: base + /categories/ + id
+    final baseUrlClean = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final url = Uri.parse("$baseUrlClean/categories/$id");
+
+    print("🚀 Intentando PUT a: $url");
+
+    final response = await http.put(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "name": name,
+        "type": type,
+      }),
+    );
+
+    print("📊 Status del Backend: ${response.statusCode}");
+    return response.statusCode == 200;
+  } catch (e) {
+    print("❌ Error de red: $e");
+    return false;
   }
-
-  static Future<bool> updateCategory(
-    String token,
-    int id,
-    String name,
-    String type,
-  ) async {
-    try {
-      final cleanBaseUrl = baseUrl.endsWith("/")
-          ? baseUrl.substring(0, baseUrl.length - 1)
-          : baseUrl;
-      final body = jsonEncode({"name": name, "type": type});
-      final urls = [
-        Uri.parse("$cleanBaseUrl/categories/categories/$id"),
-        Uri.parse("$cleanBaseUrl/categories/$id"),
-      ];
-
-      for (final url in urls) {
-        print("Intentando PUT a: $url");
-        final response = await http.put(
-          url,
-          headers: _jsonHeaders(token),
-          body: body,
-        );
-
-        print("UPDATE CATEGORY STATUS: ${response.statusCode}");
-        print("UPDATE CATEGORY BODY: ${response.body}");
-
-        if (response.statusCode == 200) return true;
-        if (response.statusCode != 404 && response.statusCode != 405) {
-          return false;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      print("UPDATE CATEGORY ERROR: $e");
-      return false;
-    }
-  }
-
+}
+  // --- ELIMINAR (DELETE) ---
   static Future<bool> deleteCategory(String token, int id) async {
     try {
-      final cleanBaseUrl = baseUrl.endsWith("/")
-          ? baseUrl.substring(0, baseUrl.length - 1)
-          : baseUrl;
+      // IMPORTANTE: Agregamos el prefijo doble /categories/categories/
+      final url = Uri.parse(
+          "$baseUrl/categories/$id"); // Verifica si tu API requiere / al final
 
-      print("🕵️‍♂️ --- INICIANDO BORRADO DE CATEGORÍA ID: $id ---");
+      final response = await http.delete(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
 
-      // Primer intento: Sin barra al final
-      final urlSinSlash = Uri.parse("$cleanBaseUrl/categories/$id");
-      print("👉 Intento 1 | URL: $urlSinSlash");
-
-      var response =
-          await http.delete(urlSinSlash, headers: _jsonHeaders(token));
-      print("📡 Intento 1 | STATUS: ${response.statusCode}");
-      print("📦 Intento 1 | BODY: ${response.body}");
-
+      // FastAPI suele devolver 200 o 204 (No Content) al borrar con éxito
       if (response.statusCode == 200 || response.statusCode == 204) {
-        print("✅ ¡Categoría borrada con éxito en el intento 1!");
+        print("Categoría eliminada con éxito");
         return true;
+      } else {
+        print("Error al borrar: ${response.statusCode} - ${response.body}");
+        return false;
       }
-
-      // Si nos dio error, intentamos con la barra al final (por si FastAPI pide el 307)
-      print("🔄 Falló el intento 1. Probando con barra final (/) ...");
-      final urlConSlash = Uri.parse("$cleanBaseUrl/categories/$id/");
-      print("👉 Intento 2 | URL: $urlConSlash");
-
-      response = await http.delete(urlConSlash, headers: _jsonHeaders(token));
-      print("📡 Intento 2 | STATUS: ${response.statusCode}");
-      print("📦 Intento 2 | BODY: ${response.body}");
-
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        print("✅ ¡Categoría borrada con éxito en el intento 2!");
-        return true;
-      }
-
-      print(
-          "❌ Ningún intento funcionó. Revisa los códigos de error de arriba.");
-
-      // Una posible razón es que la categoría tenga transacciones asociadas (Error 500 o 400)
-      if (response.statusCode == 500 || response.statusCode == 400) {
-        print(
-            "⚠️ CUIDADO: Puede que no te deje borrarla porque hay transacciones usando esta categoría.");
-      }
-
-      return false;
     } catch (e) {
-      print("🚨 ERROR FATAL AL ELIMINAR CATEGORÍA: $e");
+      print("Error de red al borrar: $e");
       return false;
     }
   }
 
   static Future<bool> resetPassword(String token, String newPassword) async {
+    final url = Uri.parse("$baseUrl/auth/reset-password");
+
     try {
       final response = await http
           .post(
-            Uri.parse("$baseUrl/auth/reset-password"),
-            headers: _jsonHeaders(),
-            body: jsonEncode({"token": token, "new_password": newPassword}),
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "token": token,
+              "new_password": newPassword,
+            }),
           )
           .timeout(const Duration(seconds: 60));
 
       return response.statusCode == 200;
     } catch (e) {
-      print("RESET PASSWORD ERROR: $e");
+      print("ERROR RESET PASSWORD: $e");
       return false;
     }
   }
 
   static Future<bool> forgotPassword(String email) async {
+    final url = Uri.parse("$baseUrl/auth/forgot-password");
+
     try {
       final response = await http
           .post(
-            Uri.parse("$baseUrl/auth/forgot-password"),
-            headers: _jsonHeaders(),
+            url,
+            headers: {"Content-Type": "application/json"},
             body: jsonEncode({"email": email}),
           )
           .timeout(const Duration(seconds: 60));
 
       return response.statusCode == 200;
     } catch (e) {
-      print("FORGOT PASSWORD ERROR: $e");
+      print("ERROR FORGOT PASSWORD: $e");
       return false;
     }
   }
 
   static Future<List<dynamic>> getUsers(String token) async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/users/all"),
-      headers: _jsonHeaders(token),
-    );
+    final url = Uri.parse("$baseUrl/users/all");
 
-    return _decodeList(response, "GET USERS");
+    final res =
+        await http.get(url, headers: {"Authorization": "Bearer $token"});
+
+    return jsonDecode(res.body);
   }
 
   static Future<void> deleteUser(String token, int id) async {
     await http.delete(
       Uri.parse("$baseUrl/users/delete/$id"),
-      headers: _jsonHeaders(token),
+      headers: {"Authorization": "Bearer $token"},
     );
   }
 
   static Future<void> makeAdmin(String token, int id) async {
     await http.put(
       Uri.parse("$baseUrl/users/make-admin/$id"),
-      headers: _jsonHeaders(token),
+      headers: {"Authorization": "Bearer $token"},
     );
   }
 
   static Future<void> removeAdmin(String token, int id) async {
     await http.put(
       Uri.parse("$baseUrl/users/remove-admin/$id"),
-      headers: _jsonHeaders(token),
+      headers: {"Authorization": "Bearer $token"},
     );
   }
 
   static Future<List<dynamic>> getCategories() async {
     final response = await http.get(Uri.parse("$baseUrl/videos/categories"));
-    return _decodeList(response, "GET VIDEO CATEGORIES");
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar categorías");
+    }
   }
 
+  // Obtener videos por categoría
   static Future<List<dynamic>> getVideos(int categoryId) async {
     final response = await http.get(Uri.parse("$baseUrl/videos/$categoryId"));
-    return _decodeList(response, "GET VIDEOS");
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar videos");
+    }
   }
 
   static Future<bool> createVideoCategory(
-      String title, String description) async {
+    String title,
+    String description,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/videos/categories"),
-      headers: _jsonHeaders(),
-      body: jsonEncode({"title": title, "description": description}),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "description": description,
+      }),
     );
 
     return response.statusCode == 200 || response.statusCode == 201;
@@ -384,25 +376,41 @@ class ApiService {
   ) async {
     final response = await http.put(
       Uri.parse("$baseUrl/videos/categories/$id"),
-      headers: _jsonHeaders(),
-      body: jsonEncode({"title": title, "description": description}),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "description": description,
+      }),
     );
 
     return response.statusCode == 200;
   }
 
   static Future<bool> deleteVideoCategory(int id) async {
-    final response =
-        await http.delete(Uri.parse("$baseUrl/videos/categories/$id"));
+    final response = await http.delete(
+      Uri.parse("$baseUrl/videos/categories/$id"),
+    );
+
     return response.statusCode == 200;
   }
 
   static Future<bool> createVideo(
-      String title, String url, int categoryId) async {
+    String title,
+    String url,
+    int categoryId,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/videos/"),
-      headers: _jsonHeaders(),
-      body: jsonEncode({"title": title, "url": url, "category_id": categoryId}),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "url": url,
+        "category_id": categoryId,
+      }),
     );
 
     return response.statusCode == 200 || response.statusCode == 201;
@@ -416,26 +424,48 @@ class ApiService {
   ) async {
     final response = await http.put(
       Uri.parse("$baseUrl/videos/$id"),
-      headers: _jsonHeaders(),
-      body: jsonEncode({"title": title, "url": url, "category_id": categoryId}),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "title": title,
+        "url": url,
+        "category_id": categoryId,
+      }),
     );
 
     return response.statusCode == 200;
   }
 
   static Future<bool> deleteVideo(int id) async {
-    final response = await http.delete(Uri.parse("$baseUrl/videos/$id"));
+    final response = await http.delete(
+      Uri.parse("$baseUrl/videos/$id"),
+    );
+
     return response.statusCode == 200;
   }
 
   Future<List<dynamic>> obtenerLecturas() async {
-    final response = await http.get(Uri.parse("$baseUrl/api/lecturas/"));
-    return _decodeList(response, "GET LECTURAS");
+    final response = await http
+        .get(Uri.parse("https://finara-api-1lmd.onrender.com/api/lecturas/"));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Error al cargar lecturas");
+    }
   }
 
   static Future<List<dynamic>> getLecturas() async {
-    final response = await http.get(Uri.parse("$baseUrl/api/lecturas/"));
-    return _decodeList(response, "GET LECTURAS");
+    final response = await http.get(
+      Uri.parse("$baseUrl/api/lecturas/"),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al cargar lecturas");
+    }
   }
 
   static Future<bool> createLectura(
@@ -443,20 +473,15 @@ class ApiService {
     String contenido,
     String tiempoLectura,
   ) async {
-    if (titulo.trim().isEmpty ||
-        contenido.trim().isEmpty ||
-        tiempoLectura.trim().isEmpty) {
-      print("Error: campos vacios en createLectura");
-      return false;
-    }
-
     final response = await http.post(
       Uri.parse("$baseUrl/api/lecturas/"),
-      headers: _jsonHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: jsonEncode({
-        "titulo": titulo.trim(),
-        "contenido": contenido.trim(),
-        "tiempo_lectura": tiempoLectura.trim(),
+        "titulo": titulo,
+        "contenido": contenido,
+        "tiempo_lectura": tiempoLectura,
       }),
     );
 
@@ -467,7 +492,9 @@ class ApiService {
   }
 
   static Future<bool> deleteLectura(int id) async {
-    final response = await http.delete(Uri.parse("$baseUrl/api/lecturas/$id"));
+    final response = await http.delete(
+      Uri.parse("$baseUrl/api/lecturas/$id"),
+    );
 
     print("DELETE LECTURA STATUS: ${response.statusCode}");
     print("DELETE LECTURA BODY: ${response.body}");
@@ -481,20 +508,15 @@ class ApiService {
     String contenido,
     String tiempoLectura,
   ) async {
-    if (titulo.trim().isEmpty ||
-        contenido.trim().isEmpty ||
-        tiempoLectura.trim().isEmpty) {
-      print("Error: campos vacios en updateLectura");
-      return false;
-    }
-
     final response = await http.put(
       Uri.parse("$baseUrl/api/lecturas/$id"),
-      headers: _jsonHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: jsonEncode({
-        "titulo": titulo.trim(),
-        "contenido": contenido.trim(),
-        "tiempo_lectura": tiempoLectura.trim(),
+        "titulo": titulo,
+        "contenido": contenido,
+        "tiempo_lectura": tiempoLectura,
       }),
     );
 
@@ -505,68 +527,12 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getMessages(String token, int userId) async {
-    final response = await http.get(
+    final res = await http.get(
       Uri.parse("$baseUrl/messages/$userId"),
-      headers: _jsonHeaders(token),
+      headers: {"Authorization": "Bearer $token"},
     );
 
-    return _decodeList(response, "GET MESSAGES");
-  }
-
-  static Future<Map<String, bool>> getBlockStatus(
-    String token,
-    int userId,
-  ) async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/messages/blocked/$userId"),
-      headers: _jsonHeaders(token),
-    );
-
-    if (response.statusCode != 200) {
-      return {
-        "blocked": false,
-        "blocked_by_me": false,
-        "blocked_me": false,
-      };
-    }
-
-    final data = _decode(response);
-    if (data is! Map) {
-      return {
-        "blocked": false,
-        "blocked_by_me": false,
-        "blocked_me": false,
-      };
-    }
-
-    return {
-      "blocked": data["blocked"] == true,
-      "blocked_by_me": data["blocked_by_me"] == true,
-      "blocked_me": data["blocked_me"] == true,
-    };
-  }
-
-  static Future<bool> isUserBlocked(String token, int userId) async {
-    final status = await getBlockStatus(token, userId);
-    return status["blocked"] == true;
-  }
-
-  static Future<bool> blockUser(String token, int userId) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/messages/block/$userId"),
-      headers: _jsonHeaders(token),
-    );
-
-    return response.statusCode == 200 || response.statusCode == 201;
-  }
-
-  static Future<bool> unblockUser(String token, int userId) async {
-    final response = await http.delete(
-      Uri.parse("$baseUrl/messages/block/$userId"),
-      headers: _jsonHeaders(token),
-    );
-
-    return response.statusCode == 200;
+    return jsonDecode(res.body);
   }
 
   static Future<bool> sendMessage(
@@ -574,123 +540,29 @@ class ApiService {
     int receiverId,
     String content,
   ) async {
-    final response = await http.post(
+    final res = await http.post(
       Uri.parse("$baseUrl/messages/"),
-      headers: _jsonHeaders(token),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"
+      },
       body: jsonEncode({"receiver_id": receiverId, "content": content}),
     );
 
-    print("SEND MESSAGE STATUS: ${response.statusCode}");
-    print("SEND MESSAGE BODY: ${response.body}");
+    print(res.statusCode);
+    print(res.body);
 
-    return response.statusCode == 200 || response.statusCode == 201;
+    return res.statusCode == 200 || res.statusCode == 201;
   }
 
   static Future<List<dynamic>> getUsersPublic(String token) async {
-    final response = await http.get(
+    final res = await http.get(
       Uri.parse("$baseUrl/users/"),
-      headers: _jsonHeaders(token),
+      headers: {"Authorization": "Bearer $token"},
     );
 
-    return _decodeList(response, "GET PUBLIC USERS");
+    return jsonDecode(res.body);
   }
 
-  static Future<Map<String, dynamic>?> searchUserByEmail(
-    String token,
-    String email,
-  ) async {
-    final response = await http.get(
-      Uri.parse(
-        "$baseUrl/messages/search?email=${Uri.encodeComponent(email)}",
-      ),
-      headers: _jsonHeaders(token),
-    );
-
-    if (response.statusCode != 200) {
-      return null;
-    }
-
-    final data = _decode(response);
-
-    return data is Map<String, dynamic> ? data : null;
-  }
-
-  static Future<Map<String, dynamic>> sendMessageRequest(
-    String token,
-    int receiverId,
-  ) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/messages/request"),
-      headers: _jsonHeaders(token),
-      body: jsonEncode({
-        "receiver_id": receiverId,
-      }),
-    );
-
-    print("REQUEST STATUS: ${response.statusCode}");
-    print("REQUEST BODY: ${response.body}");
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return {
-        "success": true,
-        "message": "Solicitud enviada",
-      };
-    }
-
-    final data = jsonDecode(response.body);
-
-    return {
-      "success": false,
-      "message": data["detail"] ?? "Error desconocido",
-    };
-  }
-
-  static Future<List<dynamic>> getRequests(String token) async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/messages/requests"),
-      headers: _jsonHeaders(token),
-    );
-
-    return _decodeList(response, "GET REQUESTS");
-  }
-
-  static Future<bool> acceptRequest(
-    String token,
-    int requestId,
-  ) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/messages/request/$requestId/accept"),
-      headers: _jsonHeaders(token),
-    );
-
-    return response.statusCode == 200;
-  }
-
-  static Future<bool> rejectRequest(
-    String token,
-    int requestId,
-  ) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/messages/request/$requestId/reject"),
-      headers: _jsonHeaders(token),
-    );
-
-    return response.statusCode == 200;
-  }
-
-  static Future<List<dynamic>> getChats(
-    String token,
-  ) async {
-    final response = await http.get(
-      Uri.parse(
-        "$baseUrl/messages/chats",
-      ),
-      headers: _jsonHeaders(token),
-    );
-
-    return _decodeList(
-      response,
-      "GET CHATS",
-    );
-  }
+  
 }

@@ -1,12 +1,12 @@
-﻿import 'package:finara_app_v1/models/category_model.dart';
+import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
+import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:finara_app_v1/providers/theme_provider.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
-import '../widgets/custom_bottom_nav.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:finara_app_v1/providers/languaje_provider.dart';
@@ -14,10 +14,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import 'admin_screen.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 
@@ -34,10 +30,10 @@ class CurrencyInputFormatter extends TextInputFormatter {
       TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.selection.baseOffset == 0) return newValue;
 
-    // Quita cualquier cosa que no sea numero
+    // Quita cualquier cosa que no sea número
     String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Convierte a numero y formatea (ejemplo: 1000 -> 1.000)
+    // Convierte a número y formatea (ejemplo: 1000 -> 1.000)
     double value = double.parse(newText) / 100; // Divide por 100 para centavos
     final formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
     String formatted = formatter.format(value).trim();
@@ -50,7 +46,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 }
 
 Map<String, dynamic> _getCategoryData(String description) {
-  // Comparamos la descripcion para asignar icono y color
+  // Comparamos la descripción para asignar icono y color
   String desc = description.toLowerCase();
   if (desc.contains("mercado")) {
     return {'icon': Icons.shopping_basket_rounded, 'color': Colors.orange};
@@ -73,62 +69,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
-  bool showAllMovements = false;
-  String movementFilter = "todos";
-
-  void _showFloatingMessage(String message, {bool isError = false}) {
-    final overlay = Overlay.of(context, rootOverlay: true);
-    late OverlayEntry entry;
-
-    entry = OverlayEntry(
-      builder: (_) => Positioned(
-        top: MediaQuery.of(context).padding.top + 14,
-        left: 18,
-        right: 18,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color:
-                  isError ? const Color(0xFFB91C1C) : const Color(0xFF047857),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.22),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isError ? Icons.error_outline : Icons.check_circle_outline,
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-
-    overlay.insert(entry);
-    Future.delayed(const Duration(seconds: 3), () {
-      entry.remove();
-    });
-  }
 
   @override
   void initState() {
@@ -139,7 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> loadTransactions() async {
     final auth = context.read<AuthProvider>();
-    if (auth.token == null || auth.token!.isEmpty) return;
 
     final data = await ApiService.getTransactions(auth.token!);
 
@@ -148,11 +87,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final loadedTransactions =
           data.map((e) => TransactionModel.fromMap(e)).toList();
-      loadedTransactions.sort((a, b) {
-        final dateCompare = b.date.compareTo(a.date);
-        if (dateCompare != 0) return dateCompare;
-        return (b.id ?? 0).compareTo(a.id ?? 0);
-      });
 
       print("TRANSACCIONES OK");
 
@@ -170,15 +104,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void loadUser() async {
     try {
       final auth = context.read<AuthProvider>();
-      if (auth.token == null || auth.token!.isEmpty) {
-        setState(() {
-          name = "Sesion vencida";
-          email = "Inicia sesion nuevamente";
-          profileImageUrl = null;
-        });
-        return;
-      }
-
       final data = await auth.getUserData();
       print(data);
 
@@ -186,11 +111,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (data != null) {
           name = data["name"] ?? "Sin nombre";
           email = data["email"] ?? "Sin email";
-          profileImageUrl = data["profile_image_url"];
         } else {
           name = "No se pudo cargar";
           email = "";
-          profileImageUrl = null;
         }
       });
     } catch (e) {
@@ -203,59 +126,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadData() async {
-    final auth = context.read<AuthProvider>();
-    if (auth.token == null || auth.token!.isEmpty) return;
-
     await loadCategories();
     await loadTransactions();
   }
 
   Future<void> loadCategories() async {
     final auth = context.read<AuthProvider>();
-    if (auth.token == null || auth.token!.isEmpty) return;
-
-    var data = await ApiService.getTransactionCategories(auth.token!);
-    data = await _ensureDefaultCategories(auth.token!, data);
+    final data = await ApiService.getTransactionCategories(auth.token!);
 
     if (!mounted) return;
 
     setState(() {
       categories = data.map((e) => CategoryModel.fromMap(e)).toList();
     });
-  }
-
-  Future<List<dynamic>> _ensureDefaultCategories(
-    String token,
-    List<dynamic> current,
-  ) async {
-    const defaults = [
-      {"name": "Salario", "type": "ingreso"},
-      {"name": "Otros ingresos", "type": "ingreso"},
-      {"name": "Comida", "type": "gasto"},
-      {"name": "Transporte", "type": "gasto"},
-    ];
-
-    var created = false;
-    for (final category in defaults) {
-      final exists = current.any((item) {
-        final data = Map<String, dynamic>.from(item);
-        return (data["name"] ?? "").toString().toLowerCase() ==
-                category["name"]!.toLowerCase() &&
-            (data["type"] ?? "").toString() == category["type"];
-      });
-
-      if (!exists) {
-        final ok = await ApiService.createCategory(
-          token,
-          category["name"]!,
-          category["type"]!,
-        );
-        created = created || ok;
-      }
-    }
-
-    if (!created) return current;
-    return ApiService.getTransactionCategories(token);
   }
 
   String getCategoryName(int categoryId) {
@@ -268,68 +151,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       return "General";
     }
-  }
-
-  ImageProvider? _profileImageProvider() {
-    final imageUrl = profileImageUrl;
-
-    if (imageUrl == null || imageUrl.isEmpty) {
-      return null;
-    }
-
-    if (imageUrl.startsWith("data:image")) {
-      try {
-        final commaIndex = imageUrl.indexOf(",");
-        if (commaIndex == -1) return null;
-
-        return MemoryImage(base64Decode(imageUrl.substring(commaIndex + 1)));
-      } catch (_) {
-        return null;
-      }
-    }
-
-    return NetworkImage(imageUrl);
-  }
-
-  ImageProvider? _memoryImageFromData(String? imageData) {
-    if (imageData == null || imageData.isEmpty) return null;
-
-    try {
-      final commaIndex = imageData.indexOf(",");
-      final raw =
-          commaIndex == -1 ? imageData : imageData.substring(commaIndex + 1);
-      return MemoryImage(base64Decode(raw));
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<String?> _pickMetaImageData() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 55,
-      maxWidth: 900,
-    );
-
-    if (image == null) return null;
-
-    final bytes = await image.readAsBytes();
-    return "data:image/jpeg;base64,${base64Encode(bytes)}";
-  }
-
-  DateTime _dateWithCurrentTime(DateTime date) {
-    final now = DateTime.now();
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-      now.hour,
-      now.minute,
-      now.second,
-      now.millisecond,
-      now.microsecond,
-    );
   }
 
   double getBalance() {
@@ -346,83 +167,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
-  Widget _movementFilterButton({
-    required String value,
-    required String label,
-    required IconData icon,
-    required bool isDark,
-  }) {
-    final selected = movementFilter == value;
-
-    return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          setState(() {
-            movementFilter = value;
-            showAllMovements = false;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-          decoration: BoxDecoration(
-            color: selected
-                ? const Color(0xFF10B981)
-                : (isDark ? const Color(0xFF10231F) : Colors.white),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selected
-                  ? const Color(0xFF10B981)
-                  : (isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected
-                    ? Colors.white
-                    : (isDark ? Colors.white70 : const Color(0xFF064E3B)),
-              ),
-              const SizedBox(width: 7),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: selected
-                        ? Colors.white
-                        : (isDark ? Colors.white70 : const Color(0xFF064E3B)),
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final metas = context.watch<AuthProvider>().metas;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color primaryColor = Color(0xFF064E3B);
-    final filteredMovements = transactions.where((transaction) {
-      if (movementFilter == "todos") return true;
-      return transaction.type == movementFilter;
-    }).toList();
-    final auth = Provider.of<AuthProvider>(context);
-
-    if (auth.isAdmin && auth.isAdminView) {
-      return const AdminScreen();
-    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -445,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(
-                    12), // Bordes mas redondeados son tendencia
+                    12), // Bordes más redondeados son tendencia
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF00C853).withOpacity(0.3),
@@ -471,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  "Mi Perfil", // Subti­tulo indicativo
+                  "Mi Perfil", // Subtítulo indicativo
                   style: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey[600],
                     fontSize: 12,
@@ -482,23 +231,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-
-        actions: [
-          Consumer<AuthProvider>(
-            builder: (context, auth, _) {
-              if (!auth.isAdmin) return const SizedBox();
-
-              return IconButton(
-                icon: Icon(
-                  auth.isAdminView ? Icons.person : Icons.admin_panel_settings,
-                ),
-                onPressed: () {
-                  auth.toggleView();
-                },
-              );
-            },
-          ),
-        ],
       ),
 
       //DRAWER (MENU)
@@ -518,14 +250,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(
                           color: Colors.white24,
-                          width: 2), // Un borde lo hace ver mÃ¡s fino
+                          width: 2), // Un borde lo hace ver más fino
                     ),
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.white12,
                       // Usamos un try-catch visual con errorBuilder si fuera necesario,
-                      // pero aquÃ­ optimizamos la lÃ³gica de carga
-                      backgroundImage: _profileImageProvider(),
+                      // pero aquí optimizamos la lógica de carga
+                      backgroundImage: (profileImageUrl != null &&
+                              profileImageUrl!.isNotEmpty)
+                          ? NetworkImage(profileImageUrl!)
+                          : null,
                       child:
                           (profileImageUrl == null || profileImageUrl!.isEmpty)
                               ? const Icon(Icons.person,
@@ -539,7 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: AnimatedContainer(
-                        // Pequeña animacion al tocar
+                        // Pequeña animación al tocar
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(
                             6), // Un poquito más grande para el dedo
@@ -583,7 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text("CONFIGURACIÃ“N",
+                    child: Text("CONFIGURACIÓN",
                         style: TextStyle(
                             color: Colors.grey,
                             fontWeight: FontWeight.bold,
@@ -596,17 +331,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: isDark ? "Modo claro" : "Modo oscuro",
                     color: Colors.orange,
                     onTap: () => context.read<ThemeProvider>().toggleTheme(),
-                  ),
-
-                  _buildDrawerItem(
-                    icon: Icons.picture_as_pdf_outlined,
-                    title: "Descargar movimientos",
-                    subtitle: "Exportar historial en PDF",
-                    color: const Color(0xFF00C853),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await _downloadMovementsPdf();
-                    },
                   ),
 
                   // IDIOMA MEJORADO
@@ -623,11 +347,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   const Divider(),
+
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text("MÓDULOS",
+                        style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2)),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.home_rounded,
+                    title: "Inicio",
+                    color: const Color(0xFF10B981),
+                    onTap: () => Navigator.pushReplacementNamed(context, "/home"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.newspaper_rounded,
+                    title: "Noticias",
+                    color: Colors.blue,
+                    onTap: () => Navigator.pushReplacementNamed(context, "/news"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.auto_awesome,
+                    title: "Daiko AI",
+                    color: Colors.purple,
+                    onTap: () => Navigator.pushReplacementNamed(context, "/daiko_ai"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.school_rounded,
+                    title: "Aprendizaje",
+                    color: Colors.teal,
+                    onTap: () => Navigator.pushReplacementNamed(context, "/video"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.calculate_rounded,
+                    title: "Calculadora",
+                    color: Colors.indigo,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CalculatorsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
 
-            // BOTÃ“N DE CERRAR SESIÃ“N
+            // BOTÓN DE CERRAR SESIÓN
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListTile(
@@ -658,16 +429,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       //BODY CRUD
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: ListView(
+        child: Column(
           children: [
             //PERFIL
             Row(
               children: [
                 CircleAvatar(
-                  radius: 20, // MÃ¡s pequeÃ±o
+                  radius: 20, // Más pequeño
                   backgroundColor: Colors.white12,
                   // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
-                  backgroundImage: _profileImageProvider(),
+                  backgroundImage:
+                      (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                          ? NetworkImage(profileImageUrl!)
+                          : null,
                   child: (profileImageUrl == null || profileImageUrl!.isEmpty)
                       ? const Icon(Icons.person_outline_rounded,
                           size: 20, color: Colors.white54)
@@ -696,9 +470,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // TARJETA DE BALANCE MEJORADA
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24), // Un poco mas de aire
+              padding: const EdgeInsets.all(24), // Un poco más de aire
               decoration: BoxDecoration(
-                // Un degradado sutil lo hace ver mas "Premium"
+                // Un degradado sutil lo hace ver más "Premium"
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -742,17 +516,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    formatCurrency(getBalance()), // <-- Usando la funcion nueva
+                    formatCurrency(getBalance()), // <-- Usando la función nueva
                     style: TextStyle(
-                      fontSize: 36, // Un poco mas grande
-                      fontWeight: FontWeight.w900, // Mas grueso
+                      fontSize: 36, // Un poco más grande
+                      fontWeight: FontWeight.w900, // Más grueso
                       letterSpacing:
-                          -1, // Un poco mas juntas las letras se ve pro
+                          -1, // Un poco más juntas las letras se ve pro
                       color: isDark ? Colors.white : const Color(0xFF1B4332),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Un pequeno indicador extra le da el toque final
+                  // Un pequeño indicador extra le da el toque final
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -773,7 +547,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            //SECCION METAS
+            //SECCIÓN METAS
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -791,18 +565,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
 
             SizedBox(
-              height: 320,
+              height: 180,
               child: metas.isEmpty
-                  ? const Center(child: Text("No hay metas aun"))
+                  ? const Center(child: Text("No hay metas aún"))
                   : ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: metas.length,
                       itemBuilder: (context, index) {
                         final meta = metas[index];
-                        final metaImage = _memoryImageFromData(meta.imageData);
 
                         return Container(
-                          width: 270,
+                          width: 220,
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
@@ -821,45 +594,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  height: 105,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981)
-                                        .withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(16),
-                                    image: metaImage == null
-                                        ? null
-                                        : DecorationImage(
-                                            image: metaImage,
-                                            fit: BoxFit.cover,
-                                          ),
-                                  ),
-                                  child: metaImage == null
-                                      ? const Center(
-                                          child: Icon(
-                                            Icons.flag_rounded,
-                                            color: Color(0xFF10B981),
-                                            size: 34,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(height: 10),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        meta.nombre,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                      child: Text(meta.nombre,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16)),
                                     ),
                                     Row(
                                       children: [
@@ -891,40 +634,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     "${meta.porcentaje.toStringAsFixed(1)}% completado"),
                                 const SizedBox(height: 5),
                                 Text(
-                                  "${formatCurrency(meta.montoActual)} de ${formatCurrency(meta.montoMeta)}",
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
                                   "Faltan: ${meta.mesesRestantes} meses",
                                   style: const TextStyle(
                                       fontSize: 12, color: Colors.grey),
-                                ),
-                                const Spacer(),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 38,
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF10B981),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    onPressed: () => _agregarDineroMeta(index),
-                                    icon: const Icon(
-                                        Icons.add_circle_outline_rounded,
-                                        size: 18),
-                                    label: const Text(
-                                      "Añadir dinero",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w800),
-                                    ),
-                                  ),
                                 ),
                               ]),
                         );
@@ -934,7 +646,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            //TITULO Y BOTOn AGREGAR MOVIMIENTO
+            //TÍTULO Y BOTÓN AGREGAR
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -953,65 +665,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 10),
 
-            Row(
-              children: [
-                _movementFilterButton(
-                  value: "todos",
-                  label: "Todos",
-                  icon: Icons.list_rounded,
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 8),
-                _movementFilterButton(
-                  value: "ingreso",
-                  label: "Ingresos",
-                  icon: Icons.trending_up_rounded,
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 8),
-                _movementFilterButton(
-                  value: "gasto",
-                  label: "Gastos",
-                  icon: Icons.trending_down_rounded,
-                  isDark: isDark,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
             //LISTA DE TRANSACCIONES
-            if (filteredMovements.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF10231F) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Center(
-                  child: Text("No hay movimientos para mostrar"),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: showAllMovements
-                    ? filteredMovements.length
-                    : filteredMovements.take(4).length,
+            Expanded(
+              child: ListView.separated(
+                itemCount: transactions.length,
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                  final t = filteredMovements[index];
+                  final t = transactions[index];
                   final bool isIngreso = t.type == "ingreso";
+                  final bool isFuture = t.isFutureMovement;
                   final categoryName =
                       getCategoryName(int.tryParse(t.categoryId) ?? 0);
                   final catData = _getCategoryData(categoryName);
                   return Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      color: isFuture
+                          ? (isDark
+                              ? const Color(0xFF172554)
+                              : const Color(0xFFEFF6FF))
+                          : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
                       borderRadius: BorderRadius.circular(20),
+                      border: isFuture
+                          ? Border.all(color: const Color(0xFF3B82F6))
+                          : null,
                       boxShadow: isDark
                           ? []
                           : [
@@ -1022,7 +700,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Row(
                       children: [
-                        //ICON SEGUN LA IMAGEN
+                        //ICON SEGÚN LA IMAGEN
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -1034,7 +712,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(width: 15),
 
-                        //DESCRIPCION Y FECHA
+                        //DESCRIPCIÓN Y FECHA
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1052,10 +730,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _formatDate(t.date),
+                                DateFormat("dd/MM/yyyy").format(t.date),
                                 style: TextStyle(
                                     color: Colors.grey[500], fontSize: 12),
                               ),
+                              if (isFuture) ...[
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF3B82F6)
+                                        .withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: const Text(
+                                    "Próximo movimiento",
+                                    style: TextStyle(
+                                      color: Color(0xFF2563EB),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1096,28 +794,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
-            if (filteredMovements.length > 4) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    setState(() => showAllMovements = !showAllMovements);
-                  },
-                  icon: Icon(showAllMovements
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down),
-                  label: Text(showAllMovements
-                      ? "Mostrar menos"
-                      : "Ver todos los movimientos"),
-                ),
-              ),
-            ],
+            ),
           ],
         ),
-      ),
-      bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 4,
       ),
     );
   }
@@ -1125,16 +804,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void showForm({TransactionModel? edit}) async {
     await loadCategories();
     List<CategoryModel> localCategories = List.from(categories);
+    final today = DateTime.now();
+    final selectedInitialDate = edit?.date ?? today;
     final dateController = TextEditingController(
         text: edit != null
-            ? DateFormat("MM/dd/yyyy").format(edit.date)
-            : DateFormat("MM/dd/yyyy").format(DateTime.now()));
+            ? DateFormat("MM/dd/yyyy").format(selectedInitialDate)
+            : DateFormat("MM/dd/yyyy").format(today));
 
     final desc = TextEditingController(text: edit?.description);
-    final amount = TextEditingController(
-        text: edit != null ? formatMoneyInput(edit.amount) : "");
+    final amount =
+        TextEditingController(text: edit != null ? edit.amount.toString() : "");
     String type = edit?.type ?? "gasto";
-    int? selectedCategoryId;
+    int? selectedCategoryId = int.tryParse(edit?.categoryId ?? "");
+    bool allowFutureMovement = edit?.isFutureMovement ?? false;
 
     showModalBottomSheet(
       context: context,
@@ -1142,10 +824,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         bool isLoadingDialog = false;
-        String? amountError;
-        String? categoryError;
-        String? dateError;
-        String? descError;
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
@@ -1189,7 +867,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // TÃTULO
+                          // TÍTULO
                           Center(
                             child: Text(
                               edit == null
@@ -1216,7 +894,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     type,
                                     (v) => setStateDialog(() {
                                           type = v;
-                                          categoryError = null;
                                         }),
                                     isDark),
                                 _buildTypeButton(
@@ -1224,7 +901,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     type,
                                     (v) => setStateDialog(() {
                                           type = v;
-                                          categoryError = null;
                                         }),
                                     isDark),
                               ],
@@ -1254,48 +930,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF064E3B),
                             ),
-                            onChanged: (_) {
-                              if (amountError != null) {
-                                setStateDialog(() => amountError = null);
-                              }
-                            },
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.attach_money,
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.attach_money,
                                   size: 35, color: Color(0xFF064E3B)),
                               hintText: "0.00",
-                              errorText: amountError,
                               border: InputBorder.none,
                             ),
                           ),
 
                           const SizedBox(height: 25),
 
-                          // SELECTOR CATEGORIA
-                          const TranslatedText("Categor­ia",
+                          // SELECTOR CATEGORÍA
+                          const TranslatedText("Categoría",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
 
-                          // 1. Btn para crear nueva
+// 1. Botón para crear nueva
+                          // 1. Botón para crear nueva
                           TextButton(
                             onPressed: () async {
                               String? nueva =
-                                  await _mostrarDialogoNuevaCategoria();
+                                  await _mostrarDialogoCategoriaBonita();
 
                               if (nueva != null && nueva.isNotEmpty) {
                                 // Validación local: Usamos ignoreCase para mayor seguridad
                                 if (localCategories.any((c) =>
                                     c.name.toLowerCase() ==
                                     nueva.toLowerCase())) {
-                                  _showFloatingMessage(
-                                      "Esa categoria ya existe",
-                                      isError: true);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text("Esa categoría ya existe")),
+                                  );
                                   return;
                                 }
 
                                 final auth = context.read<AuthProvider>();
-                                // Asumimos que la API devuelve el objeto creado o al menos confirma el Exito
+                                // Asumimos que la API devuelve el objeto creado o al menos confirma el éxito
                                 bool success = await ApiService.createCategory(
                                     auth.token!, nueva, type);
 
@@ -1314,7 +987,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     if (filtered.isNotEmpty) {
                                       // 3. Intentamos encontrar la que acabamos de crear por nombre
-                                      // (Es mÃ¡s seguro que .last si la lista viene ordenada del servidor)
+                                      // (Es más seguro que .last si la lista viene ordenada del servidor)
                                       final creada = filtered.firstWhere(
                                         (c) =>
                                             c.name.toLowerCase() ==
@@ -1327,11 +1000,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               }
                             },
-                            child: const Text("Agregar categoria",
+                            child: const Text("Agregar categoría",
                                 style: TextStyle(color: Colors.green)),
                           ),
 
-                          // 2. Fila con Dropdown + Editar + Eliminar
+// 2. Fila con Dropdown + Editar + Eliminar
                           Row(
                             children: [
                               Expanded(
@@ -1351,12 +1024,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     isExpanded: true,
                                     underline: const SizedBox(),
                                     icon: const Icon(Icons.keyboard_arrow_down),
-                                    // IMPORTANTE: AsegÃºrate de que filteredCategories se re-calcule
-                                    // antes de este punto en el build del dia logo.
+                                    // IMPORTANTE: Asegúrate de que filteredCategories se re-calcule
+                                    // antes de este punto en el build del diálogo.
                                     items: localCategories
                                         .where((c) =>
                                             c.type ==
-                                            type) // Filtramos aqui­ directamente para evitar desfases
+                                            type) // Filtramos aquí directamente para evitar desfases
                                         .map((cat) {
                                       return DropdownMenuItem<int>(
                                         value: int.parse(cat.id),
@@ -1364,16 +1037,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       );
                                     }).toList(),
                                     onChanged: (v) {
-                                      setStateDialog(() {
-                                        selectedCategoryId = v;
-                                        categoryError = null;
-                                      });
+                                      setStateDialog(
+                                          () => selectedCategoryId = v);
                                     },
                                   ),
                                 ),
                               ),
                               if (selectedCategoryId != null) ...[
-                                // BTN EDITAR
+                                // BOTÓN EDITAR
                                 IconButton(
                                   icon: const Icon(Icons.edit_outlined,
                                       color: Colors.blueAccent),
@@ -1386,7 +1057,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     );
 
                                     String? nuevoNombre =
-                                        await _mostrarDialogoNuevaCategoria(
+                                        await _mostrarDialogoCategoriaBonita(
                                       valorInicial: catActual.name,
                                     );
 
@@ -1406,18 +1077,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                         });
-                                        _showFloatingMessage(
-                                            "Categoria actualizada");
-                                      } else {
-                                        _showFloatingMessage(
-                                          "Error al actualizar la categoria",
-                                          isError: true,
-                                        );
                                       }
                                     }
                                   },
                                 ),
-                                // BTN ELIMINAR
+                                // BOTÓN ELIMINAR
                                 IconButton(
                                   icon: const Icon(Icons.delete_outline,
                                       color: Colors.redAccent),
@@ -1426,9 +1090,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title:
-                                            const Text("¿Eliminar categoria?"),
+                                            const Text("¿Eliminar categoría?"),
                                         content: const Text(
-                                            "Esta accion no se puede deshacer."),
+                                            "Esta acción no se puede deshacer."),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
@@ -1459,14 +1123,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                           selectedCategoryId =
-                                              null; // Reset de selecciÃ³n
+                                              null; // Reset de selección
                                         });
-                                        _showFloatingMessage(
-                                            "Categoria eliminada con exito");
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  "Categoría eliminada con éxito")),
+                                        );
                                       } else {
-                                        _showFloatingMessage(
-                                            "Error al eliminar la categoria",
-                                            isError: true);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  "Error al eliminar la categoría")),
+                                        );
                                       }
                                     }
                                   },
@@ -1474,18 +1145,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ],
                           ),
-                          if (categoryError != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              categoryError!,
-                              style: const TextStyle(
-                                  color: Colors.redAccent, fontSize: 12),
-                            ),
-                          ],
 
                           const SizedBox(height: 25),
 
                           //AQUÍ REGRESA LA FECHA
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            activeColor: const Color(0xFF10B981),
+                            title: Text(
+                              type == "ingreso"
+                                  ? "Ingresos futuros"
+                                  : "Gastos futuros",
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              type == "ingreso"
+                                  ? "Activalo para planificar dinero que entrara despues."
+                                  : "Activalo para registrar pagos o compras proximas.",
+                            ),
+                            value: allowFutureMovement,
+                            onChanged: (value) {
+                              setStateDialog(() {
+                                allowFutureMovement = value;
+                                final parsed = DateFormat("MM/dd/yyyy")
+                                    .tryParse(dateController.text);
+                                final todayOnly = DateTime(
+                                  today.year,
+                                  today.month,
+                                  today.day,
+                                );
+                                if (!value &&
+                                    parsed != null &&
+                                    parsed.isAfter(todayOnly)) {
+                                  dateController.text =
+                                      DateFormat("MM/dd/yyyy").format(today);
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 10),
                           const TranslatedText("Fecha",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1493,21 +1192,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           InkWell(
                             onTap: () async {
+                              final parsedDate = DateFormat("MM/dd/yyyy")
+                                  .tryParse(dateController.text);
+                              final maxDate = allowFutureMovement
+                                  ? DateTime(2101)
+                                  : DateTime(
+                                      today.year,
+                                      today.month,
+                                      today.day,
+                                    );
+                              final safeInitialDate = (parsedDate != null &&
+                                      !parsedDate.isAfter(maxDate))
+                                  ? parsedDate
+                                  : maxDate;
                               DateTime? picked = await showDatePicker(
                                 context: context,
-                                initialDate: edit != null &&
-                                        dateController.text.isNotEmpty
-                                    ? (DateFormat("MM/dd/yyyy")
-                                            .tryParse(dateController.text) ??
-                                        DateTime.now())
-                                    : DateTime.now(),
+                                initialDate: safeInitialDate,
                                 firstDate: DateTime(2000),
-                                lastDate: DateTime(2101),
+                                lastDate: maxDate,
                               );
                               if (picked != null) {
                                 setStateDialog(() => dateController.text =
                                     DateFormat("MM/dd/yyyy").format(picked));
-                                setStateDialog(() => dateError = null);
                               }
                             },
                             child: Container(
@@ -1516,11 +1222,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color:
                                     isDark ? Colors.black12 : Colors.grey[50],
                                 borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: dateError == null
-                                      ? Colors.grey[200]!
-                                      : Colors.redAccent,
-                                ),
+                                border: Border.all(color: Colors.grey[200]!),
                               ),
                               child: Row(
                                 children: [
@@ -1532,14 +1234,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ),
-                          if (dateError != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              dateError!,
-                              style: const TextStyle(
-                                  color: Colors.redAccent, fontSize: 12),
-                            ),
-                          ],
 
                           const SizedBox(height: 25),
 
@@ -1551,14 +1245,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: desc,
-                            onChanged: (_) {
-                              if (descError != null) {
-                                setStateDialog(() => descError = null);
-                              }
-                            },
                             decoration: InputDecoration(
                               hintText: "Escribe una nota...",
-                              errorText: descError,
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
@@ -1575,9 +1263,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 35),
-                          // BTN GUARDAR
+                          // BOTÓN GUARDAR
 
-                          //(SizedBox despues del TextField de Notas)
+                          //(SizedBox después del TextField de Notas)
                           const SizedBox(height: 30),
 
                           SizedBox(
@@ -1598,41 +1286,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
                                           double.tryParse(cleanText) ?? 0.0;
-                                      DateTime? fechaFinal =
+                                      DateTime fechaFinal =
                                           DateFormat("MM/dd/yyyy")
-                                              .tryParse(dateController.text);
-
-                                      setStateDialog(() {
-                                        amountError = montoFinal <= 0
-                                            ? "Ingresa un monto mayor a 0"
-                                            : null;
-                                        categoryError =
-                                            selectedCategoryId == null
-                                                ? "Selecciona una categoria"
-                                                : null;
-                                        dateError = fechaFinal == null
-                                            ? "Selecciona una fecha"
-                                            : null;
-                                        descError = desc.text.trim().isEmpty
-                                            ? "Escribe una descripcion"
-                                            : null;
-                                      });
-
-                                      if (amountError != null ||
-                                          categoryError != null ||
-                                          dateError != null ||
-                                          descError != null) {
-                                        _showFloatingMessage(
-                                          "Completa los campos obligatorios",
-                                          isError: true,
+                                              .parse(dateController.text);
+                                      if (selectedCategoryId == null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  "Selecciona una categoría")),
                                         );
                                         return;
                                       }
 
                                       int categoryId = selectedCategoryId!;
-                                      final transactionDate = edit == null
-                                          ? _dateWithCurrentTime(fechaFinal!)
-                                          : fechaFinal!;
+
+                                      if (montoFinal <= 0) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: TranslatedText(
+                                                  "Por favor ingresa un monto válido")),
+                                        );
+                                        return;
+                                      }
+
+                                      if (desc.text.trim().isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: TranslatedText(
+                                                  "Por favor ingresa una descripción")),
+                                        );
+                                        return;
+                                      }
 
                                       setStateDialog(
                                           () => isLoadingDialog = true);
@@ -1649,16 +1336,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          transactionDate,
+                                          fechaFinal,
                                         );
                                         if (type == "ingreso") {
-                                          await context
+                                          context
                                               .read<AuthProvider>()
                                               .actualizarMetasConIngreso(
                                                   montoFinal);
                                         }
                                       } else {
-                                        // ES EDICION
+                                        // ES EDICIÓN
                                         success =
                                             await ApiService.updateTransaction(
                                           auth.token!,
@@ -1667,7 +1354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           montoFinal,
                                           desc.text,
                                           categoryId,
-                                          transactionDate,
+                                          fechaFinal,
                                         );
                                       }
 
@@ -1680,8 +1367,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           SnackBar(
                                               content: Text(edit == null
-                                                  ? "Creado con Exito"
-                                                  : "Actualizado con Exito")),
+                                                  ? "Creado con éxito"
+                                                  : "Actualizado con éxito")),
                                         );
                                       } else {
                                         setStateDialog(
@@ -1779,7 +1466,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text("Se eliminará '${t.description}'"),
                   const SizedBox(height: 8),
-                  Text("Monto: ${formatCurrency(t.amount)}",
+                  Text("Monto: \$${t.amount.toStringAsFixed(2)}",
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.redAccent)),
@@ -1800,29 +1487,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: isDeleting
                       ? null
                       : () async {
-                          // 1. Activar el estado de carga (el circulito)
-                          setStateDialog(() => isDeleting = true);
-
-                          // 2. Llamar a la API para borrar
-                          final auth = context.read<AuthProvider>();
-                          bool success = await ApiService.deleteTransaction(
-                            auth.token!,
-                            t.id!,
-                          );
-
-                          if (!context.mounted) return;
-
-                          // 3. Acciones tras la respuesta del servidor
-                          if (success) {
-                            Navigator.pop(context); // Cierra la alerta
-                            loadTransactions(); // Recarga la lista en pantalla
-                            _showFloatingMessage("Movimiento eliminado");
-                          } else {
-                            setStateDialog(
-                                () => isDeleting = false); // Quita el circulito
-                            _showFloatingMessage("Error al eliminar",
-                                isError: true);
-                          }
+                          // ... tu lógica de borrado que ya tienes ...
                         },
                   child: isDeleting
                       ? const SizedBox(
@@ -1847,7 +1512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const TranslatedText("Nueva categoria"),
+        title: const TranslatedText("Nueva categoría"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -1870,7 +1535,170 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Constructor de items para el menu
+  Future<String?> _mostrarDialogoCategoriaBonita({String? valorInicial}) async {
+    final controller = TextEditingController(text: valorInicial ?? '');
+    bool showError = false;
+
+    return showDialog<String>(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final hasError = showError && controller.text.trim().isEmpty;
+
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 22),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+            child: Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF10231E) : Colors.white,
+                borderRadius: BorderRadius.circular(26),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.category_rounded,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          valorInicial == null
+                              ? "Nueva categoria"
+                              : "Editar categoria",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Organiza tus movimientos con nombres claros y faciles de reconocer.",
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : Colors.black54,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (_) => setStateDialog(() {}),
+                    decoration: InputDecoration(
+                      labelText: "Nombre de categoria",
+                      hintText: "Ej: Transporte, Comida, Nomina",
+                      prefixIcon: const Icon(
+                        Icons.label_outline_rounded,
+                        color: Color(0xFF10B981),
+                      ),
+                      filled: true,
+                      fillColor:
+                          isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: hasError
+                              ? Colors.redAccent
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: hasError
+                              ? Colors.redAccent
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: hasError
+                              ? Colors.redAccent
+                              : const Color(0xFF10B981),
+                          width: 1.6,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (hasError) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Este campo es obligatorio.",
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          child: const Text("Cancelar"),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setStateDialog(() => showError = true);
+                            if (controller.text.trim().isEmpty) return;
+                            Navigator.pop(context, controller.text.trim());
+                          },
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            minimumSize: const Size.fromHeight(50),
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          child: const Text(
+                            "Guardar",
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Constructor de items para el menú
   Widget _buildDrawerItem(
       {required IconData icon,
       required String title,
@@ -1939,92 +1767,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _downloadMovementsPdf() async {
-    if (transactions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No hay movimientos para exportar")),
-      );
-      return;
-    }
-
-    final pdf = pw.Document();
-    final generatedAt = DateFormat("dd/MM/yyyy HH:mm").format(DateTime.now());
-
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(28),
-        build: (context) => [
-          pw.Text(
-            "Movimientos Finara",
-            style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
-          ),
-          pw.SizedBox(height: 6),
-          pw.Text("Usuario: ${name.isEmpty ? 'Sin nombre' : name}"),
-          pw.Text("Email: ${email.isEmpty ? 'Sin email' : email}"),
-          pw.Text("Generado: $generatedAt"),
-          pw.SizedBox(height: 16),
-          pw.Table.fromTextArray(
-            headers: ["Tipo", "Categoria", "Descripcion", "Monto"],
-            data: transactions.map((t) {
-              final categoryName =
-                  getCategoryName(int.tryParse(t.categoryId) ?? 0);
-              return [
-                t.type,
-                categoryName,
-                t.description,
-                formatCurrency(t.amount),
-              ];
-            }).toList(),
-            headerStyle: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.white,
-            ),
-            headerDecoration: const pw.BoxDecoration(
-              color: PdfColor.fromInt(0xFF064E3B),
-            ),
-            cellAlignment: pw.Alignment.centerLeft,
-            cellStyle: const pw.TextStyle(fontSize: 10),
-            columnWidths: {
-              0: const pw.FixedColumnWidth(60),
-              1: const pw.FlexColumnWidth(),
-              2: const pw.FlexColumnWidth(),
-              3: const pw.FixedColumnWidth(85),
-            },
-          ),
-          pw.SizedBox(height: 16),
-          pw.Align(
-            alignment: pw.Alignment.centerRight,
-            child: pw.Text(
-              "Balance total: ${formatCurrency(getBalance())}",
-              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    await Printing.sharePdf(
-      bytes: await pdf.save(),
-      filename: "movimientos_finara.pdf",
-    );
-  }
-
   Future<void> _pickImage() async {
     final auth = context.read<AuthProvider>(); // Obtenemos el token
-    if (auth.token == null || auth.token!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Inicia sesion nuevamente")),
-      );
-      return;
-    }
-
     final ImagePicker picker = ImagePicker();
 
     // 1. Seleccionar la imagen
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 50, // Comprimimos un poco para que suba mas rapido
+      imageQuality: 50, // Comprimimos un poco para que suba más rápido
     );
 
     if (image == null) return;
@@ -2035,7 +1785,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-    bool loadingDialogOpen = true;
 
     try {
       var request = http.MultipartRequest(
@@ -2059,33 +1808,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      // Quitar el ci­rculo de carga
-      if (!mounted) return;
-
-      if (loadingDialogOpen) {
-        Navigator.pop(context);
-        loadingDialogOpen = false;
-      }
+      // Quitar el círculo de carga
+      if (mounted) Navigator.pop(context);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
 
         setState(() {
-          profileImageUrl = data['url'];
+          // El timestamp ?v= es un truco excelente para refrescar la imagen
+          profileImageUrl =
+              "${data['url']}?v=${DateTime.now().millisecondsSinceEpoch}";
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Foto de perfil actualizada")),
+          const SnackBar(content: Text("Foto de perfil actualizada ✅")),
         );
       } else {
         throw "Error del servidor: ${response.statusCode}";
       }
     } catch (e) {
-      if (!mounted) return;
-
-      if (loadingDialogOpen) {
-        Navigator.pop(context);
-      }
+      if (mounted) Navigator.pop(context); // Quitar carga si hay error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error al subir imagen: $e")),
       );
@@ -2098,170 +1840,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return formatter.format(amount);
   }
 
-  String formatMoneyInput(double amount) {
-    return NumberFormat("#,##0.00", "en_US").format(amount);
-  }
-
-  double _parseAmount(String value) {
-    final normalized = value.replaceAll(RegExp(r'[^0-9.]'), '').trim();
-    return double.tryParse(normalized) ?? 0;
-  }
-
-  String _formatDate(DateTime date) {
-    if (date.year == 2026 && date.month == 4 && date.day == 14) {
-      return DateFormat("dd/MM/yyyy").format(DateTime.now());
-    }
-    return DateFormat("dd/MM/yyyy").format(date.toLocal());
-  }
-
-  String _formatDateTime(DateTime date) {
-    return DateFormat("dd/MM/yyyy - h:mm a").format(date.toLocal());
-  }
-
-  void _agregarDineroMeta(int index) {
-    final meta = context.read<AuthProvider>().metas[index];
-    final montoController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F2A25) : Colors.white,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(30)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 52,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white24 : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF064E3B), Color(0xFF10B981)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.add_circle_outline_rounded,
-                              color: Colors.white),
-                          SizedBox(width: 10),
-                          Text(
-                            "Añadir dinero",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        meta.nombre,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _metaTextField(
-                  controller: montoController,
-                  label: "Monto a añadir",
-                  hint: "0.00",
-                  icon: Icons.attach_money_rounded,
-                  isDark: isDark,
-                  keyboardType: TextInputType.number,
-                  prefixText: "\$ ",
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    CurrencyInputFormatter(),
-                  ],
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    onPressed: () async {
-                      final monto = _parseAmount(montoController.text);
-                      if (monto <= 0) {
-                        _showFloatingMessage(
-                          "Ingresa un monto mayor a 0",
-                          isError: true,
-                        );
-                        return;
-                      }
-
-                      await context
-                          .read<AuthProvider>()
-                          .agregarDineroMeta(index, monto);
-
-                      if (!mounted) return;
-                      Navigator.pop(context);
-                      _showFloatingMessage("Dinero añadido a la meta");
-                    },
-                    icon: const Icon(Icons.savings_rounded),
-                    label: const Text(
-                      "Añadir a meta",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   void _crearMeta() {
     TextEditingController nombre = TextEditingController();
     TextEditingController montoMeta = TextEditingController();
-    TextEditingController montoActual = TextEditingController();
     TextEditingController ahorroMensual = TextEditingController();
-    String? metaImageData;
+    bool showValidationErrors = false;
 
     showModalBottomSheet(
       context: context,
@@ -2271,6 +1854,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
+            OutlineInputBorder metaBorder(bool hasError) => OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(
+                    color: hasError ? Colors.redAccent : Colors.grey[200]!,
+                    width: hasError ? 1.6 : 1,
+                  ),
+                );
+            final nombreError =
+                showValidationErrors && nombre.text.trim().isEmpty;
+            final montoError =
+                showValidationErrors && montoMeta.text.trim().isEmpty;
+            final ahorroError =
+                showValidationErrors && ahorroMensual.text.trim().isEmpty;
 
             return Container(
               height: MediaQuery.of(context).size.height * 0.75,
@@ -2304,7 +1900,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          //TITULO
+                          //TÍTULO
                           const Center(
                             child: Text(
                               "Nueva meta de ahorro",
@@ -2318,40 +1914,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 30),
 
-                          Center(
-                            child: Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 38,
-                                  backgroundColor:
-                                      const Color(0xFF10B981).withOpacity(0.15),
-                                  backgroundImage:
-                                      _memoryImageFromData(metaImageData),
-                                  child: metaImageData == null
-                                      ? const Icon(
-                                          Icons.image_outlined,
-                                          color: Color(0xFF10B981),
-                                          size: 30,
-                                        )
-                                      : null,
-                                ),
-                                TextButton.icon(
-                                  onPressed: () async {
-                                    final imageData =
-                                        await _pickMetaImageData();
-                                    if (imageData == null) return;
-                                    setStateDialog(
-                                        () => metaImageData = imageData);
-                                  },
-                                  icon: const Icon(Icons.add_photo_alternate),
-                                  label: const Text("Foto opcional"),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
                           //NOMBRE
                           const Text(
                             "Nombre",
@@ -2362,48 +1924,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: nombre,
+                            onChanged: (_) => setStateDialog(() {}),
                             decoration: InputDecoration(
                               hintText: "Ej: Viaje, Moto, Laptop...",
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          const Text(
-                            "Monto actual",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: montoActual,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(),
-                            ],
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.trending_up,
-                                  color: Color(0xFF064E3B)),
-                              prefixText: "\$ ",
-                              hintText: "0.00",
-                              filled: true,
-                              fillColor:
-                                  isDark ? Colors.black12 : Colors.grey[50],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
-                              ),
+                              border: metaBorder(nombreError),
+                              enabledBorder: metaBorder(nombreError),
+                              focusedBorder: metaBorder(nombreError),
                             ),
                           ),
 
@@ -2419,24 +1948,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: montoMeta,
+                            onChanged: (_) => setStateDialog(() {}),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(),
-                            ],
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.attach_money,
                                   color: Color(0xFF064E3B)),
-                              prefixText: "\$ ",
                               hintText: "0.00",
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
-                              ),
+                              border: metaBorder(montoError),
+                              enabledBorder: metaBorder(montoError),
+                              focusedBorder: metaBorder(montoError),
                             ),
                           ),
 
@@ -2452,24 +1975,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: ahorroMensual,
+                            onChanged: (_) => setStateDialog(() {}),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(),
-                            ],
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.savings,
                                   color: Color(0xFF064E3B)),
-                              prefixText: "\$ ",
-                              hintText: "Opcional",
+                              hintText: "0.00",
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
-                              ),
+                              border: metaBorder(ahorroError),
+                              enabledBorder: metaBorder(ahorroError),
+                              focusedBorder: metaBorder(ahorroError),
                             ),
                           ),
 
@@ -2486,9 +2003,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15)),
                               ),
-                              onPressed: () async {
-                                if (nombre.text.isEmpty ||
-                                    montoMeta.text.isEmpty) {
+                              onPressed: () {
+                                setStateDialog(
+                                    () => showValidationErrors = true);
+                                if (nombre.text.trim().isEmpty ||
+                                    montoMeta.text.trim().isEmpty ||
+                                    ahorroMensual.text.trim().isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                         content: Text(
@@ -2496,26 +2016,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   );
                                   return;
                                 }
-                                final objetivo = _parseAmount(montoMeta.text);
-                                if (objetivo <= 0) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            "El monto objetivo debe ser mayor a 0")),
-                                  );
-                                  return;
-                                }
-                                await context.read<AuthProvider>().addMeta(
+
+                                context.read<AuthProvider>().addMeta(
                                       MetaAhorro(
                                         nombre: nombre.text,
-                                        montoMeta: objetivo,
-                                        montoActual:
-                                            _parseAmount(montoActual.text),
-                                        ahorroMensual:
-                                            _parseAmount(ahorroMensual.text),
-                                        imageData: metaImageData,
+                                        montoMeta: double.parse(montoMeta.text),
+                                        ahorroMensual: double.tryParse(
+                                                ahorroMensual.text) ??
+                                            0,
                                       ),
                                     );
+
                                 Navigator.pop(context);
                               },
                               child: const Text(
@@ -2540,18 +2051,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+// 👇 AQUÍ PEGAS ESTAS
   void _editarMeta(int index) {
     final metas = context.read<AuthProvider>().metas;
     final meta = metas[index];
 
     TextEditingController nombre = TextEditingController(text: meta.nombre);
     TextEditingController montoMeta =
-        TextEditingController(text: formatCurrency(meta.montoMeta));
-    TextEditingController montoActual =
-        TextEditingController(text: formatCurrency(meta.montoActual));
+        TextEditingController(text: meta.montoMeta.toString());
     TextEditingController ahorroMensual =
-        TextEditingController(text: formatCurrency(meta.ahorroMensual));
-    String? metaImageData = meta.imageData;
+        TextEditingController(text: meta.ahorroMensual.toString());
+    bool showValidationErrors = false;
 
     showModalBottomSheet(
       context: context,
@@ -2561,236 +2071,111 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
-            final objetivoPreview = _parseAmount(montoMeta.text);
-            final actualPreview = _parseAmount(montoActual.text);
-            final previewProgress = objetivoPreview <= 0
-                ? 0.0
-                : (actualPreview / objetivoPreview).clamp(0.0, 1.0);
+            OutlineInputBorder metaBorder(bool hasError) => OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(
+                    color: hasError ? Colors.redAccent : Colors.grey[300]!,
+                    width: hasError ? 1.6 : 1,
+                  ),
+                );
+            final nombreError =
+                showValidationErrors && nombre.text.trim().isEmpty;
+            final montoError =
+                showValidationErrors && montoMeta.text.trim().isEmpty;
+            final ahorroError =
+                showValidationErrors && ahorroMensual.text.trim().isEmpty;
 
             return Container(
-              height: MediaQuery.of(context).size.height * 0.82,
+              height: MediaQuery.of(context).size.height * 0.75,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F2A25) : Colors.white,
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(30)),
               ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 52,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white24 : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.only(
-                        left: 24,
-                        right: 24,
-                        top: 20,
-                        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF064E3B),
-                                  Color(0xFF10B981),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Row(
-                                  children: [
-                                    Icon(Icons.savings_rounded,
-                                        color: Colors.white),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      "Actualizar meta",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 18),
-                                LinearProgressIndicator(
-                                  value: previewProgress,
-                                  minHeight: 8,
-                                  backgroundColor: Colors.white24,
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(99),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  "${(previewProgress * 100).toStringAsFixed(1)}% completado",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 22),
-                          Center(
-                            child: Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 38,
-                                  backgroundColor:
-                                      const Color(0xFF10B981).withOpacity(0.15),
-                                  backgroundImage:
-                                      _memoryImageFromData(metaImageData),
-                                  child: metaImageData == null
-                                      ? const Icon(
-                                          Icons.image_outlined,
-                                          color: Color(0xFF10B981),
-                                          size: 30,
-                                        )
-                                      : null,
-                                ),
-                                TextButton.icon(
-                                  onPressed: () async {
-                                    final imageData =
-                                        await _pickMetaImageData();
-                                    if (imageData == null) return;
-                                    setStateDialog(
-                                        () => metaImageData = imageData);
-                                  },
-                                  icon: const Icon(Icons.add_photo_alternate),
-                                  label: Text(metaImageData == null
-                                      ? "Foto opcional"
-                                      : "Cambiar foto"),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _metaTextField(
-                            controller: nombre,
-                            label: "Nombre",
-                            hint: "Ej: Viaje, Moto, Laptop...",
-                            icon: Icons.flag_rounded,
-                            isDark: isDark,
-                            onChanged: (_) => setStateDialog(() {}),
-                          ),
-                          const SizedBox(height: 16),
-                          _metaTextField(
-                            controller: montoMeta,
-                            label: "Monto objetivo",
-                            hint: "0.00",
-                            icon: Icons.track_changes_rounded,
-                            isDark: isDark,
-                            keyboardType: TextInputType.number,
-                            prefixText: "\$ ",
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(),
-                            ],
-                            onChanged: (_) => setStateDialog(() {}),
-                          ),
-                          const SizedBox(height: 16),
-                          _metaTextField(
-                            controller: montoActual,
-                            label: "Monto actual",
-                            hint: "0.00",
-                            icon: Icons.trending_up_rounded,
-                            isDark: isDark,
-                            keyboardType: TextInputType.number,
-                            prefixText: "\$ ",
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(),
-                            ],
-                            onChanged: (_) => setStateDialog(() {}),
-                          ),
-                          const SizedBox(height: 16),
-                          _metaTextField(
-                            controller: ahorroMensual,
-                            label: "Ahorro mensual",
-                            hint: "Opcional",
-                            icon: Icons.calendar_month_rounded,
-                            isDark: isDark,
-                            keyboardType: TextInputType.number,
-                            prefixText: "\$ ",
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(),
-                            ],
-                          ),
-                          const SizedBox(height: 18),
-                          _metaAportesList(meta, isDark),
-                          const SizedBox(height: 26),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 54,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF10B981),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              onPressed: () async {
-                                final objetivo = _parseAmount(montoMeta.text);
-                                if (nombre.text.trim().isEmpty ||
-                                    objetivo <= 0) {
-                                  _showFloatingMessage(
-                                    "Completa nombre y monto objetivo",
-                                    isError: true,
-                                  );
-                                  return;
-                                }
-
-                                await context.read<AuthProvider>().editarMeta(
-                                      index,
-                                      MetaAhorro(
-                                        nombre: nombre.text.trim(),
-                                        montoMeta: objetivo,
-                                        montoActual:
-                                            _parseAmount(montoActual.text),
-                                        ahorroMensual:
-                                            _parseAmount(ahorroMensual.text),
-                                        aportes: meta.aportes,
-                                        imageData: metaImageData,
-                                      ),
-                                    );
-
-                                if (!mounted) return;
-                                Navigator.pop(context);
-                                _showFloatingMessage("Meta actualizada");
-                              },
-                              icon: const Icon(Icons.save_rounded),
-                              label: const Text(
-                                "Guardar cambios",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  left: 25,
+                  right: 25,
+                  top: 20,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                ),
+                child: Column(
+                  children: [
+                    const Text("Editar Meta",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF064E3B))),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: nombre,
+                      onChanged: (_) => setStateDialog(() {}),
+                      decoration: InputDecoration(
+                        labelText: "Nombre",
+                        filled: true,
+                        fillColor: isDark ? Colors.black12 : Colors.grey[50],
+                        border: metaBorder(nombreError),
+                        enabledBorder: metaBorder(nombreError),
+                        focusedBorder: metaBorder(nombreError),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: montoMeta,
+                      onChanged: (_) => setStateDialog(() {}),
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: "Monto objetivo",
+                        filled: true,
+                        fillColor: isDark ? Colors.black12 : Colors.grey[50],
+                        border: metaBorder(montoError),
+                        enabledBorder: metaBorder(montoError),
+                        focusedBorder: metaBorder(montoError),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: ahorroMensual,
+                      onChanged: (_) => setStateDialog(() {}),
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: "Ahorro mensual",
+                        filled: true,
+                        fillColor: isDark ? Colors.black12 : Colors.grey[50],
+                        border: metaBorder(ahorroError),
+                        enabledBorder: metaBorder(ahorroError),
+                        focusedBorder: metaBorder(ahorroError),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        setStateDialog(() => showValidationErrors = true);
+                        if (nombre.text.trim().isEmpty ||
+                            montoMeta.text.trim().isEmpty ||
+                            ahorroMensual.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Completa los campos obligatorios"),
+                            ),
+                          );
+                          return;
+                        }
+                        context.read<AuthProvider>().editarMeta(
+                              index,
+                              MetaAhorro(
+                                nombre: nombre.text,
+                                montoMeta: double.parse(montoMeta.text),
+                                ahorroMensual: double.parse(ahorroMensual.text),
+                              ),
+                            );
+
+                        Navigator.pop(context);
+                      },
+                      child: const Text("Guardar"),
+                    )
+                  ],
+                ),
               ),
             );
           },
@@ -2799,151 +2184,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _metaAportesList(MetaAhorro meta, bool isDark) {
-    final aportes = meta.aportes.take(5).toList();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF10231F) : const Color(0xFFF7FAF8),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.receipt_long_rounded,
-                  color: Color(0xFF10B981), size: 20),
-              const SizedBox(width: 8),
-              Text(
-                "Añadidos recientes",
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (aportes.isEmpty)
-            Text(
-              "Aun no has añadido dinero manualmente.",
-              style: TextStyle(
-                color: isDark ? Colors.white60 : Colors.grey[600],
-                fontSize: 12,
-              ),
-            )
-          else
-            ...aportes.map(
-              (aporte) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _formatDateTime(aporte.fecha),
-                        style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.grey[700],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      "+ ${formatCurrency(aporte.monto)}",
-                      style: const TextStyle(
-                        color: Color(0xFF10B981),
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _metaTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    required bool isDark,
-    TextInputType keyboardType = TextInputType.text,
-    String? prefixText,
-    List<TextInputFormatter>? inputFormatters,
-    ValueChanged<String>? onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isDark ? Colors.white70 : Colors.grey[700],
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          onChanged: onChanged,
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: const Color(0xFF10B981)),
-            prefixText: prefixText,
-            hintText: hint,
-            filled: true,
-            fillColor: isDark ? const Color(0xFF10231F) : Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                color: isDark ? Colors.white10 : Colors.grey[300]!,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   void _eliminarMeta(int index) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Eliminar meta"),
-        content: const Text("Â¿Seguro?"),
+        content: const Text("¿Seguro?"),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancelar")),
           TextButton(
-            onPressed: () async {
-              await context.read<AuthProvider>().eliminarMeta(index);
+            onPressed: () {
+              context.read<AuthProvider>().eliminarMeta(index);
               Navigator.pop(context);
             },
             child: const Text("Eliminar", style: TextStyle(color: Colors.red)),

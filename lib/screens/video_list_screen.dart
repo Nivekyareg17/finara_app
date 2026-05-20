@@ -2,7 +2,6 @@ import 'package:finara_app_v1/screens/video_webView_Screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/translate_widget.dart';
-import '../widgets/custom_bottom_nav.dart';
 
 
 class VideoListScreen extends StatefulWidget {
@@ -148,9 +147,6 @@ class _VideoListScreenState extends State<VideoListScreen> {
                 );
               },
             ),
-      bottomNavigationBar: const CustomBottomNav(
-        selectedIndex: 3,
-      ),
     );
   }
 }

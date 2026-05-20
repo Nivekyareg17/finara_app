@@ -1,4 +1,5 @@
 class TransactionModel {
+  
   int? id;
   String type;
   double amount;
@@ -21,6 +22,13 @@ class TransactionModel {
     this.imagePath,
   });
 
+  bool get isFutureMovement {
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    final movementDate = DateTime(date.year, date.month, date.day);
+    return movementDate.isAfter(todayOnly);
+  }
+
   Map<String, dynamic> toMap() => {
         "id": id,
         "type": type,
@@ -32,33 +40,27 @@ class TransactionModel {
         "imagePath": imagePath,
       };
 
-  static DateTime _parseDate(Map<String, dynamic> map) {
-    final raw = map["date"] ?? map["created_at"] ?? map["timestamp"];
-    final parsed =
-        raw == null ? null : DateTime.tryParse(raw.toString());
+ factory TransactionModel.fromMap(Map<String, dynamic> map) {
+  return TransactionModel(
+    id: map["id"] ?? 0,
+    type: map["type"] ?? "",
+    amount: (map["amount"] as num?)?.toDouble() ?? 0.0,
+    description: map["description"] ?? "",
 
-    if (parsed == null) return DateTime.now();
+    categoryId:
+        (map["category_id"] ?? map["categoryId"] ?? 0).toString(),
 
-    if (parsed.year == 2026 && parsed.month == 4 && parsed.day == 14) {
-      return DateTime.now();
-    }
+    categoryName:
+        map["category_name"] ??
+        map["categoryName"] ??
+        map["category"] ??
+        "General",
 
-    return parsed;
-  }
+   date: map["date"] != null
+    ? (DateTime.tryParse(map["date"].toString()) ?? DateTime.now())
+    : DateTime.now(),
 
-  factory TransactionModel.fromMap(Map<String, dynamic> map) {
-    return TransactionModel(
-      id: map["id"] ?? 0,
-      type: map["type"] ?? "",
-      amount: (map["amount"] as num?)?.toDouble() ?? 0.0,
-      description: map["description"] ?? "",
-      categoryId: (map["category_id"] ?? map["categoryId"] ?? 0).toString(),
-      categoryName: map["category_name"] ??
-          map["categoryName"] ??
-          map["category"] ??
-          "General",
-      date: _parseDate(map),
-      imagePath: map["imagePath"]?.toString(),
-    );
-  }
+    imagePath: map["imagePath"]?.toString(),
+  );
+}
 }
