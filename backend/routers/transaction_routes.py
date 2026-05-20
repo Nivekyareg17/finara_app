@@ -17,13 +17,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def ensure_transaction_date_column():
-    with engine.begin() as connection:
-        connection.execute(
-            text(
-                "ALTER TABLE transactions "
-                "ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    try:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE transactions "
+                    "ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                )
             )
-        )
+    except Exception as exc:
+        print(f"Could not ensure transactions.date column: {exc}")
 
 
 def serialize_transaction_row(row):
@@ -91,6 +94,9 @@ def get_transactions(
     ensure_transaction_date_column()
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     try:
         transactions = db.query(Transaction).filter(

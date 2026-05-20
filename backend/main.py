@@ -35,6 +35,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def force_cors_headers(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return JSONResponse(
+            status_code=200,
+            content={},
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+            },
+        )
+
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        print(f"Unhandled error on {request.url.path}: {exc}")
+        response = JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
+
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 os.makedirs("static/profile_pics", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
