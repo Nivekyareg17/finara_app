@@ -256,16 +256,16 @@ class _AIChatPageState extends State<AIChatPage> {
 
     bool success = false;
     
-    if (_editingNoteId == null) {
-      success = await _noteService.createNote(note);
-    } else {
-      success = await _noteService.updateNote(note);
-    }
+    // if (_editingNoteId == null) {
+    //   success = await _noteService.createNote(note);
+    // } else {
+    //   success = await _noteService.updateNote(note);
+    // }
 
-    if (success && mounted) {
-      Navigator.pop(context);
-      setState(() {});
-    }
+    // if (success && mounted) {
+    //   Navigator.pop(context);
+    //   setState(() {});
+    // }
   }
 
   void _confirmarEliminar(int id) {
@@ -310,20 +310,20 @@ class _AIChatPageState extends State<AIChatPage> {
     _chatController.clear();
 
 
-    final response = await _aiService.sendMessageToDaiko(
-      prompt: userMsg.text, 
-      token: authProvider.token!, 
-      history: _messages, 
-      sessionId: _currentSessionId,
-      tool: _selectedTool.toLowerCase(),
-    );
+    // final response = await _aiService.sendMessageToDaiko(
+    //   prompt: userMsg.text, 
+    //   token: authProvider.token!, 
+    //   history: _messages, 
+    //   sessionId: _currentSessionId,
+    //   tool: _selectedTool.toLowerCase(),
+    // );
 
-    if (mounted) {
-      setState(() { 
-        _messages.insert(0, response); 
-        _isLoading = false; 
-      });
-    }
+    // if (mounted) {
+    //   setState(() { 
+    //     _messages.insert(0, response); 
+    //     _isLoading = false; 
+    //   });
+    // }
   }
   
   @override
