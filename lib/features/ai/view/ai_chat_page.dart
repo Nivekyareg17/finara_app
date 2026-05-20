@@ -30,16 +30,15 @@ class _AIChatPageState extends State<AIChatPage> {
   bool _isLoading = false;
   String _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
 
-  // Herramienta seleccionada para el selector de la UI
+ 
   String _selectedTool = "Rápido";
 
-  // Controladores Profesionales para Notas
   final TextEditingController _noteTitleController = TextEditingController();
   late RichTextController _noteContentController; // Controlador para Mini Word
   final TextEditingController _searchController = TextEditingController();
   int? _editingNoteId; 
 
-  // Lógica de Categorías y Filtros
+
   final List<String> _categoriasPredeterminadas = ["Ahorros", "Inversiones", "Desarrollo", "Gastos", "Ideas", "General"];
   String _categoriaSeleccionada = "General";
   String _filtroCategoria = "Todas";
@@ -55,7 +54,7 @@ class _AIChatPageState extends State<AIChatPage> {
   }
   // FIN DE VARIABLES DE ESTADO Y CONTROLADORES
 
-  // --- LÓGICA DE FORMATO POR SELECCIÓN (MINI WORD) ---
+  // --- LÓGICA DE FORMATO POR SELECCIÓN---
   void _aplicarFormato(String marcador) {
     final text = _noteContentController.text;
     final selection = _noteContentController.selection;
@@ -175,7 +174,7 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  // --- EDITOR PROFESIONAL (CREAR/EDITAR) ---
+  // --- EDITOR PROFESIONAL ---
   void _abrirEditorNota([Note? nota]) {
     if (nota != null) {
       _editingNoteId = nota.id;
@@ -200,7 +199,7 @@ class _AIChatPageState extends State<AIChatPage> {
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 20, right: 20, top: 20),
           child: Column(
             children: [
-              // TOOLBAR MINI WORD
+             
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
