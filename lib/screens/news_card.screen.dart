@@ -1,4 +1,5 @@
 import 'package:finara_app_v1/services/news_services.dart';
+import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import '../../models/news_model.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -50,6 +51,7 @@ class NewsScreen extends StatelessWidget {
     final newsService = NewsService();
 
     return Scaffold(
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 1),
       appBar: AppBar(
         elevation: 0,
         title: Row(

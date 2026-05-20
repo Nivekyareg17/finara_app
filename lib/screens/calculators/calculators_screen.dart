@@ -13,6 +13,7 @@ class CalculatorsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background =
         isDark ? const Color(0xFF061A17) : const Color(0xFFF6F8F7);
+    final isNarrow = MediaQuery.sizeOf(context).width < 390;
 
     return Scaffold(
       backgroundColor: background,
@@ -68,10 +69,10 @@ class CalculatorsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           GridView.count(
-            crossAxisCount: 2,
+            crossAxisCount: isNarrow ? 1 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 0.88,
+            childAspectRatio: isNarrow ? 2.25 : 0.72,
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             children: const [
@@ -178,7 +179,7 @@ class _CalculatorTileState extends State<_CalculatorTile> {
             ),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 gradient: _active
                     ? LinearGradient(
@@ -205,6 +206,7 @@ class _CalculatorTileState extends State<_CalculatorTile> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
@@ -226,46 +228,59 @@ class _CalculatorTileState extends State<_CalculatorTile> {
                           size: 20),
                     ],
                   ),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: _active
-                          ? Colors.white.withOpacity(0.18)
-                          : widget.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      widget.metric,
-                      style: TextStyle(
-                        color: _active ? Colors.white : widget.color,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: _active
+                                  ? Colors.white.withOpacity(0.18)
+                                  : widget.color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              widget.metric,
+                              style: TextStyle(
+                                color: _active ? Colors.white : widget.color,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      color: _active ? Colors.white : null,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    widget.subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: _active
-                          ? Colors.white70
-                          : (isDark ? Colors.white60 : Colors.black54),
-                      fontSize: 12,
-                      height: 1.25,
-                    ),
+                      const SizedBox(height: 10),
+                      Text(
+                        widget.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _active ? Colors.white : null,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          height: 1.12,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        widget.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _active
+                              ? Colors.white70
+                              : (isDark ? Colors.white60 : Colors.black54),
+                          fontSize: 12,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -319,13 +334,16 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
         if (_storedValue == null || current == null || _operator == null) {
           return;
         }
-        final result = switch (_operator) {
-          "+" => _storedValue! + current,
-          "-" => _storedValue! - current,
-          "x" => _storedValue! * current,
-          "/" => current == 0 ? 0 : _storedValue! / current,
-          _ => current,
-        };
+        double result = current;
+        if (_operator == "+") {
+          result = _storedValue! + current;
+        } else if (_operator == "-") {
+          result = _storedValue! - current;
+        } else if (_operator == "x") {
+          result = _storedValue! * current;
+        } else if (_operator == "/") {
+          result = current == 0 ? 0 : _storedValue! / current;
+        }
         _display = _format(result);
         _storedValue = null;
         _operator = null;

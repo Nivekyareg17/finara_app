@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:provider/provider.dart';
 import '../model/chat_message.dart';
@@ -139,6 +140,7 @@ class _AIChatPageState extends State<AIChatPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 2),
       appBar: _buildAppBar(isDark),
       
       // --- BOTÓN FLOTANTE LATERAL (ESTILO PESTAÑA) ---

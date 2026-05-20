@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import 'chat_screen.dart';
@@ -12,320 +11,88 @@ class ChatListScreen extends StatefulWidget {
   State<ChatListScreen> createState() => _ChatListScreenState();
 }
 
-class _ChatListScreenState extends State<ChatListScreen>
-    with SingleTickerProviderStateMixin {
-  final searchController = TextEditingController();
+class _ChatListScreenState extends State<ChatListScreen> {
   List users = [];
-  List requests = [];
-  late TabController tabController;
-  bool isLoading = true;
-  String searchQuery = "";
+
+  Future<void> loadUsers() async {
+    final auth = context.read<AuthProvider>();
+    final data = await ApiService.getUsersPublic(auth.token!);
+
+    setState(() {
+      users = data;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-
-    tabController = TabController(
-      length: 2,
-      vsync: this,
-    );
-
-    loadChats();
-    loadRequests();
-  }
-
-  @override
-  void dispose() {
-    tabController.dispose();
-    searchController.dispose();
-    super.dispose();
-  }
-
-  Future<void> loadChats() async {
-    final auth = context.read<AuthProvider>();
-    final token = auth.token;
-
-    if (token == null || token.isEmpty) {
-      if (!mounted) return;
-      setState(() => isLoading = false);
-      return;
-    }
-
-    final data = await ApiService.getChats(token);
-    if (!mounted) return;
-
-    setState(() {
-      users = data;
-      isLoading = false;
-    });
-  }
-
-  Future<void> loadRequests() async {
-    final auth = context.read<AuthProvider>();
-    final token = auth.token;
-
-    if (token == null || token.isEmpty) return;
-
-    final data = await ApiService.getRequests(token);
-
-    if (!mounted) return;
-
-    setState(() {
-      requests = data;
-    });
-  }
-
-  Future<void> openSearchDialog() async {
-    final auth = context.read<AuthProvider>();
-    final token = auth.token;
-
-    if (token == null || token.isEmpty) return;
-
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        Map<String, dynamic>? foundUser;
-        bool searching = false;
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return AlertDialog(
-              title: const Text("Buscar por correo"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      hintText: "correo@ejemplo.com",
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () async {
-                      setModalState(() {
-                        searching = true;
-                      });
-
-                      final result = await ApiService.searchUserByEmail(
-                        token,
-                        controller.text.trim(),
-                      );
-
-                      setModalState(() {
-                        foundUser = result;
-                        searching = false;
-                      });
-                    },
-                    child: searching
-                        ? const CircularProgressIndicator()
-                        : const Text("Buscar"),
-                  ),
-                  const SizedBox(height: 16),
-                  if (foundUser != null)
-                    Column(
-                      children: [
-                        Text(foundUser!["name"]),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () async {
-                            final result = await ApiService.sendMessageRequest(
-                              token,
-                              foundUser!["id"],
-                            );
-
-                            if (!mounted) return;
-
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  result["message"],
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Enviar solicitud",
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+    loadUsers();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final filteredUsers = users.where((user) {
-      final data = Map<String, dynamic>.from(user);
-      final name = (data["name"] ?? "").toString().toLowerCase();
-      return name.contains(searchQuery.toLowerCase().trim());
-    }).toList();
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Chats"),
-        bottom: TabBar(
-          controller: tabController,
-          tabs: [
-            const Tab(
-              text: "Chats",
+      appBar: AppBar(title: const Text("Chats"),titleTextStyle: TextStyle(fontSize: 25,color: const Color.fromARGB(221, 16, 75, 8),),),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(10),
+        itemCount: users.length,
+        itemBuilder: (context, i) {
+          final user = users[i];
+
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-            Tab(
-              text: requests.isEmpty
-                  ? "Solicitudes"
-                  : "Solicitudes (${requests.length})",
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+
+              //AVATAR
+              leading: CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.green.shade600,
+                child: Text(
+                  user["name"][0].toUpperCase(),
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+
+              //NOMBRE
+              title: Text(
+                user["name"],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Color.fromARGB(221, 27, 136, 13),
+                ),
+              ),
+
+              //SUBTEXTO
+              subtitle: const Text(
+                "Toca para chatear",
+                style: TextStyle(color: Colors.grey),
+              ),
+
+              //ICONO DERECHA
+              trailing:
+                  const Icon(Icons.chat_bubble_outline, color: Colors.green),
+
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                      userId: user["id"],
+                      userName: user["name"],
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_search),
-            onPressed: openSearchDialog,
-          ),
-        ],
-      ),
-      body: TabBarView(
-        controller: tabController,
-        children: [
-          // TAB CHATS CAUSA pe
-          users.isEmpty
-              ? const Center(
-                  child: Text(
-                    "No tienes chats",
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: users.length,
-                  itemBuilder: (context, index) {
-                    final user = Map<String, dynamic>.from(
-                      users[index],
-                    );
-
-                    final name = (user["name"] ?? "Usuario").toString();
-
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(
-                          name[0].toUpperCase(),
-                        ),
-                      ),
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              name,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Text(
-                            user["last_time"] != null
-                                ? user["last_time"].toString().substring(11, 16)
-                                : "",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      subtitle: Text(
-                        user["last_message"] ?? "",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatScreen(
-                              userId: user["id"],
-                              userName: name,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-
-          // TAB SOLICITUDES chamo
-          requests.isEmpty
-              ? const Center(
-                  child: Text(
-                    "No tienes solicitudes",
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: requests.length,
-                  itemBuilder: (context, index) {
-                    final request = Map<String, dynamic>.from(
-                      requests[index],
-                    );
-
-                    return ListTile(
-                      title: Text(
-                        request["sender_name"] ?? "Usuario",
-                      ),
-                      subtitle: Text(
-                        request["sender_email"] ?? "",
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.check,
-                              color: Colors.green,
-                            ),
-                            onPressed: () async {
-                              final auth = context.read<AuthProvider>();
-
-                              final success = await ApiService.acceptRequest(
-                                auth.token!,
-                                request["id"],
-                              );
-
-                              if (success) {
-                                loadRequests();
-                              }
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.red,
-                            ),
-                            onPressed: () async {
-                              final auth = context.read<AuthProvider>();
-
-                              final success = await ApiService.rejectRequest(
-                                auth.token!,
-                                request["id"],
-                              );
-
-                              if (success) {
-                                loadRequests();
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ],
+          );
+        },
       ),
     );
   }

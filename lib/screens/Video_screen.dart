@@ -1,6 +1,7 @@
 import 'package:finara_app_v1/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'video_list_screen.dart';
+import '../widgets/custom_bottom_nav.dart';
 import '../widgets/translate_widget.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -38,6 +39,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B1220) : Colors.grey[50],
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 3),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF0B1220) : Colors.white,

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:finara_app_v1/screens/stock_screen.dart';
 import '../providers/languaje_provider.dart';
 import '../widgets/QuickActionTile.dart';
+import '../widgets/custom_bottom_nav.dart';
 import '../widgets/quick_wins.dart';
 import '../widgets/statcard.dart';
 import 'chat_screen.dart';
@@ -49,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
+          bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),
           appBar: AppBar(
             backgroundColor: isDark ? Colors.black : Colors.white,
             elevation: 0,
@@ -82,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
                         Navigator.push(
                           context,

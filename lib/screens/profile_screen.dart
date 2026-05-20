@@ -1,7 +1,7 @@
-import 'package:finara_app_v1/models/category_model.dart';
+﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
+import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
-import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:finara_app_v1/providers/theme_provider.dart';
@@ -30,10 +30,10 @@ class CurrencyInputFormatter extends TextInputFormatter {
       TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.selection.baseOffset == 0) return newValue;
 
-    // Quita cualquier cosa que no sea número
+    // Quita cualquier cosa que no sea nÃºmero
     String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Convierte a número y formatea (ejemplo: 1000 -> 1.000)
+    // Convierte a nÃºmero y formatea (ejemplo: 1000 -> 1.000)
     double value = double.parse(newText) / 100; // Divide por 100 para centavos
     final formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
     String formatted = formatter.format(value).trim();
@@ -46,7 +46,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 }
 
 Map<String, dynamic> _getCategoryData(String description) {
-  // Comparamos la descripción para asignar icono y color
+  // Comparamos la descripciÃ³n para asignar icono y color
   String desc = description.toLowerCase();
   if (desc.contains("mercado")) {
     return {'icon': Icons.shopping_basket_rounded, 'color': Colors.orange};
@@ -73,6 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
+  String movementFilter = "todos";
 
   @override
   void initState() {
@@ -176,6 +177,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
+  List<TransactionModel> get filteredTransactions {
+    if (movementFilter == "gasto") {
+      return transactions.where((t) => t.type == "gasto").toList();
+    }
+
+    if (movementFilter == "ingreso") {
+      return transactions.where((t) => t.type == "ingreso").toList();
+    }
+
+    return transactions;
+  }
+
   @override
   Widget build(BuildContext context) {
     final metas = context.watch<AuthProvider>().metas;
@@ -184,6 +197,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 4),
 
       // APPBAR
       appBar: AppBar(
@@ -203,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(
-                    12), // Bordes más redondeados son tendencia
+                    12), // Bordes mÃ¡s redondeados son tendencia
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF00C853).withOpacity(0.3),
@@ -229,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  "Mi Perfil", // Subtítulo indicativo
+                  "Mi Perfil", // SubtÃ­tulo indicativo
                   style: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey[600],
                     fontSize: 12,
@@ -259,13 +273,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(
                           color: Colors.white24,
-                          width: 2), // Un borde lo hace ver más fino
+                          width: 2), // Un borde lo hace ver mÃ¡s fino
                     ),
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.white12,
                       // Usamos un try-catch visual con errorBuilder si fuera necesario,
-                      // pero aquí optimizamos la lógica de carga
+                      // pero aquÃ­ optimizamos la lÃ³gica de carga
                       backgroundImage: (profileImageUrl != null &&
                               profileImageUrl!.isNotEmpty)
                           ? NetworkImage(profileImageUrl!)
@@ -283,10 +297,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: AnimatedContainer(
-                        // Pequeña animación al tocar
+                        // PequeÃ±a animaciÃ³n al tocar
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(
-                            6), // Un poquito más grande para el dedo
+                            6), // Un poquito mÃ¡s grande para el dedo
                         decoration: BoxDecoration(
                           color: const Color(0xFF00C853),
                           shape: BoxShape.circle,
@@ -327,7 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text("CONFIGURACIÓN",
+                    child: Text("CONFIGURACIÃ“N",
                         style: TextStyle(
                             color: Colors.grey,
                             fontWeight: FontWeight.bold,
@@ -377,59 +391,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
 
-                  const Divider(),
-
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text("MÓDULOS",
-                        style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2)),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.home_rounded,
-                    title: "Inicio",
-                    color: const Color(0xFF10B981),
-                    onTap: () => Navigator.pushReplacementNamed(context, "/home"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.newspaper_rounded,
-                    title: "Noticias",
-                    color: Colors.blue,
-                    onTap: () => Navigator.pushReplacementNamed(context, "/news"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.auto_awesome,
-                    title: "Daiko AI",
-                    color: Colors.purple,
-                    onTap: () => Navigator.pushReplacementNamed(context, "/daiko_ai"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.school_rounded,
-                    title: "Aprendizaje",
-                    color: Colors.teal,
-                    onTap: () => Navigator.pushReplacementNamed(context, "/video"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.calculate_rounded,
-                    title: "Calculadora",
-                    color: Colors.indigo,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CalculatorsScreen(),
-                        ),
-                      );
-                    },
-                  ),
                 ],
               ),
             ),
 
-            // BOTÓN DE CERRAR SESIÓN
+            // BOTÃ“N DE CERRAR SESIÃ“N
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListTile(
@@ -437,7 +403,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12)),
                 tileColor: Colors.red.withOpacity(0.1),
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const TranslatedText("Cerrar sesión",
+                title: const TranslatedText("Cerrar sesiÃ³n",
                     style: TextStyle(
                         color: Colors.red, fontWeight: FontWeight.bold)),
                 onTap: () async {
@@ -466,7 +432,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  radius: 20, // Más pequeño
+                  radius: 20, // MÃ¡s pequeÃ±o
                   backgroundColor: Colors.white12,
                   // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
                   backgroundImage:
@@ -501,9 +467,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // TARJETA DE BALANCE MEJORADA
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24), // Un poco más de aire
+              padding: const EdgeInsets.all(24), // Un poco mÃ¡s de aire
               decoration: BoxDecoration(
-                // Un degradado sutil lo hace ver más "Premium"
+                // Un degradado sutil lo hace ver mÃ¡s "Premium"
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -547,17 +513,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    formatCurrency(getBalance()), // <-- Usando la función nueva
+                    formatCurrency(getBalance()), // <-- Usando la funciÃ³n nueva
                     style: TextStyle(
-                      fontSize: 36, // Un poco más grande
-                      fontWeight: FontWeight.w900, // Más grueso
+                      fontSize: 36, // Un poco mÃ¡s grande
+                      fontWeight: FontWeight.w900, // MÃ¡s grueso
                       letterSpacing:
-                          -1, // Un poco más juntas las letras se ve pro
+                          -1, // Un poco mÃ¡s juntas las letras se ve pro
                       color: isDark ? Colors.white : const Color(0xFF1B4332),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Un pequeño indicador extra le da el toque final
+                  // Un pequeÃ±o indicador extra le da el toque final
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -578,106 +544,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            //SECCIÓN METAS
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Metas de ahorro",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  onPressed: _crearMeta,
-                  icon: const Icon(Icons.add, color: Color(0xFF00C853)),
-                )
-              ],
-            ),
+            //SECCIÃ“N METAS
+           // SECCIÓN METAS
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Metas de ahorro",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                onPressed: _crearMeta,
+                icon: const Icon(Icons.add, color: Color(0xFF00C853)),
+              )
+            ],
+          ),
 
-            const SizedBox(height: 10),
+          const SizedBox(height: 10),
 
-            SizedBox(
-              height: 180,
-              child: metas.isEmpty
-                  ? const Center(child: Text("No hay metas aún"))
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: metas.length,
-                      itemBuilder: (context, index) {
-                        final meta = metas[index];
-
-                        return Container(
-                          width: 220,
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color.fromARGB(255, 6, 78, 59)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: isDark
-                                ? []
-                                : [
-                                    BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 10)
+          // CORRECCIÓN DE ESPACIO: Reducimos el alto de 180 a 140 para eliminar el hueco
+          SizedBox(
+            height: 140, 
+            child: metas.isEmpty
+                ? const Center(child: Text("No hay metas aún"))
+                : ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: metas.length,
+                    itemBuilder: (context, index) {
+                      final meta = metas[index];
+                      return Container(
+                        width: 240, // Un poco más ancho para que los textos respiren mejor
+                        margin: const EdgeInsets.only(right: 12, bottom: 4), // Pequeño margen inferior para la sombra
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color.fromARGB(255, 6, 78, 59)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: isDark
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  )
+                                ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribuye el contenido limpiamente
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    meta.nombre,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis, // Si el nombre es muy largo, añade "..."
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => _editarMeta(index),
+                                      child: Icon(Icons.edit,
+                                          size: 18,
+                                          color: isDark ? Colors.white70 : const Color.fromARGB(255, 5, 46, 35)),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: () => _eliminarMeta(index),
+                                      child: const Icon(Icons.delete,
+                                          size: 18, color: Colors.red),
+                                    ),
                                   ],
-                          ),
-                          child: Column(
+                                )
+                              ],
+                            ),
+                            
+                            // Agrupamos la barra y los textos inferiores
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(meta.nombre,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
-                                    ),
-                                    Row(
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () => _editarMeta(index),
-                                          child: const Icon(Icons.edit,
-                                              size: 18,
-                                              color: Color.fromARGB(
-                                                  255, 5, 46, 35)),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        GestureDetector(
-                                          onTap: () => _eliminarMeta(index),
-                                          child: const Icon(Icons.delete,
-                                              size: 18, color: Colors.red),
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                LinearProgressIndicator(
-                                  value: meta.progreso.clamp(0, 1),
-                                  backgroundColor: Colors.grey[300],
-                                  color: const Color(0xFF00C853),
+                                ClipRRect( // Hace que las esquinas de la barra de progreso sean redondeadas
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: meta.progreso.clamp(0, 1),
+                                    backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
+                                    color: const Color(0xFF00C853),
+                                    minHeight: 6, // Un poco más gruesa para que se vea premium
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
-                                    "${meta.porcentaje.toStringAsFixed(1)}% completado"),
-                                const SizedBox(height: 5),
-                                Text(
-                                  "Faltan: ${meta.mesesRestantes} meses",
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.grey),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${meta.porcentaje.toStringAsFixed(0)}% completado", // Sin decimales innecesarios (.0)
+                                      style: TextStyle(
+                                        fontSize: 12, 
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? Colors.white70 : Colors.  grey[600],  
+                                      ),
+                                    ),
+                                    Text(
+                                      "Faltan: ${meta.mesesRestantes} m",
+                                      style: const TextStyle(
+                                          fontSize: 11, color: Colors.grey),
+                                    ),
+                                  ],
                                 ),
-                              ]),
-                        );
-                      },
-                    ),
-            ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ), // Espacio controlado antes de Movimientos
 
             const SizedBox(height: 20),
 
-            //TÍTULO Y BOTÓN AGREGAR
+            //TÃTULO Y BOTÃ“N AGREGAR
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -696,14 +690,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 10),
 
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: "todos",
+                  label: Text("Todos"),
+                  icon: Icon(Icons.list_rounded),
+                ),
+                ButtonSegment(
+                  value: "gasto",
+                  label: Text("Gastos"),
+                  icon: Icon(Icons.trending_down_rounded),
+                ),
+                ButtonSegment(
+                  value: "ingreso",
+                  label: Text("Ingresos"),
+                  icon: Icon(Icons.trending_up_rounded),
+                ),
+              ],
+              selected: {movementFilter},
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(
+                  const Color(0xFF10B981).withOpacity(0.16),
+                ),
+                foregroundColor: MaterialStateProperty.all(
+                  const Color(0xFF064E3B),
+                ),
+              ),
+              onSelectionChanged: (selection) {
+                setState(() => movementFilter = selection.first);
+              },
+            ),
+
+            const SizedBox(height: 12),
+
             //LISTA DE TRANSACCIONES
             Expanded(
               child: ListView.separated(
-                itemCount: transactions.length,
+                itemCount: filteredTransactions.length,
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                  final t = transactions[index];
+                  final t = filteredTransactions[index];
                   final bool isIngreso = t.type == "ingreso";
                   final bool isFuture = t.isFutureMovement;
                   final categoryName =
@@ -731,7 +759,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Row(
                       children: [
-                        //ICON SEGÚN LA IMAGEN
+                        //ICON SEGÃšN LA IMAGEN
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -743,7 +771,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(width: 15),
 
-                        //DESCRIPCIÓN Y FECHA
+                        //DESCRIPCIÃ“N Y FECHA
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -776,7 +804,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: const Text(
-                                    "Próximo movimiento",
+                                    "PrÃ³ximo movimiento",
                                     style: TextStyle(
                                       color: Color(0xFF2563EB),
                                       fontSize: 11,
@@ -898,7 +926,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // TÍTULO
+                          // TÃTULO
                           Center(
                             child: Text(
                               edit == null
@@ -971,35 +999,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          // SELECTOR CATEGORÍA
-                          const TranslatedText("Categoría",
+                          // SELECTOR CATEGORÃA
+                          const TranslatedText("CategorÃ­a",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
 
-// 1. Botón para crear nueva
-                          // 1. Botón para crear nueva
+// 1. BotÃ³n para crear nueva
+                          // 1. BotÃ³n para crear nueva
                           TextButton(
                             onPressed: () async {
                               String? nueva =
                                   await _mostrarDialogoCategoriaBonita();
 
                               if (nueva != null && nueva.isNotEmpty) {
-                                // Validación local: Usamos ignoreCase para mayor seguridad
+                                // ValidaciÃ³n local: Usamos ignoreCase para mayor seguridad
                                 if (localCategories.any((c) =>
                                     c.name.toLowerCase() ==
                                     nueva.toLowerCase())) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                         content:
-                                            Text("Esa categoría ya existe")),
+                                            Text("Esa categorÃ­a ya existe")),
                                   );
                                   return;
                                 }
 
                                 final auth = context.read<AuthProvider>();
-                                // Asumimos que la API devuelve el objeto creado o al menos confirma el éxito
+                                // Asumimos que la API devuelve el objeto creado o al menos confirma el Ã©xito
                                 bool success = await ApiService.createCategory(
                                     auth.token!, nueva, type);
 
@@ -1007,8 +1035,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await loadCategories(); // Recarga la lista global 'categories'
 
                                   setStateDialog(() {
-                                    // ACTUALIZACIÓN CRÍTICA:
-                                    // 1. Sincronizamos la lista local con la global recién cargada
+                                    // ACTUALIZACIÃ“N CRÃTICA:
+                                    // 1. Sincronizamos la lista local con la global reciÃ©n cargada
                                     localCategories = List.from(categories);
 
                                     // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
@@ -1018,7 +1046,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     if (filtered.isNotEmpty) {
                                       // 3. Intentamos encontrar la que acabamos de crear por nombre
-                                      // (Es más seguro que .last si la lista viene ordenada del servidor)
+                                      // (Es mÃ¡s seguro que .last si la lista viene ordenada del servidor)
                                       final creada = filtered.firstWhere(
                                         (c) =>
                                             c.name.toLowerCase() ==
@@ -1031,7 +1059,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               }
                             },
-                            child: const Text("Agregar categoría",
+                            child: const Text("Agregar categorÃ­a",
                                 style: TextStyle(color: Colors.green)),
                           ),
 
@@ -1055,12 +1083,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     isExpanded: true,
                                     underline: const SizedBox(),
                                     icon: const Icon(Icons.keyboard_arrow_down),
-                                    // IMPORTANTE: Asegúrate de que filteredCategories se re-calcule
-                                    // antes de este punto en el build del diálogo.
+                                    // IMPORTANTE: AsegÃºrate de que filteredCategories se re-calcule
+                                    // antes de este punto en el build del diÃ¡logo.
                                     items: localCategories
                                         .where((c) =>
                                             c.type ==
-                                            type) // Filtramos aquí directamente para evitar desfases
+                                            type) // Filtramos aquÃ­ directamente para evitar desfases
                                         .map((cat) {
                                       return DropdownMenuItem<int>(
                                         value: int.parse(cat.id),
@@ -1075,7 +1103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               if (selectedCategoryId != null) ...[
-                                // BOTÓN EDITAR
+                                // BOTÃ“N EDITAR
                                 IconButton(
                                   icon: const Icon(Icons.edit_outlined,
                                       color: Colors.blueAccent),
@@ -1112,7 +1140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     }
                                   },
                                 ),
-                                // BOTÓN ELIMINAR
+                                // BOTÃ“N ELIMINAR
                                 IconButton(
                                   icon: const Icon(Icons.delete_outline,
                                       color: Colors.redAccent),
@@ -1121,9 +1149,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title:
-                                            const Text("¿Eliminar categoría?"),
+                                            const Text("Â¿Eliminar categorÃ­a?"),
                                         content: const Text(
-                                            "Esta acción no se puede deshacer."),
+                                            "Esta acciÃ³n no se puede deshacer."),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
@@ -1154,20 +1182,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                           selectedCategoryId =
-                                              null; // Reset de selección
+                                              null; // Reset de selecciÃ³n
                                         });
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Categoría eliminada con éxito")),
+                                                  "CategorÃ­a eliminada con Ã©xito")),
                                         );
                                       } else {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Error al eliminar la categoría")),
+                                                  "Error al eliminar la categorÃ­a")),
                                         );
                                       }
                                     }
@@ -1179,7 +1207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          //AQUÍ REGRESA LA FECHA
+                          //AQUÃ REGRESA LA FECHA
                           InkWell(
                             borderRadius: BorderRadius.circular(22),
                             onTap: () {
@@ -1369,9 +1397,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 35),
-                          // BOTÓN GUARDAR
+                          // BOTÃ“N GUARDAR
 
-                          //(SizedBox después del TextField de Notas)
+                          //(SizedBox despuÃ©s del TextField de Notas)
                           const SizedBox(height: 30),
 
                           SizedBox(
@@ -1387,7 +1415,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onPressed: isLoadingDialog
                                   ? null
                                   : () async {
-                                      // 1. Validar que el monto no esté vacío o sea 0
+                                      // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
                                       String cleanText = amount.text
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
@@ -1400,7 +1428,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Selecciona una categoría")),
+                                                  "Selecciona una categorÃ­a")),
                                         );
                                         return;
                                       }
@@ -1412,7 +1440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa un monto válido")),
+                                                  "Por favor ingresa un monto vÃ¡lido")),
                                         );
                                         return;
                                       }
@@ -1422,7 +1450,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa una descripción")),
+                                                  "Por favor ingresa una descripciÃ³n")),
                                         );
                                         return;
                                       }
@@ -1451,7 +1479,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   montoFinal);
                                         }
                                       } else {
-                                        // ES EDICIÓN
+                                        // ES EDICIÃ“N
                                         success =
                                             await ApiService.updateTransaction(
                                           auth.token!,
@@ -1473,8 +1501,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           SnackBar(
                                               content: Text(edit == null
-                                                  ? "Creado con éxito"
-                                                  : "Actualizado con éxito")),
+                                                  ? "Creado con Ã©xito"
+                                                  : "Actualizado con Ã©xito")),
                                         );
                                       } else {
                                         setStateDialog(
@@ -1564,13 +1592,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-              title: const Text("¿Eliminar movimiento?",
+              title: const Text("Â¿Eliminar movimiento?",
                   style: TextStyle(fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Se eliminará '${t.description}'"),
+                  Text("Se eliminarÃ¡ '${t.description}'"),
                   const SizedBox(height: 8),
                   Text("Monto: \$${t.amount.toStringAsFixed(2)}",
                       style: const TextStyle(
@@ -1593,7 +1621,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: isDeleting
                       ? null
                       : () async {
-                          // ... tu lógica de borrado que ya tienes ...
+                          // ... tu lÃ³gica de borrado que ya tienes ...
                         },
                   child: isDeleting
                       ? const SizedBox(
@@ -1602,6 +1630,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
                       : const Text("Eliminar"),
+          
                 ),
               ],
             );
@@ -1618,7 +1647,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const TranslatedText("Nueva categoría"),
+        title: const TranslatedText("Nueva categorÃ­a"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -1804,7 +1833,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Constructor de items para el menú
+  // Constructor de items para el menÃº
   Widget _buildDrawerItem(
       {required IconData icon,
       required String title,
@@ -2172,7 +2201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // 1. Seleccionar la imagen
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 50, // Comprimimos un poco para que suba más rápido
+      imageQuality: 50, // Comprimimos un poco para que suba mÃ¡s rÃ¡pido
     );
 
     if (image == null) return;
@@ -2206,7 +2235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      // Quitar el círculo de carga
+      // Quitar el cÃ­rculo de carga
       if (mounted) Navigator.pop(context);
 
       if (response.statusCode == 200) {
@@ -2219,7 +2248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Foto de perfil actualizada ✅")),
+          const SnackBar(content: Text("Foto de perfil actualizada âœ…")),
         );
       } else {
         throw "Error del servidor: ${response.statusCode}";
@@ -2298,7 +2327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          //TÍTULO
+                          //TÃTULO
                           const Center(
                             child: Text(
                               "Nueva meta de ahorro",
@@ -2449,7 +2478,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-// 👇 AQUÍ PEGAS ESTAS
+// ðŸ‘‡ AQUÃ PEGAS ESTAS
   void _editarMeta(int index) {
     final metas = context.read<AuthProvider>().metas;
     final meta = metas[index];
@@ -2587,7 +2616,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Eliminar meta"),
-        content: const Text("¿Seguro?"),
+        content: const Text("Â¿Seguro?"),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
