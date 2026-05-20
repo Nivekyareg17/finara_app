@@ -24,8 +24,10 @@ from routers.news_routes import news_router
 
 app = FastAPI(
     title="Finara API",
-    version="1.0",
+    version="1.0.1",
 )
+
+API_VERSION = "2026-05-19-movements-cors"
 
 app.add_middleware(
     CORSMiddleware,
@@ -113,4 +115,9 @@ app.include_router(notes_routes.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Finara API is running"}
+    return {"message": "Finara API is running", "version": API_VERSION}
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "version": API_VERSION}
