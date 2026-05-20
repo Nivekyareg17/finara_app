@@ -33,6 +33,10 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password = Column(String)
     profile_image_url = Column(String, nullable=True)
+    username = Column(String, nullable=True)
+    age = Column(Integer, nullable=True)
+    description = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
 
     role_id = Column(Integer, ForeignKey("roles.id"))
     role = relationship("Role", back_populates="users")

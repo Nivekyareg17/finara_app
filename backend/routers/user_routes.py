@@ -73,6 +73,43 @@ def get_current_user(   # Función cuando alguien llame /me
         "email": user.email,
         "role": data["role"],
         "profile_image_url": user.profile_image_url,
+        "username": user.username,
+        "age": user.age,
+        "description": user.description,
+        "phone": user.phone,
+    }
+
+
+@router.put("/profile-info")
+def update_profile_info(
+    profile: schemas.UserProfileUpdate,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    data = verify_token(token)
+    email = data["sub"]
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    user.username = profile.username.strip() if profile.username else None
+    user.age = profile.age
+    user.description = profile.description.strip() if profile.description else None
+    user.phone = profile.phone.strip() if profile.phone else None
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "name": user.name,
+        "email": user.email,
+        "profile_image_url": user.profile_image_url,
+        "username": user.username,
+        "age": user.age,
+        "description": user.description,
+        "phone": user.phone,
     }
 
 @router.get("/")

@@ -53,6 +53,39 @@ class ApiService {
     return null;
   }
 
+  static Future<Map<String, dynamic>?> updateProfileInfo(
+    String token, {
+    required String username,
+    required String age,
+    required String description,
+    required String phone,
+  }) async {
+    final url = Uri.parse("$baseUrl/users/profile-info");
+    final parsedAge = int.tryParse(age.trim());
+
+    final response = await http.put(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "username": username.trim().isEmpty ? null : username.trim(),
+        "age": parsedAge,
+        "description":
+            description.trim().isEmpty ? null : description.trim(),
+        "phone": phone.trim().isEmpty ? null : phone.trim(),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    print("PROFILE UPDATE ERROR: ${response.statusCode} ${response.body}");
+    return null;
+  }
+
   static Future<bool> createTransaction(
     String token,
     String type,

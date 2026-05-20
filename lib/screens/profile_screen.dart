@@ -66,6 +66,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? profileImageUrl;
   String name = "";
   String email = "";
+  String username = "";
+  String age = "";
+  String description = "";
+  String phone = "";
 
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
@@ -111,6 +115,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (data != null) {
           name = data["name"] ?? "Sin nombre";
           email = data["email"] ?? "Sin email";
+          profileImageUrl = data["profile_image_url"];
+          username = data["username"] ?? "";
+          age = data["age"]?.toString() ?? "";
+          description = data["description"] ?? "";
+          phone = data["phone"] ?? "";
         } else {
           name = "No se pudo cargar";
           email = "";
@@ -343,6 +352,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: const Color(0xFF00C853),
                         onTap: () => _showLanguagePicker(context, langProvider),
                       );
+                    },
+                  ),
+
+                  _buildDrawerItem(
+                    icon: Icons.badge_rounded,
+                    title: "Informacion personal",
+                    subtitle: username.isEmpty ? "Completa tu perfil" : "@$username",
+                    color: const Color(0xFFE1306C),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showProfileInfoSheet();
+                    },
+                  ),
+
+                  _buildDrawerItem(
+                    icon: Icons.support_agent_rounded,
+                    title: "Soporte",
+                    subtitle: "Ayuda y contacto",
+                    color: const Color(0xFF2563EB),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showSupportSheet();
                     },
                   ),
 
@@ -1149,33 +1180,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 25),
 
                           //AQUÍ REGRESA LA FECHA
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            activeColor: const Color(0xFF10B981),
-                            title: Text(
-                              type == "ingreso"
-                                  ? "Ingresos futuros"
-                                  : "Gastos futuros",
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              type == "ingreso"
-                                  ? "Activalo para planificar dinero que entrara despues."
-                                  : "Activalo para registrar pagos o compras proximas.",
-                            ),
-                            value: allowFutureMovement,
-                            onChanged: (value) {
+                          InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: () {
                               setStateDialog(() {
-                                allowFutureMovement = value;
+                                allowFutureMovement = !allowFutureMovement;
                                 final parsed = DateFormat("MM/dd/yyyy")
                                     .tryParse(dateController.text);
-                                final todayOnly = DateTime(
-                                  today.year,
-                                  today.month,
-                                  today.day,
-                                );
-                                if (!value &&
+                                final todayOnly =
+                                    DateTime(today.year, today.month, today.day);
+                                if (!allowFutureMovement &&
                                     parsed != null &&
                                     parsed.isAfter(todayOnly)) {
                                   dateController.text =
@@ -1183,8 +1197,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               });
                             },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOutCubic,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: allowFutureMovement
+                                      ? [
+                                          const Color(0xFF2563EB),
+                                          const Color(0xFF10B981),
+                                        ]
+                                      : [
+                                          isDark
+                                              ? const Color(0xFF17231F)
+                                              : const Color(0xFFF8FAFC),
+                                          isDark
+                                              ? const Color(0xFF10231E)
+                                              : const Color(0xFFEFF6FF),
+                                        ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: allowFutureMovement
+                                      ? Colors.transparent
+                                      : const Color(0xFFBFDBFE),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: allowFutureMovement
+                                          ? Colors.white.withOpacity(0.18)
+                                          : const Color(0xFFDBEAFE),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                    child: Icon(
+                                      type == "ingreso"
+                                          ? Icons.trending_up_rounded
+                                          : Icons.event_available_rounded,
+                                      color: allowFutureMovement
+                                          ? Colors.white
+                                          : const Color(0xFF2563EB),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          type == "ingreso"
+                                              ? "Ingresos futuros"
+                                              : "Gastos futuros",
+                                          style: TextStyle(
+                                            color: allowFutureMovement
+                                                ? Colors.white
+                                                : null,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          allowFutureMovement
+                                              ? "Fechas futuras habilitadas"
+                                              : "Toca para permitir fechas futuras",
+                                          style: TextStyle(
+                                            color: allowFutureMovement
+                                                ? Colors.white70
+                                                : Colors.black54,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    allowFutureMovement
+                                        ? Icons.check_circle_rounded
+                                        : Icons.radio_button_unchecked_rounded,
+                                    color: allowFutureMovement
+                                        ? Colors.white
+                                        : const Color(0xFF2563EB),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 18),
                           const TranslatedText("Fecha",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1764,6 +1870,298 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         );
       },
+    );
+  }
+
+  void _showProfileInfoSheet() {
+    final usernameController = TextEditingController(text: username);
+    final ageController = TextEditingController(text: age);
+    final descriptionController = TextEditingController(text: description);
+    final phoneController = TextEditingController(text: phone);
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
+          return Container(
+            padding: EdgeInsets.only(
+              left: 22,
+              right: 22,
+              top: 18,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 22,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF10231E) : Colors.white,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(30)),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.35),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 34,
+                        backgroundImage: (profileImageUrl != null &&
+                                profileImageUrl!.isNotEmpty)
+                            ? NetworkImage(profileImageUrl!)
+                            : null,
+                        child:
+                            (profileImageUrl == null || profileImageUrl!.isEmpty)
+                                ? const Icon(Icons.person_rounded, size: 32)
+                                : null,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name.isEmpty ? "Mi perfil" : name,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              usernameController.text.trim().isEmpty
+                                  ? "Agrega tu usuario"
+                                  : "@${usernameController.text.trim()}",
+                              style: const TextStyle(
+                                color: Color(0xFFE1306C),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  _profileInput(
+                    controller: usernameController,
+                    label: "Nombre de usuario",
+                    hint: "ej: alex_finara",
+                    icon: Icons.alternate_email_rounded,
+                  ),
+                  _profileInput(
+                    controller: ageController,
+                    label: "Edad",
+                    hint: "ej: 24",
+                    icon: Icons.cake_rounded,
+                    keyboardType: TextInputType.number,
+                  ),
+                  _profileInput(
+                    controller: phoneController,
+                    label: "Telefono",
+                    hint: "ej: +57 300 000 0000",
+                    icon: Icons.phone_rounded,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  _profileInput(
+                    controller: descriptionController,
+                    label: "Descripcion",
+                    hint: "Cuentanos algo sobre ti",
+                    icon: Icons.notes_rounded,
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              setSheetState(() => isSaving = true);
+                              final auth = context.read<AuthProvider>();
+                              final result = await ApiService.updateProfileInfo(
+                                auth.token!,
+                                username: usernameController.text,
+                                age: ageController.text,
+                                description: descriptionController.text,
+                                phone: phoneController.text,
+                              );
+
+                              if (!mounted) return;
+
+                              if (result != null) {
+                                setState(() {
+                                  username = result["username"] ?? "";
+                                  age = result["age"]?.toString() ?? "";
+                                  description = result["description"] ?? "";
+                                  phone = result["phone"] ?? "";
+                                });
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Informacion actualizada"),
+                                  ),
+                                );
+                              } else {
+                                setSheetState(() => isSaving = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("No se pudo guardar"),
+                                  ),
+                                );
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE1306C),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: isSaving
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Guardar informacion",
+                              style: TextStyle(fontWeight: FontWeight.w900),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _profileInput({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: Icon(icon, color: const Color(0xFFE1306C)),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide:
+                const BorderSide(color: Color(0xFFE1306C), width: 1.6),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSupportSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF10231E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(Icons.support_agent_rounded,
+                    color: Color(0xFF2563EB), size: 32),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Soporte Finara",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Estamos listos para ayudarte con tu cuenta, movimientos, metas o dudas de la app.",
+              ),
+              const SizedBox(height: 18),
+              _supportTile(Icons.email_rounded, "Correo",
+                  "soporte@finara.app"),
+              _supportTile(Icons.chat_rounded, "Chat de ayuda",
+                  "Respuesta en horario laboral"),
+              _supportTile(Icons.bug_report_rounded, "Reportar problema",
+                  "Incluye pantalla y pasos para reproducirlo"),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _supportTile(IconData icon, String title, String subtitle) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF2563EB)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w900)),
+                Text(subtitle,
+                    style: const TextStyle(color: Colors.black54, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

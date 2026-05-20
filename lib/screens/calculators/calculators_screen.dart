@@ -131,7 +131,7 @@ class CalculatorsScreen extends StatelessWidget {
   }
 }
 
-class _CalculatorTile extends StatelessWidget {
+class _CalculatorTile extends StatefulWidget {
   const _CalculatorTile({
     required this.title,
     required this.subtitle,
@@ -149,79 +149,128 @@ class _CalculatorTile extends StatelessWidget {
   final Widget screen;
 
   @override
+  State<_CalculatorTile> createState() => _CalculatorTileState();
+}
+
+class _CalculatorTileState extends State<_CalculatorTile> {
+  bool _active = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => screen),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF10231E) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.16)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0 : 0.06),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _active = true),
+      onExit: (_) => setState(() => _active = false),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _active = true),
+        onTapCancel: () => setState(() => _active = false),
+        onTapUp: (_) => setState(() => _active = false),
+        child: AnimatedScale(
+          scale: _active ? 1.035 : 1,
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => widget.screen),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(icon, color: color, size: 24),
-                ),
-                const Spacer(),
-                Icon(Icons.arrow_forward_rounded, color: color, size: 20),
-              ],
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(999),
+                gradient: _active
+                    ? LinearGradient(
+                        colors: [
+                          widget.color.withOpacity(0.95),
+                          widget.color.withOpacity(0.68),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: _active
+                    ? null
+                    : (isDark ? const Color(0xFF10231E) : Colors.white),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: widget.color.withOpacity(0.16)),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.color.withOpacity(_active ? 0.26 : 0.08),
+                    blurRadius: _active ? 24 : 18,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              child: Text(
-                metric,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _active
+                              ? Colors.white.withOpacity(0.18)
+                              : widget.color.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(widget.icon,
+                            color: _active ? Colors.white : widget.color,
+                            size: 24),
+                      ),
+                      const Spacer(),
+                      Icon(Icons.arrow_forward_rounded,
+                          color: _active ? Colors.white : widget.color,
+                          size: 20),
+                    ],
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _active
+                          ? Colors.white.withOpacity(0.18)
+                          : widget.color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      widget.metric,
+                      style: TextStyle(
+                        color: _active ? Colors.white : widget.color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.title,
+                    style: TextStyle(
+                      color: _active ? Colors.white : null,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    widget.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: _active
+                          ? Colors.white70
+                          : (isDark ? Colors.white60 : Colors.black54),
+                      fontSize: 12,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: isDark ? Colors.white60 : Colors.black54,
-                fontSize: 12,
-                height: 1.25,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

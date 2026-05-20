@@ -74,6 +74,10 @@ models.Base.metadata.create_all(bind=engine)
 def apply_schema_updates():
     statements = [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image_url TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS description TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
     ]
 

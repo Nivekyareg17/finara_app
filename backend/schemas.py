@@ -25,6 +25,12 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=1)
 
+class UserProfileUpdate(BaseModel):
+    username: Optional[str] = Field(None, max_length=40)
+    age: Optional[int] = Field(None, ge=0, le=120)
+    description: Optional[str] = Field(None, max_length=240)
+    phone: Optional[str] = Field(None, max_length=30)
+
 class TransactionCreate(BaseModel):
     amount: float = Field(..., gt=0)
     type: Literal["ingreso", "gasto"]
