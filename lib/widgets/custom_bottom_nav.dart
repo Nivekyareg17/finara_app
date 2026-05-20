@@ -68,7 +68,7 @@ class CustomBottomNav extends StatelessWidget {
             BottomNavigationBarItem(
                 icon: const Icon(Icons.auto_awesome), label: labels[2]),
             BottomNavigationBarItem(
-                icon: const Icon(Icons.account_balance_wallet_outlined), label: labels[3]),
+                icon: const Icon(Icons.school_outlined), label: labels[3]),
             BottomNavigationBarItem(
                 icon: const Icon(Icons.person_outline), label: labels[4]),
           ],

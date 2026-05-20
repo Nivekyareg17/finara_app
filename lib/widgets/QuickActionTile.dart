@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-// 1. Importamos el widget traductor
-import 'translate_widget.dart'; 
+import 'translate_widget.dart';
 
 class QuickActionTile extends StatefulWidget {
   final String title, subtitle;
@@ -24,19 +23,24 @@ class QuickActionTile extends StatefulWidget {
 class _QuickActionTileState extends State<QuickActionTile> {
   bool _active = false;
 
+  void _setActive(bool value) {
+    if (_active == value) return;
+    setState(() => _active = value);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: MouseRegion(
-        onEnter: (_) => setState(() => _active = true),
-        onExit: (_) => setState(() => _active = false),
+        onEnter: (_) => _setActive(true),
+        onExit: (_) => _setActive(false),
         child: GestureDetector(
-          onTapDown: (_) => setState(() => _active = true),
-          onTapCancel: () => setState(() => _active = false),
-          onTapUp: (_) => setState(() => _active = false),
+          onTapDown: (_) => _setActive(true),
+          onTapCancel: () => _setActive(false),
+          onTapUp: (_) => _setActive(false),
           child: AnimatedScale(
             scale: _active ? 1.025 : 1,
             duration: const Duration(milliseconds: 150),
@@ -52,48 +56,52 @@ class _QuickActionTileState extends State<QuickActionTile> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: widget.iconColor.withOpacity(_active ? 0.18 : 0.05),
+                      color:
+                          widget.iconColor.withOpacity(_active ? 0.18 : 0.05),
                       blurRadius: _active ? 18 : 10,
                       offset: const Offset(0, 8),
                     ),
                   ],
                 ),
                 child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: widget.iconColor.withOpacity(_active ? 0.18 : 0.1),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(widget.icon, color: widget.iconColor),
-              ),
-
-              const SizedBox(width: 15),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 2. CAMBIO: Título de la acción traducido
-                    TranslatedText(
-                      widget.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black,
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color:
+                            widget.iconColor.withOpacity(_active ? 0.18 : 0.1),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Icon(widget.icon, color: widget.iconColor),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TranslatedText(
+                            widget.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          TranslatedText(
+                            widget.subtitle,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    // 3. CAMBIO: Subtítulo traducido (ej: "Asesoría experta" -> "Expert advice")
-                    TranslatedText(
-                      widget.subtitle,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: Colors.grey,
                     ),
                   ],
-                ),
-              ),
-
-              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-            ],
                 ),
               ),
             ),

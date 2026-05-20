@@ -1,7 +1,7 @@
-import 'package:finara_app_v1/models/category_model.dart';
+﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
+import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
-import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:finara_app_v1/providers/theme_provider.dart';
@@ -32,10 +32,10 @@ class CurrencyInputFormatter extends TextInputFormatter {
       TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.selection.baseOffset == 0) return newValue;
 
-    // Quita cualquier cosa que no sea número
+    // Quita cualquier cosa que no sea nÃºmero
     String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Convierte a número y formatea (ejemplo: 1000 -> 1.000)
+    // Convierte a nÃºmero y formatea (ejemplo: 1000 -> 1.000)
     double value = double.parse(newText) / 100; // Divide por 100 para centavos
     final formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
     String formatted = formatter.format(value).trim();
@@ -48,7 +48,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 }
 
 Map<String, dynamic> _getCategoryData(String description) {
-  // Comparamos la descripción para asignar icono y color
+  // Comparamos la descripciÃ³n para asignar icono y color
   String desc = description.toLowerCase();
   if (desc.contains("mercado")) {
     return {'icon': Icons.shopping_basket_rounded, 'color': Colors.orange};
@@ -256,6 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      bottomNavigationBar: const CustomBottomNav(selectedIndex: 4),
 
       // APPBAR
       appBar: AppBar(
@@ -275,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(
-                    12), // Bordes más redondeados son tendencia
+                    12), // Bordes mÃ¡s redondeados son tendencia
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF00C853).withOpacity(0.3),
@@ -301,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  "Mi Perfil", // Subtítulo indicativo
+                  "Mi Perfil", // SubtÃ­tulo indicativo
                   style: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey[600],
                     fontSize: 12,
@@ -331,13 +332,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(
                           color: Colors.white24,
-                          width: 2), // Un borde lo hace ver más fino
+                          width: 2), // Un borde lo hace ver mÃ¡s fino
                     ),
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.white12,
                       // Usamos un try-catch visual con errorBuilder si fuera necesario,
-                      // pero aquí optimizamos la lógica de carga
+                      // pero aquÃ­ optimizamos la lÃ³gica de carga
                       backgroundImage: (profileImageUrl != null &&
                               profileImageUrl!.isNotEmpty)
                           ? NetworkImage(profileImageUrl!)
@@ -355,10 +356,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: AnimatedContainer(
-                        // Pequeña animación al tocar
+                        // PequeÃ±a animaciÃ³n al tocar
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(
-                            6), // Un poquito más grande para el dedo
+                            6), // Un poquito mÃ¡s grande para el dedo
                         decoration: BoxDecoration(
                           color: const Color(0xFF00C853),
                           shape: BoxShape.circle,
@@ -399,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text("CONFIGURACIÓN",
+                    child: Text("CONFIGURACIÃ“N",
                         style: TextStyle(
                             color: Colors.grey,
                             fontWeight: FontWeight.bold,
@@ -506,7 +507,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            // BOTÓN DE CERRAR SESIÓN
+            // BOTÃ“N DE CERRAR SESIÃ“N
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListTile(
@@ -514,7 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12)),
                 tileColor: Colors.red.withOpacity(0.1),
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const TranslatedText("Cerrar sesión",
+                title: const TranslatedText("Cerrar sesiÃ³n",
                     style: TextStyle(
                         color: Colors.red, fontWeight: FontWeight.bold)),
                 onTap: () async {
@@ -1292,7 +1293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // TÍTULO
+                          // TÃTULO
                           Center(
                             child: Text(
                               edit == null
@@ -1365,35 +1366,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          // SELECTOR CATEGORÍA
-                          const TranslatedText("Categoría",
+                          // SELECTOR CATEGORÃA
+                          const TranslatedText("CategorÃ­a",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
 
-// 1. Botón para crear nueva
-                          // 1. Botón para crear nueva
+// 1. BotÃ³n para crear nueva
+                          // 1. BotÃ³n para crear nueva
                           TextButton(
                             onPressed: () async {
                               String? nueva =
                                   await _mostrarDialogoCategoriaBonita();
 
                               if (nueva != null && nueva.isNotEmpty) {
-                                // Validación local: Usamos ignoreCase para mayor seguridad
+                                // ValidaciÃ³n local: Usamos ignoreCase para mayor seguridad
                                 if (localCategories.any((c) =>
                                     c.name.toLowerCase() ==
                                     nueva.toLowerCase())) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                         content:
-                                            Text("Esa categoría ya existe")),
+                                            Text("Esa categorÃ­a ya existe")),
                                   );
                                   return;
                                 }
 
                                 final auth = context.read<AuthProvider>();
-                                // Asumimos que la API devuelve el objeto creado o al menos confirma el éxito
+                                // Asumimos que la API devuelve el objeto creado o al menos confirma el Ã©xito
                                 bool success = await ApiService.createCategory(
                                     auth.token!, nueva, type);
 
@@ -1401,8 +1402,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await loadCategories(); // Recarga la lista global 'categories'
 
                                   setStateDialog(() {
-                                    // ACTUALIZACIÓN CRÍTICA:
-                                    // 1. Sincronizamos la lista local con la global recién cargada
+                                    // ACTUALIZACIÃ“N CRÃTICA:
+                                    // 1. Sincronizamos la lista local con la global reciÃ©n cargada
                                     localCategories = List.from(categories);
 
                                     // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
@@ -1412,7 +1413,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     if (filtered.isNotEmpty) {
                                       // 3. Intentamos encontrar la que acabamos de crear por nombre
-                                      // (Es más seguro que .last si la lista viene ordenada del servidor)
+                                      // (Es mÃ¡s seguro que .last si la lista viene ordenada del servidor)
                                       final creada = filtered.firstWhere(
                                         (c) =>
                                             c.name.toLowerCase() ==
@@ -1425,7 +1426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               }
                             },
-                            child: const Text("Agregar categoría",
+                            child: const Text("Agregar categorÃ­a",
                                 style: TextStyle(color: Colors.green)),
                           ),
 
@@ -1449,12 +1450,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     isExpanded: true,
                                     underline: const SizedBox(),
                                     icon: const Icon(Icons.keyboard_arrow_down),
-                                    // IMPORTANTE: Asegúrate de que filteredCategories se re-calcule
-                                    // antes de este punto en el build del diálogo.
+                                    // IMPORTANTE: AsegÃºrate de que filteredCategories se re-calcule
+                                    // antes de este punto en el build del diÃ¡logo.
                                     items: localCategories
                                         .where((c) =>
                                             c.type ==
-                                            type) // Filtramos aquí directamente para evitar desfases
+                                            type) // Filtramos aquÃ­ directamente para evitar desfases
                                         .map((cat) {
                                       return DropdownMenuItem<int>(
                                         value: int.parse(cat.id),
@@ -1469,7 +1470,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               if (selectedCategoryId != null) ...[
-                                // BOTÓN EDITAR
+                                // BOTÃ“N EDITAR
                                 IconButton(
                                   icon: const Icon(Icons.edit_outlined,
                                       color: Colors.blueAccent),
@@ -1506,7 +1507,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     }
                                   },
                                 ),
-                                // BOTÓN ELIMINAR
+                                // BOTÃ“N ELIMINAR
                                 IconButton(
                                   icon: const Icon(Icons.delete_outline,
                                       color: Colors.redAccent),
@@ -1515,9 +1516,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title:
-                                            const Text("¿Eliminar categoría?"),
+                                            const Text("Â¿Eliminar categorÃ­a?"),
                                         content: const Text(
-                                            "Esta acción no se puede deshacer."),
+                                            "Esta acciÃ³n no se puede deshacer."),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
@@ -1548,20 +1549,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                           selectedCategoryId =
-                                              null; // Reset de selección
+                                              null; // Reset de selecciÃ³n
                                         });
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Categoría eliminada con éxito")),
+                                                  "CategorÃ­a eliminada con Ã©xito")),
                                         );
                                       } else {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Error al eliminar la categoría")),
+                                                  "Error al eliminar la categorÃ­a")),
                                         );
                                       }
                                     }
@@ -1573,7 +1574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          //AQUÍ REGRESA LA FECHA
+                          //AQUÃ REGRESA LA FECHA
                           InkWell(
                             borderRadius: BorderRadius.circular(22),
                             onTap: () {
@@ -1763,9 +1764,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 35),
-                          // BOTÓN GUARDAR
+                          // BOTÃ“N GUARDAR
 
-                          //(SizedBox después del TextField de Notas)
+                          //(SizedBox despuÃ©s del TextField de Notas)
                           const SizedBox(height: 30),
 
                           SizedBox(
@@ -1781,7 +1782,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onPressed: isLoadingDialog
                                   ? null
                                   : () async {
-                                      // 1. Validar que el monto no esté vacío o sea 0
+                                      // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
                                       String cleanText = amount.text
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
@@ -1794,7 +1795,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
-                                                  "Selecciona una categoría")),
+                                                  "Selecciona una categorÃ­a")),
                                         );
                                         return;
                                       }
@@ -1806,7 +1807,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa un monto válido")),
+                                                  "Por favor ingresa un monto vÃ¡lido")),
                                         );
                                         return;
                                       }
@@ -1816,7 +1817,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa una descripción")),
+                                                  "Por favor ingresa una descripciÃ³n")),
                                         );
                                         return;
                                       }
@@ -1845,7 +1846,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   montoFinal);
                                         }
                                       } else {
-                                        // ES EDICIÓN
+                                        // ES EDICIÃ“N
                                         success =
                                             await ApiService.updateTransaction(
                                           auth.token!,
@@ -1867,8 +1868,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           SnackBar(
                                               content: Text(edit == null
-                                                  ? "Creado con éxito"
-                                                  : "Actualizado con éxito")),
+                                                  ? "Creado con Ã©xito"
+                                                  : "Actualizado con Ã©xito")),
                                         );
                                       } else {
                                         setStateDialog(
@@ -1958,13 +1959,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-              title: const Text("¿Eliminar movimiento?",
+              title: const Text("Â¿Eliminar movimiento?",
                   style: TextStyle(fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Se eliminará '${t.description}'"),
+                  Text("Se eliminarÃ¡ '${t.description}'"),
                   const SizedBox(height: 8),
                   Text("Monto: \$${t.amount.toStringAsFixed(2)}",
                       style: const TextStyle(
@@ -1987,7 +1988,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: isDeleting
                       ? null
                       : () async {
-                          // ... tu lógica de borrado que ya tienes ...
+                          // ... tu lÃ³gica de borrado que ya tienes ...
                         },
                   child: isDeleting
                       ? const SizedBox(
@@ -1996,6 +1997,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
                       : const Text("Eliminar"),
+          
                 ),
               ],
             );
@@ -2012,7 +2014,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const TranslatedText("Nueva categoría"),
+        title: const TranslatedText("Nueva categorÃ­a"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -2198,7 +2200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Constructor de items para el menú
+  // Constructor de items para el menÃº
   Widget _buildDrawerItem(
       {required IconData icon,
       required String title,
@@ -2565,7 +2567,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // 1. Seleccionar la imagen
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 50, // Comprimimos un poco para que suba más rápido
+      imageQuality: 50, // Comprimimos un poco para que suba mÃ¡s rÃ¡pido
     );
 
     if (image == null) return;
@@ -2599,7 +2601,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      // Quitar el círculo de carga
+      // Quitar el cÃ­rculo de carga
       if (mounted) Navigator.pop(context);
 
       if (response.statusCode == 200) {
@@ -2612,7 +2614,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Foto de perfil actualizada ✅")),
+          const SnackBar(content: Text("Foto de perfil actualizada âœ…")),
         );
       } else {
         throw "Error del servidor: ${response.statusCode}";
@@ -2691,7 +2693,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          //TÍTULO
+                          //TÃTULO
                           const Center(
                             child: Text(
                               "Nueva meta de ahorro",
@@ -2842,7 +2844,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-// 👇 AQUÍ PEGAS ESTAS
+// ðŸ‘‡ AQUÃ PEGAS ESTAS
   void _editarMeta(int index) {
     final metas = context.read<AuthProvider>().metas;
     final meta = metas[index];
@@ -2980,7 +2982,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Eliminar meta"),
-        content: const Text("¿Seguro?"),
+        content: const Text("Â¿Seguro?"),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
