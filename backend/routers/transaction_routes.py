@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from sqlalchemy import text
+from database import SessionLocal, engine
 from models import Transaction, User, Category
 from auth import verify_token
 from fastapi.security import OAuth2PasswordBearer
@@ -13,6 +14,16 @@ router = APIRouter(
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+def ensure_transaction_date_column():
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE transactions "
+                "ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
 
 def get_db():
     db = SessionLocal()
@@ -28,6 +39,7 @@ def create_transaction(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
+    ensure_transaction_date_column()
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
@@ -69,6 +81,7 @@ def get_transactions(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
+    ensure_transaction_date_column()
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
@@ -86,6 +99,7 @@ def update_transaction(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
+    ensure_transaction_date_column()
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
