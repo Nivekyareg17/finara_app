@@ -130,6 +130,9 @@ class MessageCreate(BaseModel):
     receiver_id: int
     content: str
 
+class MessageRequestCreate(BaseModel):
+    receiver_id: int
+
 class MessageResponse(BaseModel):
     id: int
     content: str
