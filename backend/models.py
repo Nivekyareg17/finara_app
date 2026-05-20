@@ -123,6 +123,41 @@ class Message(Base):
     sender = relationship("User", foreign_keys=[sender_id])
     receiver = relationship("User", foreign_keys=[receiver_id])
 
+
+class MessageRequest(Base):
+    __tablename__ = "message_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    sender_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE")
+    )
+
+    receiver_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE")
+    )
+
+    status = Column(String, default="pending")
+
+
+class BlockedUser(Base):
+    __tablename__ = "blocked_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    blocker_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE")
+    )
+
+    blocked_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE")
+    )
+
+
 class Note(Base):
     __tablename__ = "notes"
 
