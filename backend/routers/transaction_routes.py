@@ -25,6 +25,13 @@ def ensure_transaction_date_column():
             )
         )
 
+
+def serialize_transaction_row(row):
+    data = dict(row)
+    if data.get("date") is None:
+        data["date"] = datetime.utcnow()
+    return data
+
 def get_db():
     db = SessionLocal()
     try:
@@ -85,11 +92,49 @@ def get_transactions(
     data = verify_token(token)
     user = db.query(User).filter(User.email == data["sub"]).first()
 
-    transactions = db.query(Transaction).filter(
-        Transaction.user_id == user.id
-    ).order_by(Transaction.date.desc(), Transaction.id.desc()).all()
+    try:
+        transactions = db.query(Transaction).filter(
+            Transaction.user_id == user.id
+        ).order_by(Transaction.date.desc(), Transaction.id.desc()).all()
 
-    return transactions
+        return transactions
+    except Exception as exc:
+        print(f"ORM transactions query failed: {exc}")
+        db.rollback()
+
+    try:
+        rows = db.execute(
+            text(
+                """
+                SELECT id, amount, type, description, category_id, user_id,
+                       COALESCE(date, CURRENT_TIMESTAMP) AS date
+                FROM transactions
+                WHERE user_id = :user_id
+                ORDER BY COALESCE(date, CURRENT_TIMESTAMP) DESC, id DESC
+                """
+            ),
+            {"user_id": user.id},
+        ).mappings().all()
+
+        return [serialize_transaction_row(row) for row in rows]
+    except Exception as exc:
+        print(f"Date fallback transactions query failed: {exc}")
+        db.rollback()
+
+    rows = db.execute(
+        text(
+            """
+            SELECT id, amount, type, description, category_id, user_id,
+                   CURRENT_TIMESTAMP AS date
+            FROM transactions
+            WHERE user_id = :user_id
+            ORDER BY id DESC
+            """
+        ),
+        {"user_id": user.id},
+    ).mappings().all()
+
+    return [serialize_transaction_row(row) for row in rows]
 
 
 @router.put("/{id}")

@@ -113,12 +113,17 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getTransactions(String token) async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/transactions/"),
-      headers: _jsonHeaders(token),
-    );
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/transactions/"),
+        headers: _jsonHeaders(token),
+      );
 
-    return _decodeList(response, "GET TRANSACTIONS");
+      return _decodeList(response, "GET TRANSACTIONS");
+    } catch (e) {
+      print("GET TRANSACTIONS ERROR: $e");
+      return [];
+    }
   }
 
   static Future<bool> updateTransaction(
