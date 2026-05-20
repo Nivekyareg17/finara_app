@@ -3,12 +3,20 @@ import 'package:http/http.dart' as http;
 import '../models/note.dart';
 
 class NoteService {
-  // Nota que el baseUrl llega hasta "notes"
   final String baseUrl = "https://finara-api-1lmd.onrender.com/notes";
 
-  Future<List<Note>> fetchNotes() async {
+
+  Future<List<Note>> fetchNotes(String token) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token", 
+        },
+      );
+      
+      print("📡 STATUS FETCH: ${response.statusCode}");
       if (response.statusCode == 200) {
         List data = json.decode(response.body);
         return data.map((n) => Note.fromJson(n)).toList();
@@ -20,44 +28,52 @@ class NoteService {
     }
   }
 
-  Future<bool> saveNote(Note note) async {
+  Future<bool> createNote(Note note, String token) async {
     try {
-      http.Response response;
-      final headers = {"Content-Type": "application/json"};
-      final body = json.encode(note.toJson());
-
-      if (note.id == null) {
-        // SI NO HAY ID -> CREAR (POST)
-        response = await http.post(
-          Uri.parse('$baseUrl/'), // Con barra al final
-          headers: headers,
-          body: body,
-        );
-      } else {
-        // SI HAY ID -> ACTUALIZAR (PUT)
-        response = await http.put(
-          Uri.parse('$baseUrl/${note.id}/'), // Con barra al final
-          headers: headers,
-          body: body,
-        );
-      }
-      
-      print("📡 STATUS GUARDAR: ${response.statusCode}");
-      // Permitimos 200 (OK) o 201 (Creado)
+      final response = await http.post(
+        Uri.parse('$baseUrl/'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: json.encode(note.toJson()),
+      );
+      print("📡 STATUS CREAR: ${response.statusCode}");
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print("🚨 Error en saveNote: $e");
+      print("🚨 Error en createNote: $e");
       return false;
     }
   }
 
-  Future<bool> deleteNote(int id) async {
+  Future<bool> updateNote(Note note, String token) async {
     try {
-      // ELIMINAR (DELETE) - ¡Aseguramos la barra al final!
-      final response = await http.delete(Uri.parse('$baseUrl/$id/'));
-      
+      final response = await http.put(
+        Uri.parse('$baseUrl/${note.id}/'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: json.encode(note.toJson()),
+      );
+      print("📡 STATUS ACTUALIZAR: ${response.statusCode}");
+      return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204;
+    } catch (e) {
+      print("🚨 Error en updateNote: $e");
+      return false;
+    }
+  }
+
+  Future<bool> deleteNote(int id, String token) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$id/'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
       print("📡 STATUS ELIMINAR: ${response.statusCode}");
-      // Permitimos 200 (OK) o 204 (Sin contenido)
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       print("🚨 Error en deleteNote: $e");

@@ -13,6 +13,7 @@ class AIService {
     required String token,
     required List<ChatMessage> history,
     required String sessionId,
+    required String tool,
   }) async {
     final url = Uri.parse('$_baseUrl/consultar');
 
@@ -26,20 +27,24 @@ class AIService {
               })
           .toList();
 
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          "pregunta": prompt,
-          "session_id": sessionId, // Enviamos el ID para evitar el NULL en la DB
-          "historial": lastMessages,
-          "contexto_gastos": [], // Aquí el backend ya jalará los datos de SQLAlchemy
-          "user_name": "Kevin"
-        }),
-      ).timeout(const Duration(seconds: 25));
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              "pregunta": prompt,
+              "session_id":
+                  sessionId, // Enviamos el ID para evitar el NULL en la DB
+              "historial": lastMessages,
+              "contexto_gastos":
+                  [], // Aquí el backend ya jalará los datos de SQLAlchemy
+              "user_name": "Kevin"
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -85,7 +90,8 @@ class AIService {
 
   /// 3. OBTENER HISTORIAL DE UNA SESIÓN (GET)
   /// Carga los mensajes guardados de un chat específico.
-  Future<List<ChatMessage>> getHistoryBySession(String sessionId, String token) async {
+  Future<List<ChatMessage>> getHistoryBySession(
+      String sessionId, String token) async {
     final url = Uri.parse('$_baseUrl/historial/$sessionId');
     try {
       final response = await http.get(

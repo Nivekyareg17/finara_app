@@ -18,7 +18,7 @@ class AIChatPage extends StatefulWidget {
 }
 // FIN DE DEFINICIÓN DEL WIDGET PRINCIPAL
 
-// INICIO DEL ESTADO DEL WIDGET (LÓGICA Y UI)
+// INICIO DEL ESTADO DEL WIDGET
 class _AIChatPageState extends State<AIChatPage> {
 
   // INICIO DE VARIABLES DE ESTADO Y CONTROLADORES
@@ -30,15 +30,16 @@ class _AIChatPageState extends State<AIChatPage> {
   bool _isLoading = false;
   String _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
 
- 
+  
   String _selectedTool = "Rápido";
 
+  
   final TextEditingController _noteTitleController = TextEditingController();
-  late RichTextController _noteContentController; // Controlador para Mini Word
+  late RichTextController _noteContentController; 
   final TextEditingController _searchController = TextEditingController();
   int? _editingNoteId; 
 
-
+ 
   final List<String> _categoriasPredeterminadas = ["Ahorros", "Inversiones", "Desarrollo", "Gastos", "Ideas", "General"];
   String _categoriaSeleccionada = "General";
   String _filtroCategoria = "Todas";
@@ -54,7 +55,7 @@ class _AIChatPageState extends State<AIChatPage> {
   }
   // FIN DE VARIABLES DE ESTADO Y CONTROLADORES
 
-  // --- LÓGICA DE FORMATO POR SELECCIÓN---
+  //LÓGICA DE FORMATO POR SELECCIÓN
   void _aplicarFormato(String marcador) {
     final text = _noteContentController.text;
     final selection = _noteContentController.selection;
@@ -75,7 +76,7 @@ class _AIChatPageState extends State<AIChatPage> {
     });
   }
 
-  // --- INTERFAZ: LISTADO CON BÚSQUEDA Y FILTROS ---
+  //LISTADO CON BÚSQUEDA Y FILTROS
   void _verListadoNotas() {
     showModalBottomSheet(
       context: context,
@@ -129,7 +130,7 @@ class _AIChatPageState extends State<AIChatPage> {
 
               Expanded(
                 child: FutureBuilder<List<Note>>(
-                  future: _noteService.fetchNotes(),
+                  future: _noteService.fetchNotes(Provider.of<AuthProvider>(context, listen: false).token!),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                     
@@ -174,7 +175,7 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  // --- EDITOR PROFESIONAL ---
+  //EDITOR
   void _abrirEditorNota([Note? nota]) {
     if (nota != null) {
       _editingNoteId = nota.id;
@@ -199,7 +200,6 @@ class _AIChatPageState extends State<AIChatPage> {
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 20, right: 20, top: 20),
           child: Column(
             children: [
-             
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -246,7 +246,8 @@ class _AIChatPageState extends State<AIChatPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("⚠️ El título es obligatorio"), backgroundColor: Colors.orange));
       return;
     }
-    
+    final token = Provider.of<AuthProvider>(context, listen: false).token!;
+
     final note = Note(
       id: _editingNoteId, 
       title: _noteTitleController.text, 
@@ -255,19 +256,17 @@ class _AIChatPageState extends State<AIChatPage> {
     );
 
     bool success = false;
-    
-    // if (_editingNoteId == null) {
-    //   success = await _noteService.createNote(note);
-    // } else {
-    //   success = await _noteService.updateNote(note);
-    // }
+    if (_editingNoteId == null) {
+      success = await _noteService.createNote(note, token); 
+    } else {
+      success = await _noteService.updateNote(note, token); 
+    }
 
-    // if (success && mounted) {
-    //   Navigator.pop(context);
-    //   setState(() {});
-    // }
+    if (success && mounted) {
+      Navigator.pop(context);
+      setState(() {});
+    }
   }
-
   void _confirmarEliminar(int id) {
     showDialog(
       context: context,
@@ -277,7 +276,8 @@ class _AIChatPageState extends State<AIChatPage> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("No")),
           TextButton(onPressed: () async { 
             Navigator.pop(context);
-            if (await _noteService.deleteNote(id)) { 
+            final token = Provider.of<AuthProvider>(context, listen: false).token!;
+            if (await _noteService.deleteNote(id, token)) { 
               setState(() {}); 
               Navigator.pop(context); 
               _verListadoNotas(); 
@@ -289,13 +289,13 @@ class _AIChatPageState extends State<AIChatPage> {
   }
 
 
-  // INICIO DE LÓGICA DE CHAT E HISTORIAL
+  //CHAT E HISTORIAL
   void _sendMessage() async {
     if (_chatController.text.isEmpty) return;
     
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-    // 1. Creamos el mensaje del usuario
+  
     final userMsg = ChatMessage(
       text: _chatController.text, 
       sender: MessageSender.user, 
@@ -310,20 +310,20 @@ class _AIChatPageState extends State<AIChatPage> {
     _chatController.clear();
 
 
-    // final response = await _aiService.sendMessageToDaiko(
-    //   prompt: userMsg.text, 
-    //   token: authProvider.token!, 
-    //   history: _messages, 
-    //   sessionId: _currentSessionId,
-    //   tool: _selectedTool.toLowerCase(),
-    // );
+    final response = await _aiService.sendMessageToDaiko(
+      prompt: userMsg.text, 
+      token: authProvider.token!, 
+      history: _messages, 
+      sessionId: _currentSessionId,
+      tool: _selectedTool.toLowerCase(),
+    );
 
-    // if (mounted) {
-    //   setState(() { 
-    //     _messages.insert(0, response); 
-    //     _isLoading = false; 
-    //   });
-    // }
+    if (mounted) {
+      setState(() { 
+        _messages.insert(0, response); 
+        _isLoading = false; 
+      });
+    }
   }
   
   @override
