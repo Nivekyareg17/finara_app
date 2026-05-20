@@ -1,16 +1,33 @@
 import os
-from email.mime.text import MIMEText
 import resend
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 
 def send_email(to_email, link):
+
     resend.Emails.send({
+
         "from": "onboarding@resend.dev",
         "to": to_email,
-        "subject": "Recuperar contraseña",
+        "subject": "Recuperar contraseña - Finara",
+
         "html": f"""
-        <p>Haz clic para recuperar tu contraseña:</p>
-        <a href="{link}">{link}</a>
+        <h2>Recuperar contraseña</h2>
+
+        <p>Haz clic en el botón para crear una nueva contraseña:</p>
+
+        <a href="{link}"
+           style="
+           background:#18B47A;
+           color:white;
+           padding:12px 20px;
+           text-decoration:none;
+           border-radius:8px;
+           display:inline-block;
+           ">
+            Recuperar contraseña
+        </a>
+
+        <p>Si no solicitaste esto, ignora este correo.</p>
         """
     })
