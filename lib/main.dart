@@ -7,7 +7,7 @@ import 'package:finara_app_v1/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'package:uni_links/uni_links.dart';
+import 'package:app_links/app_links.dart';
 
 import '../providers/finance_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -36,11 +36,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  final GlobalKey<NavigatorState> navigatorKey =
-      GlobalKey<NavigatorState>();
-
-  StreamSubscription? _sub;
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _sub;
 
   @override
   void initState() {
@@ -55,41 +54,34 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _handleDeepLinks() async {
+    _appLinks = AppLinks();
 
-    final initialLink = await getInitialLink();
+    final initialUri = await _appLinks.getInitialLink();
 
-    if (initialLink != null) {
-      _openReset(initialLink);
+    if (initialUri != null) {
+      _openReset(initialUri);
     }
 
-    _sub = linkStream.listen((link) {
-
-      if (link != null) {
-        _openReset(link);
-      }
-
-    });
+    _sub = _appLinks.uriLinkStream.listen(
+      (uri) {
+        _openReset(uri);
+      },
+    );
   }
 
-  void _openReset(String link) {
-
-    final uri = Uri.parse(link);
-
+  void _openReset(Uri uri) {
     final token = uri.queryParameters["token"];
 
     if (token != null) {
-
       navigatorKey.currentState?.pushNamed(
         "/reset-password",
         arguments: token,
       );
-
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -105,20 +97,15 @@ class _MyAppState extends State<MyApp> {
           create: (_) => FinanceProvider(),
         ),
       ],
-
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
-
           return MaterialApp(
             navigatorKey: navigatorKey,
             debugShowCheckedModeBanner: false,
-
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-
             initialRoute: "/",
-
             routes: {
               "/": (context) => const SplashScreen(),
               "/login": (context) => const LoginScreen(),
@@ -129,13 +116,9 @@ class _MyAppState extends State<MyApp> {
               "/profile": (context) => const ProfileScreen(),
               "/video": (context) => const VideoScreen(),
               "/admin": (context) => const AdminScreen(),
-
               "/reset-password": (context) {
-
                 final token =
-                    ModalRoute.of(context)!
-                        .settings
-                        .arguments as String;
+                    ModalRoute.of(context)!.settings.arguments as String;
 
                 return ResetPasswordScreen(
                   token: token,
