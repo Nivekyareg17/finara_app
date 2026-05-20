@@ -158,6 +158,7 @@ class _AnimatedTouchCardState extends State<_AnimatedTouchCard> {
 
   @override
   Widget build(BuildContext context) {
+    
     return MouseRegion(
       onEnter: (_) => setState(() => _active = true),
       onExit: (_) => setState(() => _active = false),

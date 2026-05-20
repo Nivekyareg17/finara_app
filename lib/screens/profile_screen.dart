@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
 import '../widgets/custom_bottom_nav.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 
@@ -74,6 +75,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
+
+  String selectedChartType = "gasto";
 
   @override
   void initState() {
@@ -175,6 +178,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return total;
+  }
+
+  double getTotalIngresos() {
+    return transactions
+        .where((t) => t.type == "ingreso")
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double getTotalGastos() {
+    return transactions
+        .where((t) => t.type == "gasto")
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double getTotalGeneral() {
+    return getTotalIngresos() + getTotalGastos();
+  }
+
+  Map<String, double> getGastosPorCategoria() {
+    Map<String, double> data = {};
+
+    for (var t in transactions) {
+      if (t.type == "gasto") {
+        String categoria = getCategoryName(int.tryParse(t.categoryId) ?? 0);
+
+        data[categoria] = (data[categoria] ?? 0) + t.amount;
+      }
+    }
+
+    return data;
+  }
+
+  Map<String, double> getMovimientosPorCategoria(String tipo) {
+    Map<String, double> data = {};
+
+    for (var t in transactions) {
+      if (t.type == tipo) {
+        String categoria = getCategoryName(
+          int.tryParse(
+                t.categoryId,
+              ) ??
+              0,
+        );
+
+        data[categoria] = (data[categoria] ?? 0) + t.amount;
+      }
+    }
+
+    final sorted = data.entries.toList()
+      ..sort(
+        (a, b) => b.value.compareTo(a.value),
+      );
+
+    return Map.fromEntries(sorted);
+  }
+
+  Color getCategoryColor(String categoria) {
+    String c = categoria.toLowerCase();
+
+    if (c.contains("comida")) return Colors.orange;
+    if (c.contains("mercado")) return Colors.deepOrange;
+    if (c.contains("transporte")) return Colors.blue;
+    if (c.contains("salud")) return Colors.red;
+    if (c.contains("ahorro")) return Colors.green;
+    if (c.contains("trabajo")) return Colors.indigo;
+    if (c.contains("educacion")) return Colors.purple;
+
+    return const Color(0xFF00C853);
   }
 
   @override
@@ -464,377 +535,691 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
 
       //BODY CRUD
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            //PERFIL
-            Row(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
               children: [
-                CircleAvatar(
-                  radius: 20, // Más pequeño
-                  backgroundColor: Colors.white12,
-                  // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
-                  backgroundImage:
-                      (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                //PERFIL
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20, // Más pequeño
+                      backgroundColor: Colors.white12,
+                      // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
+                      backgroundImage: (profileImageUrl != null &&
+                              profileImageUrl!.isNotEmpty)
                           ? NetworkImage(profileImageUrl!)
                           : null,
-                  child: (profileImageUrl == null || profileImageUrl!.isEmpty)
-                      ? const Icon(Icons.person_outline_rounded,
-                          size: 20, color: Colors.white54)
-                      : null,
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name.isEmpty ? "Cargando..." : name,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      child:
+                          (profileImageUrl == null || profileImageUrl!.isEmpty)
+                              ? const Icon(Icons.person_outline_rounded,
+                                  size: 20, color: Colors.white54)
+                              : null,
                     ),
-                    Text(
-                      email.isEmpty ? "Cargando..." : email,
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // TARJETA DE BALANCE MEJORADA
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24), // Un poco más de aire
-              decoration: BoxDecoration(
-                // Un degradado sutil lo hace ver más "Premium"
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isDark
-                      ? [const Color(0xFF064E3B), const Color(0xFF065F46)]
-                      : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Balance Total",
-                        style: TextStyle(
-                          color: isDark
-                              ? Colors.white70
-                              : const Color(0xFF1B4332).withOpacity(0.7),
-                          fontSize: 16,
-                          letterSpacing: 0.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: isDark
-                            ? Colors.white38
-                            : const Color(0xFF1B4332).withOpacity(0.3),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    formatCurrency(getBalance()), // <-- Usando la función nueva
-                    style: TextStyle(
-                      fontSize: 36, // Un poco más grande
-                      fontWeight: FontWeight.w900, // Más grueso
-                      letterSpacing:
-                          -1, // Un poco más juntas las letras se ve pro
-                      color: isDark ? Colors.white : const Color(0xFF1B4332),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Un pequeño indicador extra le da el toque final
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white10 : Colors.white54,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      "Actualizado hace un momento",
-                      style: TextStyle(
-                        fontSize: 10,
-                        color:
-                            isDark ? Colors.white60 : const Color(0xFF1B4332),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            //SECCIÓN METAS
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Metas de ahorro",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  onPressed: _crearMeta,
-                  icon: const Icon(Icons.add, color: Color(0xFF00C853)),
-                )
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            SizedBox(
-              height: 180,
-              child: metas.isEmpty
-                  ? const Center(child: Text("No hay metas aún"))
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: metas.length,
-                      itemBuilder: (context, index) {
-                        final meta = metas[index];
-
-                        return Container(
-                          width: 220,
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color.fromARGB(255, 6, 78, 59)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: isDark
-                                ? []
-                                : [
-                                    BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 10)
-                                  ],
-                          ),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(meta.nombre,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
-                                    ),
-                                    Row(
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () => _editarMeta(index),
-                                          child: const Icon(Icons.edit,
-                                              size: 18,
-                                              color: Color.fromARGB(
-                                                  255, 5, 46, 35)),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        GestureDetector(
-                                          onTap: () => _eliminarMeta(index),
-                                          child: const Icon(Icons.delete,
-                                              size: 18, color: Colors.red),
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                LinearProgressIndicator(
-                                  value: meta.progreso.clamp(0, 1),
-                                  backgroundColor: Colors.grey[300],
-                                  color: const Color(0xFF00C853),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                    "${meta.porcentaje.toStringAsFixed(1)}% completado"),
-                                const SizedBox(height: 5),
-                                Text(
-                                  "Faltan: ${meta.mesesRestantes} meses",
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.grey),
-                                ),
-                              ]),
-                        );
-                      },
-                    ),
-            ),
-
-            const SizedBox(height: 20),
-
-            //TÍTULO Y BOTÓN AGREGAR
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const TranslatedText(
-                  "Movimientos",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                TextButton.icon(
-                  onPressed: () => showForm(),
-                  icon: const Icon(Icons.add, color: Color(0xFF00C853)),
-                  label: const TranslatedText("Agregar",
-                      style: TextStyle(color: Color(0xFF00C853))),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            //LISTA DE TRANSACCIONES
-            Expanded(
-              child: ListView.separated(
-                itemCount: transactions.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final t = transactions[index];
-                  final bool isIngreso = t.type == "ingreso";
-                  final bool isFuture = t.isFutureMovement;
-                  final categoryName =
-                      getCategoryName(int.tryParse(t.categoryId) ?? 0);
-                  final catData = _getCategoryData(categoryName);
-                  return Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: isFuture
-                          ? (isDark
-                              ? const Color(0xFF172554)
-                              : const Color(0xFFEFF6FF))
-                          : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
-                      borderRadius: BorderRadius.circular(20),
-                      border: isFuture
-                          ? Border.all(color: const Color(0xFF3B82F6))
-                          : null,
-                      boxShadow: isDark
-                          ? []
-                          : [
-                              BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10)
-                            ],
-                    ),
-                    child: Row(
+                    const SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //ICON SEGÚN LA IMAGEN
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: catData['color'].withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(catData['icon'],
-                              color: catData['color'], size: 24),
+                        Text(
+                          name.isEmpty ? "Cargando..." : name,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 15),
-
-                        //DESCRIPCIÓN Y FECHA
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                categoryName,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                t.description,
-                                style: TextStyle(
-                                    color: Colors.grey[500], fontSize: 12),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat("dd/MM/yyyy").format(t.date),
-                                style: TextStyle(
-                                    color: Colors.grey[500], fontSize: 12),
-                              ),
-                              if (isFuture) ...[
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6)
-                                        .withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: const Text(
-                                    "Próximo movimiento",
-                                    style: TextStyle(
-                                      color: Color(0xFF2563EB),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        //MONTO Y ACCIONES
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              "${isIngreso ? '+' : '-'} ${formatCurrency(t.amount)}",
-                              style: TextStyle(
-                                color:
-                                    isIngreso ? Colors.green : Colors.redAccent,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  onTap: () => showForm(edit: t),
-                                  child: const Icon(Icons.edit_note,
-                                      size: 20, color: Colors.blueGrey),
-                                ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => confirmDelete(t),
-                                  child: const Icon(Icons.delete_outline,
-                                      size: 20, color: Colors.redAccent),
-                                ),
-                              ],
-                            ),
-                          ],
+                        Text(
+                          email.isEmpty ? "Cargando..." : email,
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // TARJETA DE BALANCE MEJORADA
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24), // Un poco más de aire
+                  decoration: BoxDecoration(
+                    // Un degradado sutil lo hace ver más "Premium"
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [const Color(0xFF064E3B), const Color(0xFF065F46)]
+                          : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Balance Total",
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF1B4332).withOpacity(0.7),
+                              fontSize: 16,
+                              letterSpacing: 0.5,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Icon(
+                            Icons.account_balance_wallet_outlined,
+                            color: isDark
+                                ? Colors.white38
+                                : const Color(0xFF1B4332).withOpacity(0.3),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        formatCurrency(
+                            getBalance()), // <-- Usando la función nueva
+                        style: TextStyle(
+                          fontSize: 36, // Un poco más grande
+                          fontWeight: FontWeight.w900, // Más grueso
+                          letterSpacing:
+                              -1, // Un poco más juntas las letras se ve pro
+                          color:
+                              isDark ? Colors.white : const Color(0xFF1B4332),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Un pequeño indicador extra le da el toque final
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white10 : Colors.white54,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "Actualizado hace un momento",
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark
+                                ? Colors.white60
+                                : const Color(0xFF1B4332),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                //SECCIÓN METAS
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Metas de ahorro",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: _crearMeta,
+                      icon: const Icon(Icons.add, color: Color(0xFF00C853)),
+                    )
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                SizedBox(
+                  height: 180,
+                  child: metas.isEmpty
+                      ? const Center(child: Text("No hay metas aún"))
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: metas.length,
+                          itemBuilder: (context, index) {
+                            final meta = metas[index];
+
+                            return Container(
+                              width: 220,
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color.fromARGB(255, 6, 78, 59)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: isDark
+                                    ? []
+                                    : [
+                                        BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.05),
+                                            blurRadius: 10)
+                                      ],
+                              ),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(meta.nombre,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16)),
+                                        ),
+                                        Row(
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () => _editarMeta(index),
+                                              child: const Icon(Icons.edit,
+                                                  size: 18,
+                                                  color: Color.fromARGB(
+                                                      255, 5, 46, 35)),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            GestureDetector(
+                                              onTap: () => _eliminarMeta(index),
+                                              child: const Icon(Icons.delete,
+                                                  size: 18, color: Colors.red),
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    LinearProgressIndicator(
+                                      value: meta.progreso.clamp(0, 1),
+                                      backgroundColor: Colors.grey[300],
+                                      color: const Color(0xFF00C853),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                        "${meta.porcentaje.toStringAsFixed(1)}% completado"),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      "Faltan: ${meta.mesesRestantes} meses",
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
+                                  ]),
+                            );
+                          },
+                        ),
+                ),
+
+                const SizedBox(height: 20),
+
+                //TÍTULO Y BOTÓN AGREGAR
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const TranslatedText(
+                      "Movimientos",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => showForm(),
+                      icon: const Icon(Icons.add, color: Color(0xFF00C853)),
+                      label: const TranslatedText("Agregar",
+                          style: TextStyle(color: Color(0xFF00C853))),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  height: 370,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: isDark
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                            )
+                          ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Resumen financiero",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      SizedBox(
+                        height: 210,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            PieChart(
+                              PieChartData(
+                                centerSpaceRadius: 55,
+                                sectionsSpace: 4,
+                                centerSpaceColor: isDark
+                                    ? const Color(0xFF1E1E1E)
+                                    : Colors.white,
+                                sections: [
+                                  PieChartSectionData(
+                                    value: getTotalIngresos(),
+                                    color: Colors.green,
+                                    radius: 65,
+                                    title: getTotalGeneral() == 0
+                                        ? "0%"
+                                        : "${((getTotalIngresos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                                    titleStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  PieChartSectionData(
+                                    value: getTotalGastos(),
+                                    color: Colors.redAccent,
+                                    radius: 65,
+                                    title: getTotalGeneral() == 0
+                                        ? "0%"
+                                        : "${((getTotalGastos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                                    titleStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    "Balance",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    formatCurrency(getBalance()),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Ingresos: ${formatCurrency(getTotalIngresos())}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Gastos: ${formatCurrency(getTotalGastos())}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black26 : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedChartType = "ingreso";
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selectedChartType == "ingreso"
+                                  ? const Color(0xFF00C853)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "Ingresos",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedChartType = "gasto";
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selectedChartType == "gasto"
+                                  ? Colors.redAccent
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "Gastos",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Container(
+                  height: 330,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: BarChart(
+                    BarChartData(
+                      borderData: FlBorderData(show: false),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipRoundedRadius: 14,
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final categorias = getMovimientosPorCategoria(
+                              selectedChartType,
+                            ).entries.toList();
+
+                            final item = categorias[group.x];
+
+                            return BarTooltipItem(
+                              "${item.key}\n${formatCurrency(item.value)}",
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      alignment: BarChartAlignment.start,
+                      titlesData: FlTitlesData(
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final categorias = getMovimientosPorCategoria(
+                                selectedChartType,
+                              ).keys.toList();
+
+                              if (value.toInt() >= categorias.length) {
+                                return const SizedBox();
+                              }
+
+                              return Text(
+                                categorias[value.toInt()],
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: false,
+                          ),
+                        ),
+                      ),
+                      barGroups: getMovimientosPorCategoria(
+                        selectedChartType,
+                      ).entries.toList().asMap().entries.map((entry) {
+                        int index = entry.key;
+                        final item = entry.value;
+
+                        return BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY: item.value,
+                              color: getCategoryColor(
+                                item.key,
+                              ),
+                              width: 22,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+
+                //LISTA DE TRANSACCIONES
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: transactions.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final t = transactions[index];
+                    final bool isIngreso = t.type == "ingreso";
+                    final bool isFuture = t.isFutureMovement;
+                    final categoryName =
+                        getCategoryName(int.tryParse(t.categoryId) ?? 0);
+                    final catData = _getCategoryData(categoryName);
+                    return Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: isFuture
+                            ? (isDark
+                                ? const Color(0xFF172554)
+                                : const Color(0xFFEFF6FF))
+                            : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+                        borderRadius: BorderRadius.circular(20),
+                        border: isFuture
+                            ? Border.all(color: const Color(0xFF3B82F6))
+                            : null,
+                        boxShadow: isDark
+                            ? []
+                            : [
+                                BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10)
+                              ],
+                      ),
+                      child: Row(
+                        children: [
+                          //ICON SEGÚN LA IMAGEN
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: catData['color'].withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(catData['icon'],
+                                color: catData['color'], size: 24),
+                          ),
+                          const SizedBox(width: 15),
+
+                          //DESCRIPCIÓN Y FECHA
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  categoryName,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  t.description,
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 12),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat("dd/MM/yyyy").format(t.date),
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 12),
+                                ),
+                                if (isFuture) ...[
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF3B82F6)
+                                          .withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: const Text(
+                                      "Próximo movimiento",
+                                      style: TextStyle(
+                                        color: Color(0xFF2563EB),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          //MONTO Y ACCIONES
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "${isIngreso ? '+' : '-'} ${formatCurrency(t.amount)}",
+                                style: TextStyle(
+                                  color: isIngreso
+                                      ? Colors.green
+                                      : Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => showForm(edit: t),
+                                    child: const Icon(Icons.edit_note,
+                                        size: 20, color: Colors.blueGrey),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () => confirmDelete(t),
+                                    child: const Icon(Icons.delete_outline,
+                                        size: 20, color: Colors.redAccent),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
+
       bottomNavigationBar: const CustomBottomNav(
         selectedIndex: 4,
       ),
