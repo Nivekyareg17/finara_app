@@ -4,6 +4,8 @@ import '../../models/news_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:finara_app_v1/services/translation_service.dart';
 import '../widgets/translate_widget.dart';
+import '../widgets/custom_bottom_nav.dart';
+import '../widgets/app_drawer.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
@@ -50,6 +52,7 @@ class NewsScreen extends StatelessWidget {
     final newsService = NewsService();
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         elevation: 0,
         title: Row(
@@ -116,6 +119,9 @@ class NewsScreen extends StatelessWidget {
             ),
           )
         ],
+      ),
+      bottomNavigationBar: const CustomBottomNav(
+        selectedIndex: 1,
       ),
     );
   }

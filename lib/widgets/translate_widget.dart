@@ -7,16 +7,16 @@ class TranslatedText extends StatelessWidget {
   final String text;
   final TextStyle? style;
   final TextAlign? textAlign;
-  final int? maxLines;           // <--- AGREGA ESTO
-  final TextOverflow? overflow; // <--- AGREGA ESTO
+  final int? maxLines;      
+  final TextOverflow? overflow; 
 
   const TranslatedText(
     this.text, {
     super.key, 
     this.style, 
     this.textAlign,
-    this.maxLines, // <--- Y ESTO
-    this.overflow, // <--- Y ESTO
+    this.maxLines,
+    this.overflow, 
   });
 
   @override
@@ -31,8 +31,8 @@ class TranslatedText extends StatelessWidget {
           snapshot.data ?? text,
           style: style,
           textAlign: textAlign,
-          maxLines: maxLines, // <--- PÁSALO AL TEXT REAL
-          overflow: overflow, // <--- PÁSALO AL TEXT REAL
+          maxLines: maxLines,
+          overflow: overflow,
         );
       },
     );

@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
+import '../widgets/custom_bottom_nav.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 
@@ -358,7 +359,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildDrawerItem(
                     icon: Icons.badge_rounded,
                     title: "Informacion personal",
-                    subtitle: username.isEmpty ? "Completa tu perfil" : "@$username",
+                    subtitle:
+                        username.isEmpty ? "Completa tu perfil" : "@$username",
                     color: const Color(0xFFE1306C),
                     onTap: () {
                       Navigator.pop(context);
@@ -391,25 +393,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.home_rounded,
                     title: "Inicio",
                     color: const Color(0xFF10B981),
-                    onTap: () => Navigator.pushReplacementNamed(context, "/home"),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/home"),
                   ),
                   _buildDrawerItem(
                     icon: Icons.newspaper_rounded,
                     title: "Noticias",
                     color: Colors.blue,
-                    onTap: () => Navigator.pushReplacementNamed(context, "/news"),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/news"),
                   ),
                   _buildDrawerItem(
                     icon: Icons.auto_awesome,
                     title: "Daiko AI",
                     color: Colors.purple,
-                    onTap: () => Navigator.pushReplacementNamed(context, "/daiko_ai"),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/daiko_ai"),
                   ),
                   _buildDrawerItem(
                     icon: Icons.school_rounded,
                     title: "Aprendizaje",
                     color: Colors.teal,
-                    onTap: () => Navigator.pushReplacementNamed(context, "/video"),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/video"),
                   ),
                   _buildDrawerItem(
                     icon: Icons.calculate_rounded,
@@ -829,6 +835,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: const CustomBottomNav(
+        selectedIndex: 4,
+      ),
     );
   }
 
@@ -1187,8 +1196,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 allowFutureMovement = !allowFutureMovement;
                                 final parsed = DateFormat("MM/dd/yyyy")
                                     .tryParse(dateController.text);
-                                final todayOnly =
-                                    DateTime(today.year, today.month, today.day);
+                                final todayOnly = DateTime(
+                                    today.year, today.month, today.day);
                                 if (!allowFutureMovement &&
                                     parsed != null &&
                                     parsed.isAfter(todayOnly)) {
@@ -1924,10 +1933,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 profileImageUrl!.isNotEmpty)
                             ? NetworkImage(profileImageUrl!)
                             : null,
-                        child:
-                            (profileImageUrl == null || profileImageUrl!.isEmpty)
-                                ? const Icon(Icons.person_rounded, size: 32)
-                                : null,
+                        child: (profileImageUrl == null ||
+                                profileImageUrl!.isEmpty)
+                            ? const Icon(Icons.person_rounded, size: 32)
+                            : null,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -2080,8 +2089,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide:
-                const BorderSide(color: Color(0xFFE1306C), width: 1.6),
+            borderSide: const BorderSide(color: Color(0xFFE1306C), width: 1.6),
           ),
         ),
       ),
@@ -2123,8 +2131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 "Estamos listos para ayudarte con tu cuenta, movimientos, metas o dudas de la app.",
               ),
               const SizedBox(height: 18),
-              _supportTile(Icons.email_rounded, "Correo",
-                  "soporte@finara.app"),
+              _supportTile(Icons.email_rounded, "Correo", "soporte@finara.app"),
               _supportTile(Icons.chat_rounded, "Chat de ayuda",
                   "Respuesta en horario laboral"),
               _supportTile(Icons.bug_report_rounded, "Reportar problema",
@@ -2156,7 +2163,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(title,
                     style: const TextStyle(fontWeight: FontWeight.w900)),
                 Text(subtitle,
-                    style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                    style:
+                        const TextStyle(color: Colors.black54, fontSize: 12)),
               ],
             ),
           ),

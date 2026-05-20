@@ -9,6 +9,8 @@ import '../widgets/quick_wins.dart';
 import '../widgets/statcard.dart';
 import 'chat_screen.dart';
 import '../widgets/calculators_card.dart';
+import '../widgets/app_drawer.dart';
+import '../widgets/custom_bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // 4. UNA VEZ CARGADO: Mostramos la UI real
         // Aquí ya NO hay parpadeo porque el Scaffold se dibuja con los datos listos
         return Scaffold(
+          drawer: const AppDrawer(),
           backgroundColor:
               isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
           appBar: AppBar(
@@ -81,21 +84,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ChatListScreen(),
-                          ),
-                        );
-                      },
-                      child: StatCard(
-                        title: "MENSAJES",
-                        count: "💬",
-                        unit: "Chats",
-                        icon: Icons.chat,
-                        accentColor: Colors.green,
+                    Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ChatListScreen(),
+                            ),
+                          );
+                        },
+                        child: StatCard(
+                          title: "MENSAJES",
+                          count: "💬",
+                          unit: "Chats",
+                          icon: Icons.chat,
+                          accentColor: Colors.green,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -198,6 +204,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 80),
             ],
+          ),
+          bottomNavigationBar: const CustomBottomNav(
+            selectedIndex: 0,
           ),
         );
       },
