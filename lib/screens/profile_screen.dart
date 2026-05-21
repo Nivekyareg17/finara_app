@@ -579,7 +579,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        formatCurrency(
+                        formatearDinero(
                             getBalance()), // <-- Usando la función nueva
                         style: TextStyle(
                           fontSize: 36, // Un poco más grande
@@ -750,13 +750,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           const SizedBox(height: 4),
 
                                           Text(
-                                            "Llevas: ${formatCurrency(meta.montoActual)}",
+                                            "Llevas: ${formatearDinero(meta.montoActual)}",
                                             style:
                                                 const TextStyle(fontSize: 12),
                                           ),
 
                                           Text(
-                                            "Faltan: ${formatCurrency(meta.montoMeta - meta.montoActual)}",
+                                            "Faltan: ${formatearDinero(meta.montoMeta - meta.montoActual)}",
                                             style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.redAccent),
@@ -881,7 +881,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    formatCurrency(getBalance()),
+                                    formatearDinero(getBalance()),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       fontSize: 18,
@@ -910,7 +910,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "Ingresos: ${formatCurrency(getTotalIngresos())}",
+                                "Ingresos: ${formatearDinero(getTotalIngresos())}",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -931,7 +931,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "Gastos: ${formatCurrency(getTotalGastos())}",
+                                "Gastos: ${formatearDinero(getTotalGastos())}",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1033,7 +1033,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             final item = categorias[group.x];
 
                             return BarTooltipItem(
-                              "${item.key}\n${formatCurrency(item.value)}",
+                              "${item.key}\n${formatearDinero(item.value)}",
                               const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -1205,7 +1205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "${isIngreso ? '+' : '-'} ${formatCurrency(t.amount)}",
+                                "${isIngreso ? '+' : '-'} ${formatearDinero(t.amount)}",
                                 style: TextStyle(
                                   color: isIngreso
                                       ? Colors.green
@@ -2030,6 +2030,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       : () async {
                           // ... tu lÃ³gica de borrado que ya tienes ...
                         },
+                
                   child: isDeleting
                       ? const SizedBox(
                           width: 20,
@@ -2666,11 +2667,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String formatCurrency(double amount) {
-    // Crea un formato: $1,234.56
-    final formatter = NumberFormat.currency(locale: "en_US", symbol: "\$");
-    return formatter.format(amount);
-  }
+  String formatearDinero(double valor) {
+  final formato = NumberFormat.currency(
+    locale: 'es_CO',
+    symbol: '\$',
+    decimalDigits: 2,
+  );
+
+  return formato.format(valor);
+}
 
   void _crearMeta() {
     TextEditingController nombre = TextEditingController();
@@ -2793,76 +2798,209 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 25),
 
                           //MONTO META
-                          const Text(
-                            "Monto objetivo",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: montoMeta,
-                            onChanged: (_) => setStateDialog(() {}),
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.attach_money,
-                                  color: Color(0xFF064E3B)),
-                              hintText: "0.00",
-                              filled: true,
-                              fillColor:
-                                  isDark ? Colors.black12 : Colors.grey[50],
-                              border: metaBorder(montoError),
-                              enabledBorder: metaBorder(montoError),
-                              focusedBorder: metaBorder(montoError),
-                            ),
-                          ),
-                          // Después del TextField de nombre
-                          if (nombreError)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 6, left: 4),
-                              child: Text(
-                                "Este campo es obligatorio",
-                                style: TextStyle(
-                                    color: Colors.redAccent, fontSize: 12),
-                              ),
-                            ),
+                         // ================= MONTO OBJETIVO =================
 
-                          const SizedBox(height: 25),
+Text(
+  "Monto objetivo",
+  style: TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 15,
+    color: isDark
+        ? Colors.white70
+        : Colors.grey.shade700,
+  ),
+),
 
-                          //AHORRO MENSUAL
-                          const Text(
-                            "Ahorro mensual",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: ahorroMensual,
-                            onChanged: (_) => setStateDialog(() {}),
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.savings,
-                                  color: Color(0xFF064E3B)),
-                              hintText: "0.00",
-                              filled: true,
-                              fillColor:
-                                  isDark ? Colors.black12 : Colors.grey[50],
-                              border: metaBorder(ahorroError),
-                              enabledBorder: metaBorder(ahorroError),
-                              focusedBorder: metaBorder(ahorroError),
-                            ),
-                          ),
-                          // Después del TextField de nombre
-                          if (ahorroError)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 6, left: 4),
-                              child: Text(
-                                "Este campo es obligatorio",
-                                style: TextStyle(
-                                    color: Colors.redAccent, fontSize: 12),
-                              ),
-                            ),
+const SizedBox(height: 12),
+
+Container(
+  padding: const EdgeInsets.symmetric(
+    horizontal: 18,
+    vertical: 6,
+  ),
+  decoration: BoxDecoration(
+    color: isDark
+        ? const Color(0xFF232323)
+        : const Color(0xFFF7F7F7),
+    borderRadius: BorderRadius.circular(22),
+    border: Border.all(
+      color: montoError
+          ? Colors.redAccent
+          : Theme.of(context)
+              .colorScheme
+              .primary
+              .withOpacity(0.15),
+      width: 1.8,
+    ),
+  ),
+  child: Row(
+    children: [
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context)
+              .colorScheme
+              .primary
+              .withOpacity(0.10),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          Icons.attach_money_rounded,
+          size: 28,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+
+      const SizedBox(width: 14),
+
+      Expanded(
+        child: TextField(
+          controller: montoMeta,
+          onChanged: (_) => setStateDialog(() {}),
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            CurrencyInputFormatter(),
+          ],
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: isDark
+                ? Colors.white
+                : const Color(0xFF064E3B),
+          ),
+          decoration: InputDecoration(
+            hintText: "\$ 0,00",
+            hintStyle: TextStyle(
+              color: isDark
+                  ? Colors.white24
+                  : Colors.black26,
+            ),
+            border: InputBorder.none,
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+
+if (montoError)
+  const Padding(
+    padding: EdgeInsets.only(top: 8, left: 4),
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        "Este campo es obligatorio",
+        style: TextStyle(
+          color: Colors.redAccent,
+          fontSize: 12,
+        ),
+      ),
+    ),
+  ),
+
+const SizedBox(height: 28),
+
+// ================= AHORRO MENSUAL =================
+
+Text(
+  "Ahorro mensual",
+  style: TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 15,
+    color: isDark
+        ? Colors.white70
+        : Colors.grey.shade700,
+  ),
+),
+
+const SizedBox(height: 12),
+
+Container(
+  padding: const EdgeInsets.symmetric(
+    horizontal: 18,
+    vertical: 6,
+  ),
+  decoration: BoxDecoration(
+    color: isDark
+        ? const Color(0xFF232323)
+        : const Color(0xFFF7F7F7),
+    borderRadius: BorderRadius.circular(22),
+    border: Border.all(
+      color: ahorroError
+          ? Colors.redAccent
+          : Theme.of(context)
+              .colorScheme
+              .primary
+              .withOpacity(0.15),
+      width: 1.8,
+    ),
+  ),
+  child: Row(
+    children: [
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context)
+              .colorScheme
+              .primary
+              .withOpacity(0.10),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          Icons.savings_rounded,
+          size: 28,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+
+      const SizedBox(width: 14),
+
+      Expanded(
+        child: TextField(
+          controller: ahorroMensual,
+          onChanged: (_) => setStateDialog(() {}),
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            CurrencyInputFormatter(),
+          ],
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: isDark
+                ? Colors.white
+                : const Color(0xFF064E3B),
+          ),
+          decoration: InputDecoration(
+            hintText: "\$ 0,00",
+            hintStyle: TextStyle(
+              color: isDark
+                  ? Colors.white24
+                  : Colors.black26,
+            ),
+            border: InputBorder.none,
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+
+if (ahorroError)
+  const Padding(
+    padding: EdgeInsets.only(top: 8, left: 4),
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        "Este campo es obligatorio",
+        style: TextStyle(
+          color: Colors.redAccent,
+          fontSize: 12,
+        ),
+      ),
+    ),
+  ),
 
                           const SizedBox(height: 20),
 
