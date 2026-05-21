@@ -22,7 +22,7 @@ class AIChatPage extends StatefulWidget {
 class _AIChatPageState extends State<AIChatPage> {
 
   // INICIO DE VARIABLES DE ESTADO Y CONTROLADORES
-  final List<ChatMessage> _messages = [];
+  List<ChatMessage> _messages = [];
   final TextEditingController _chatController = TextEditingController();
   final AIService _aiService = AIService();
   final NoteService _noteService = NoteService();
@@ -54,7 +54,47 @@ class _AIChatPageState extends State<AIChatPage> {
     _noteContentController = RichTextController();
   }
   // FIN DE VARIABLES DE ESTADO Y CONTROLADORES
+Widget _buildToolSelector(bool isDark) {
+    return PopupMenuButton<String>(
+      offset: const Offset(0, -220),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white10 : Colors.grey[200], 
+          borderRadius: BorderRadius.circular(20)
+        ),
+        child: Row(children: [
+          Text(_selectedTool, style: const TextStyle(fontSize: 13)), 
+          const Icon(Icons.keyboard_arrow_down, size: 18)
+        ]),
+      ),
+      onSelected: (v) => setState(() => _selectedTool = v),
+      itemBuilder: (context) => [
+        _buildPopupItem("Rápido", "Responde rápidamente", Icons.bolt, _selectedTool == "Rápido", isDark),
+        _buildPopupItem("Pensar", "Resuelve problemas complejos", Icons.psychology, _selectedTool == "Pensar", isDark),
+        _buildPopupItem("Bolsa", "Análisis de mercado", Icons.trending_up, _selectedTool == "Bolsa", isDark),
+        _buildPopupItem("Gastos", "Gestión financiera", Icons.account_balance_wallet, _selectedTool == "Gastos", isDark),
+      ],
+    );
+  }
 
+  PopupMenuItem<String> _buildPopupItem(String title, String subtitle, IconData icon, bool isSelected, bool isDark) {
+    return PopupMenuItem<String>(
+      value: title,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: isSelected ? primaryGreen : Colors.grey),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), 
+            Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey))
+          ])),
+          if (isSelected) Icon(Icons.check_circle, size: 18, color: primaryGreen),
+        ],
+      ),
+    );
+  }
   //LÓGICA DE FORMATO POR SELECCIÓN
   void _aplicarFormato(String marcador) {
     final text = _noteContentController.text;
@@ -290,12 +330,14 @@ class _AIChatPageState extends State<AIChatPage> {
 
 
   //CHAT E HISTORIAL
+  // ==========================================
+// SECCIÓN: LÓGICA DE ENVÍO DE MENSAJES (CHAT)
+// ==========================================
   void _sendMessage() async {
     if (_chatController.text.isEmpty) return;
     
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-  
     final userMsg = ChatMessage(
       text: _chatController.text, 
       sender: MessageSender.user, 
@@ -309,13 +351,13 @@ class _AIChatPageState extends State<AIChatPage> {
 
     _chatController.clear();
 
-
+    // Llamada corregida con el parámetro 'tool' incluido
     final response = await _aiService.sendMessageToDaiko(
       prompt: userMsg.text, 
       token: authProvider.token!, 
       history: _messages, 
       sessionId: _currentSessionId,
-      tool: _selectedTool.toLowerCase(),
+      tool: _selectedTool.toLowerCase(), // <--- Parámetro necesario
     );
 
     if (mounted) {
@@ -325,7 +367,11 @@ class _AIChatPageState extends State<AIChatPage> {
       });
     }
   }
-  
+// FIN DE LÓGICA DE ENVÍO
+
+// ==========================================
+// SECCIÓN: ESTRUCTURA DE LA INTERFAZ (UI)
+// ==========================================
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -343,6 +389,8 @@ class _AIChatPageState extends State<AIChatPage> {
           ),
         ],
       ),
+      
+      // --- DRAWER (HISTORIAL DE SESIONES) ---
       drawer: Drawer(
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         child: Column(
@@ -361,14 +409,27 @@ class _AIChatPageState extends State<AIChatPage> {
                 future: _aiService.getSessions(authProvider.token!),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                  
+                  // Limpieza de duplicados visuales
+                  final sessions = snapshot.data!.map((e) => e['session_id']).toSet().toList();
+
                   return ListView.builder(
-                    itemCount: snapshot.data!.length,
+                    itemCount: sessions.length,
                     itemBuilder: (context, i) => ListTile(
                       leading: const Icon(Icons.history, size: 20),
-                      title: Text("Sesión ${snapshot.data![i]['session_id'].toString().substring(0,6)}", style: const TextStyle(fontSize: 14)),
-                      onTap: () {
-                        setState(() { _messages.clear(); _currentSessionId = snapshot.data![i]['session_id']; });
+                      title: Text("Sesión ${sessions[i].toString().substring(0,6)}", style: const TextStyle(fontSize: 14)),
+                      onTap: () async {
                         Navigator.pop(context);
+                        setState(() => _isLoading = true);
+                        
+                        // Carga real del historial de la DB
+                        final mensajes = await _aiService.getHistoryBySession(sessions[i], authProvider.token!);
+                        
+                        setState(() { 
+                          _messages = mensajes; 
+                          _currentSessionId = sessions[i]; 
+                          _isLoading = false; 
+                        });
                       },
                     ),
                   );
@@ -378,7 +439,11 @@ class _AIChatPageState extends State<AIChatPage> {
           ],
         ),
       ),
+      // FIN DEL DRAWER
+
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0, title: Text("DAIKO AI", style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold))),
+      
+      // --- CUERPO DEL CHAT ---
       body: Column(
         children: [
           Expanded(child: ListView.builder(reverse: true, padding: const EdgeInsets.all(20), itemCount: _messages.length, itemBuilder: (context, i) => _buildBubble(_messages[i], isDark))),
@@ -386,10 +451,16 @@ class _AIChatPageState extends State<AIChatPage> {
           _buildInputSection(isDark),
         ],
       ),
+      // FIN DEL CUERPO
+
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 2),
     );
   }
+// FIN DE ESTRUCTURA UI
 
+// ==========================================
+// SECCIÓN: WIDGETS DE COMPOSICIÓN (BUBBLES & INPUT)
+// ==========================================
   Widget _buildBubble(ChatMessage msg, bool isDark) {
     bool isUser = msg.sender == MessageSender.user;
     return Align(
@@ -427,39 +498,6 @@ class _AIChatPageState extends State<AIChatPage> {
             backgroundColor: primaryGreen,
             child: IconButton(onPressed: _sendMessage, icon: const Icon(Icons.send, color: Colors.white, size: 20)),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildToolSelector(bool isDark) {
-    return PopupMenuButton<String>(
-      offset: const Offset(0, -220),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.grey[200], borderRadius: BorderRadius.circular(20)),
-        child: Row(children: [Text(_selectedTool, style: const TextStyle(fontSize: 13)), const Icon(Icons.keyboard_arrow_down, size: 18)]),
-      ),
-      onSelected: (v) => setState(() => _selectedTool = v),
-      itemBuilder: (context) => [
-        _buildPopupItem("Rápido", "Responde rápidamente", Icons.bolt, _selectedTool == "Rápido", isDark),
-        _buildPopupItem("Pensar", "Resuelve problemas complejos", Icons.psychology, _selectedTool == "Pensar", isDark),
-        _buildPopupItem("Bolsa", "Análisis de mercado", Icons.trending_up, _selectedTool == "Bolsa", isDark),
-        _buildPopupItem("Gastos", "Gestión financiera", Icons.account_balance_wallet, _selectedTool == "Gastos", isDark),
-      ],
-    );
-  }
-
-  PopupMenuItem<String> _buildPopupItem(String title, String subtitle, IconData icon, bool isSelected, bool isDark) {
-    return PopupMenuItem<String>(
-      value: title,
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: isSelected ? primaryGreen : Colors.grey),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey))])),
-          if (isSelected) Icon(Icons.check_circle, size: 18, color: primaryGreen),
         ],
       ),
     );
