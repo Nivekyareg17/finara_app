@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import schemas
 from security import hash_password
 from database import SessionLocal
-from models import User
+from models import User, Transaction, PasswordResetToken, EmailVerificationToken, Category
 from auth import verify_token, require_admin
 
 from fastapi import UploadFile, File
@@ -176,26 +176,69 @@ def get_users(
 
 # Eliminar usuario
 @router.delete("/delete/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db), data = Depends(require_admin)):
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    data = Depends(require_admin)
+):
+
     try:
-        user = db.query(User).filter(User.id == user_id).first()
+
+        db.query(Category)\
+            .filter(
+                Category.user_id
+                == user_id
+            ).delete()
+
+        user = db.query(User)\
+            .filter(User.id == user_id)\
+            .first()
 
         if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-        from models import Transaction, PasswordResetToken
+            raise HTTPException(
+                status_code=404,
+                detail="Usuario no encontrado"
+            )
 
-        db.query(Transaction).filter(Transaction.user_id == user_id).delete()
-        db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete()
+        db.query(Transaction)\
+            .filter(
+                Transaction.user_id
+                == user_id
+            ).delete()
+
+        db.query(PasswordResetToken)\
+            .filter(
+                PasswordResetToken.user_id
+                == user_id
+            ).delete()
+
+        db.query(EmailVerificationToken)\
+            .filter(
+                EmailVerificationToken.user_id
+                == user_id
+            ).delete()
 
         db.delete(user)
+
         db.commit()
 
-        return {"message": "Usuario eliminado"}
+        return {
+            "message":
+            "Usuario eliminado"
+        }
 
     except Exception as e:
-        print("ERROR DELETE:", str(e))  # ESTO ES CLAVE
-        raise HTTPException(status_code=500, detail=str(e))
+
+        print(
+            "ERROR DELETE:",
+            str(e)
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # Cambiar Rol (admin <-> user)

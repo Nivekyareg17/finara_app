@@ -238,32 +238,44 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     onPressed: () async {
-                      //FUERZA A ACTUALIZAR(EYE)
                       FocusScope.of(context).unfocus();
 
                       final auth = context.read<AuthProvider>();
 
-                      final success = await auth.login(
-                        emailController.text,
-                        passwordController.text,
-                      );
+                      try {
+                        final success = await auth.login(
+                          emailController.text,
+                          passwordController.text,
+                        );
 
-                      if (!mounted) return;
+                        if (!mounted) return;
 
-                      if (success) {
-                        showCustomDialog("Inicio de sesión exitoso",
+                        if (success) {
+                          showCustomDialog(
+                            "Inicio de sesión exitoso",
                             onClose: () async {
-                          final userData = await auth.getUserData();
+                              final userData = await auth.getUserData();
 
-                          if (userData?["role"] == "admin") {
-                            Navigator.pushReplacementNamed(context, "/admin");
-                          } else {
-                            Navigator.pushReplacementNamed(context, "/home");
-                          }
-                        });
-                      } else {
+                              if (userData?["role"] == "admin") {
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  "/admin",
+                                );
+                              } else {
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  "/home",
+                                );
+                              }
+                            },
+                          );
+                        }
+                      } catch (e) {
                         showCustomDialog(
-                          "Email o contraseña incorrectos",
+                          e.toString().replaceAll(
+                                "Exception: ",
+                                "",
+                              ),
                           isError: true,
                         );
                       }

@@ -15,10 +15,14 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+
       return data["access_token"];
     } else {
-      print("Error login: ${response.body}");
-      return null;
+      final error = jsonDecode(response.body);
+
+      throw Exception(
+        error["detail"] ?? "Error de login",
+      );
     }
   }
 
@@ -313,6 +317,26 @@ class ApiService {
     }
   }
 
+  static Future<bool> verifyEmail(
+    String token,
+  ) async {
+    final url = Uri.parse(
+      "$baseUrl/auth/verify-email?token=$token",
+    );
+
+    try {
+      final response = await http.get(url);
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print(
+        "VERIFY EMAIL ERROR: $e",
+      );
+
+      return false;
+    }
+  }
+
   static Future<bool> forgotPassword(String email) async {
     final url = Uri.parse("$baseUrl/auth/forgot-password");
 
@@ -341,10 +365,25 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  static Future<void> deleteUser(String token, int id) async {
-    await http.delete(
-      Uri.parse("$baseUrl/users/delete/$id"),
-      headers: {"Authorization": "Bearer $token"},
+  static Future<void> deleteUser(
+    String token,
+    int id,
+  ) async {
+    final response = await http.delete(
+      Uri.parse(
+        "$baseUrl/users/delete/$id",
+      ),
+      headers: {
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    print(
+      "DELETE STATUS: ${response.statusCode}",
+    );
+
+    print(
+      "DELETE BODY: ${response.body}",
     );
   }
 
