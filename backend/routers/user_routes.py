@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import schemas
 from security import hash_password
 from database import SessionLocal
-from models import User, Transaction, PasswordResetToken, EmailVerificationToken, Category, Message, BlockedUser
+from models import User, Transaction, PasswordResetToken, EmailVerificationToken, Category, Message, BlockedUser, MessageRequest
 from auth import verify_token, require_admin
 
 from fastapi import UploadFile, File
@@ -208,6 +208,15 @@ def delete_user(
                 synchronize_session=False
             )
         
+        db.query(MessageRequest)\
+            .filter(
+                (MessageRequest.sender_id == user_id)
+                |
+                (MessageRequest.receiver_id == user_id)
+            ).delete(
+                synchronize_session=False
+            )
+
         user = db.query(User)\
             .filter(User.id == user_id)\
             .first()
