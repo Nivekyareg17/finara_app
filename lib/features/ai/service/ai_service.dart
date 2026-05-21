@@ -3,11 +3,10 @@ import 'package:http/http.dart' as http;
 import '../model/chat_message.dart';
 
 class AIService {
-  // Base URL de tu API en Render
+ 
   final String _baseUrl = 'https://daiko-ai.onrender.com/ai';
 
-  /// 1. ENVIAR MENSAJE (POST)
-  /// Envía la pregunta, el historial de la sesión y el ID de sesión activo.
+  
   Future<ChatMessage> sendMessageToDaiko({
     required String prompt,
     required String token,
@@ -18,7 +17,7 @@ class AIService {
     final url = Uri.parse('$_baseUrl/consultar');
 
     try {
-      // Preparamos el historial para que Gemini lo entienda (User/Model)
+    
       final lastMessages = history
           .take(5)
           .map((m) => {
@@ -37,10 +36,10 @@ class AIService {
             body: jsonEncode({
               "pregunta": prompt,
               "session_id":
-                  sessionId, // Enviamos el ID para evitar el NULL en la DB
+                  sessionId, 
               "historial": lastMessages,
               "contexto_gastos":
-                  [], // Aquí el backend ya jalará los datos de SQLAlchemy
+                  [], 
               "user_name": "Kevin"
             }),
           )
@@ -69,8 +68,7 @@ class AIService {
     }
   }
 
-  /// 2. OBTENER SESIONES (GET)
-  /// Trae la lista de chats previos para mostrar en el Drawer (menú lateral).
+  
   Future<List<Map<String, dynamic>>> getSessions(String token) async {
     final url = Uri.parse('$_baseUrl/sessions');
     try {
@@ -88,8 +86,6 @@ class AIService {
     return [];
   }
 
-  /// 3. OBTENER HISTORIAL DE UNA SESIÓN (GET)
-  /// Carga los mensajes guardados de un chat específico.
   Future<List<ChatMessage>> getHistoryBySession(
       String sessionId, String token) async {
     final url = Uri.parse('$_baseUrl/historial/$sessionId');
@@ -103,7 +99,7 @@ class AIService {
         List<dynamic> data = jsonDecode(response.body);
         return data.map((m) {
           return ChatMessage(
-            text: m['ai_response'], // Mapeamos la respuesta de la DB
+            text: m['ai_response'], 
             sender: MessageSender.daiko,
             timestamp: DateTime.parse(m['created_at']),
           );
