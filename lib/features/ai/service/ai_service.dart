@@ -5,6 +5,9 @@ import '../model/chat_message.dart';
 class AIService {
   final String _baseUrl = 'https://daiko-ai.onrender.com/ai';
 
+  // ──────────────────────────────────────────────
+  // ENVIAR MENSAJE A DAIKO
+  // ──────────────────────────────────────────────
   Future<ChatMessage> sendMessageToDaiko({
     required String prompt,
     required String token,
@@ -43,7 +46,7 @@ class AIService {
           .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         return ChatMessage(
           text: data['text'] ?? 'Sin respuesta de Daiko.',
           sender: MessageSender.daiko,
@@ -65,9 +68,13 @@ class AIService {
     }
   }
 
-  // Carga las transacciones del usuario y las convierte al formato que necesita DAIKO
-  Future<List<Map<String, dynamic>>> obtenerGastosParaDaiko(String token) async {
-    final url = Uri.parse('https://finara-api-1lmd.onrender.com/transactions/');
+  // ──────────────────────────────────────────────
+  // OBTENER GASTOS/TRANSACCIONES PARA CONTEXTO
+  // ──────────────────────────────────────────────
+  Future<List<Map<String, dynamic>>> obtenerGastosParaDaiko(
+      String token) async {
+    final url =
+        Uri.parse('https://finara-api-1lmd.onrender.com/transactions/');
     try {
       final response = await http.get(
         url,
@@ -75,7 +82,8 @@ class AIService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> transacciones = jsonDecode(response.body);
+        final List<dynamic> transacciones =
+            jsonDecode(utf8.decode(response.bodyBytes));
         return transacciones
             .map((t) => {
                   "item": t["description"] ?? "Sin descripción",
@@ -92,6 +100,9 @@ class AIService {
     return [];
   }
 
+  // ──────────────────────────────────────────────
+  // OBTENER LISTA DE SESIONES
+  // ──────────────────────────────────────────────
   Future<List<Map<String, dynamic>>> getSessions(String token) async {
     final url = Uri.parse('$_baseUrl/sessions');
     try {
@@ -101,7 +112,8 @@ class AIService {
       );
 
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+        return List<Map<String, dynamic>>.from(
+            jsonDecode(utf8.decode(response.bodyBytes)));
       }
     } catch (e) {
       print("Error cargando sesiones: $e");
@@ -109,6 +121,10 @@ class AIService {
     return [];
   }
 
+  // ──────────────────────────────────────────────
+  // OBTENER HISTORIAL DE UNA SESIÓN
+  // Reconstruye tanto mensajes del usuario como de Daiko
+  // ──────────────────────────────────────────────
   Future<List<ChatMessage>> getHistoryBySession(
       String sessionId, String token) async {
     final url = Uri.parse('$_baseUrl/historial/$sessionId');
@@ -119,18 +135,69 @@ class AIService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((m) {
-          return ChatMessage(
-            text: m['ai_response'] ?? '',
-            sender: MessageSender.daiko,
-            timestamp: DateTime.parse(m['created_at']),
-          );
-        }).toList();
+        final List<dynamic> data =
+            jsonDecode(utf8.decode(response.bodyBytes));
+
+        final List<ChatMessage> mensajes = [];
+
+        for (final m in data) {
+          // Mensaje del usuario (si existe en el registro)
+          if (m['user_message'] != null &&
+              (m['user_message'] as String).isNotEmpty) {
+            mensajes.add(ChatMessage(
+              text: m['user_message'],
+              sender: MessageSender.user,
+              timestamp: DateTime.tryParse(m['created_at'] ?? '') ??
+                  DateTime.now(),
+            ));
+          }
+
+          // Respuesta de Daiko
+          if (m['ai_response'] != null &&
+              (m['ai_response'] as String).isNotEmpty) {
+            mensajes.add(ChatMessage(
+              text: m['ai_response'],
+              sender: MessageSender.daiko,
+              timestamp: DateTime.tryParse(m['created_at'] ?? '') ??
+                  DateTime.now(),
+            ));
+          }
+        }
+
+        // El ListView es reverse:true, así que invertimos el orden
+        return mensajes.reversed.toList();
       }
     } catch (e) {
       print("Error cargando mensajes de la sesión: $e");
     }
     return [];
+  }
+
+  // ──────────────────────────────────────────────
+  // ELIMINAR UNA SESIÓN Y SU HISTORIAL
+  // ──────────────────────────────────────────────
+  Future<bool> deleteSession(String sessionId, String token) async {
+    final url = Uri.parse('$_baseUrl/sessions/$sessionId');
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      // 200 OK o 204 No Content = éxito
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      } else {
+        print(
+            "Error eliminando sesión: ${response.statusCode} - ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Error de conexión al eliminar sesión: $e");
+      return false;
+    }
   }
 }

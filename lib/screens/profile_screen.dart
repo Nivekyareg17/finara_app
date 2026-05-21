@@ -1,4 +1,4 @@
-﻿﻿import 'package:finara_app_v1/models/category_model.dart';
+﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
@@ -40,7 +40,8 @@ class CurrencyInputFormatter extends TextInputFormatter {
 
     // Convierte a nÃºmero y formatea (ejemplo: 1000 -> 1.000)
     double value = double.parse(newText) / 100; // Divide por 100 para centavos
-    final formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
+    final formatter =
+        NumberFormat.currency(locale: 'es_CO', symbol: '', decimalDigits: 2);
     String formatted = formatter.format(value).trim();
 
     return newValue.copyWith(
@@ -78,6 +79,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
+  String movementFilter = "todos";
+  bool _showAllMovements = false;
 
   String selectedChartType = "gasto";
 
@@ -197,6 +200,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   double getTotalGeneral() {
     return getTotalIngresos() + getTotalGastos();
+  }
+
+  List<TransactionModel> get filteredTransactions {
+    if (movementFilter == "ingreso") {
+      return transactions.where((t) => t.type == "ingreso").toList();
+    }
+    if (movementFilter == "gasto") {
+      return transactions.where((t) => t.type == "gasto").toList();
+    }
+    return transactions;
+  }
+
+  List<TransactionModel> get visibleTransactions {
+    if (_showAllMovements || filteredTransactions.length <= 4) {
+      return filteredTransactions;
+    }
+    return filteredTransactions.take(4).toList();
   }
 
   Map<String, double> getGastosPorCategoria() {
@@ -623,7 +643,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
-                      onPressed: _crearMeta,
+                      onPressed: _crearMetaResponsive,
                       icon: const Icon(Icons.add, color: Color(0xFF00C853)),
                     )
                   ],
@@ -702,7 +722,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 children: [
                                                   GestureDetector(
                                                     onTap: () =>
-                                                        _agregarAporte(index),
+                                                        _agregarMontoMeta(index),
                                                     child: const Icon(
                                                         Icons.add_circle,
                                                         color: Colors.green),
@@ -710,7 +730,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   const SizedBox(width: 6),
                                                   GestureDetector(
                                                     onTap: () =>
-                                                        _editarMeta(index),
+                                                        _editarMetaResponsive(index),
                                                     child: const Icon(
                                                         Icons.edit,
                                                         size: 18,
@@ -750,7 +770,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           const SizedBox(height: 4),
 
                                           Text(
-                                            "Llevas: ${formatCurrency(meta.montoActual)}",
+                                            "Llevas: ${formatearDinero(meta.montoActual)}",
                                             style:
                                                 const TextStyle(fontSize: 12),
                                           ),
@@ -801,148 +821,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 10),
 
-                Container(
-                  height: 370,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: isDark
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                            )
-                          ],
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Resumen financiero",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      SizedBox(
-                        height: 210,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            PieChart(
-                              PieChartData(
-                                centerSpaceRadius: 55,
-                                sectionsSpace: 4,
-                                centerSpaceColor: isDark
-                                    ? const Color(0xFF1E1E1E)
-                                    : Colors.white,
-                                sections: [
-                                  PieChartSectionData(
-                                    value: getTotalIngresos(),
-                                    color: Colors.green,
-                                    radius: 65,
-                                    title: getTotalGeneral() == 0
-                                        ? "0%"
-                                        : "${((getTotalIngresos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
-                                    titleStyle: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  PieChartSectionData(
-                                    value: getTotalGastos(),
-                                    color: Colors.redAccent,
-                                    radius: 65,
-                                    title: getTotalGeneral() == 0
-                                        ? "0%"
-                                        : "${((getTotalGastos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
-                                    titleStyle: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text(
-                                    "Balance",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    formatCurrency(getBalance()),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Ingresos: ${formatCurrency(getTotalIngresos())}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.redAccent,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Gastos: ${formatCurrency(getTotalGastos())}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                ),
+                _buildResponsivePieChart(isDark),
 
                 const SizedBox(height: 20),
 
@@ -1011,109 +890,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 20),
 
-                Container(
-                  height: 330,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: BarChart(
-                    BarChartData(
-                      borderData: FlBorderData(show: false),
-                      barTouchData: BarTouchData(
-                        enabled: true,
-                        touchTooltipData: BarTouchTooltipData(
-                          tooltipRoundedRadius: 14,
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            final categorias = getMovimientosPorCategoria(
-                              selectedChartType,
-                            ).entries.toList();
+                _buildResponsiveBarChart(isDark),
 
-                            final item = categorias[group.x];
-
-                            return BarTooltipItem(
-                              "${item.key}\n${formatCurrency(item.value)}",
-                              const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      alignment: BarChartAlignment.start,
-                      titlesData: FlTitlesData(
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                          ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final categorias = getMovimientosPorCategoria(
-                                selectedChartType,
-                              ).keys.toList();
-
-                              if (value.toInt() >= categorias.length) {
-                                return const SizedBox();
-                              }
-
-                              return Text(
-                                categorias[value.toInt()],
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: false,
-                          ),
-                        ),
-                      ),
-                      barGroups: getMovimientosPorCategoria(
-                        selectedChartType,
-                      ).entries.toList().asMap().entries.map((entry) {
-                        int index = entry.key;
-                        final item = entry.value;
-
-                        return BarChartGroupData(
-                          x: index,
-                          barRods: [
-                            BarChartRodData(
-                              toY: item.value,
-                              color: getCategoryColor(
-                                item.key,
-                              ),
-                              width: 22,
-                              borderRadius: BorderRadius.circular(8),
-                            )
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
+                _buildMovementFilters(isDark),
+                const SizedBox(height: 14),
 
                 //LISTA DE TRANSACCIONES
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: transactions.length,
+                  itemCount: visibleTransactions.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final t = transactions[index];
+                    final t = visibleTransactions[index];
                     final bool isIngreso = t.type == "ingreso";
                     final bool isFuture = t.isFutureMovement;
                     final categoryName =
@@ -1237,11 +1027,365 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 ),
+                if (filteredTransactions.length > 4) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => setState(
+                          () => _showAllMovements = !_showAllMovements),
+                      icon: Icon(_showAllMovements
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded),
+                      label: Text(_showAllMovements
+                          ? "Ver menos movimientos"
+                          : "Ver mas movimientos"),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF064E3B),
+                        side: const BorderSide(color: Color(0xFF10B981)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildResponsivePieChart(bool isDark) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isNarrow = width < 380;
+        final chartSize =
+            (width * (isNarrow ? 0.62 : 0.5)).clamp(160.0, 220.0).toDouble();
+        final radius = (chartSize * 0.30).clamp(48.0, 66.0).toDouble();
+        final centerRadius =
+            (chartSize * 0.25).clamp(38.0, 55.0).toDouble();
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isNarrow ? 16 : 20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                    )
+                  ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Resumen financiero",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: chartSize,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        centerSpaceRadius: centerRadius,
+                        sectionsSpace: 4,
+                        centerSpaceColor:
+                            isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        sections: [
+                          PieChartSectionData(
+                            value: getTotalIngresos(),
+                            color: Colors.green,
+                            radius: radius,
+                            title: getTotalGeneral() == 0
+                                ? "0%"
+                                : "${((getTotalIngresos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                            titleStyle: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isNarrow ? 12 : 15,
+                            ),
+                          ),
+                          PieChartSectionData(
+                            value: getTotalGastos(),
+                            color: Colors.redAccent,
+                            radius: radius,
+                            title: getTotalGeneral() == 0
+                                ? "0%"
+                                : "${((getTotalGastos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                            titleStyle: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isNarrow ? 12 : 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "Balance",
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: centerRadius * 1.9,
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              formatCurrency(getBalance()),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 14,
+                runSpacing: 10,
+                children: [
+                  _chartLegend(
+                    Colors.green,
+                    "Ingresos: ${formatCurrency(getTotalIngresos())}",
+                  ),
+                  _chartLegend(
+                    Colors.redAccent,
+                    "Gastos: ${formatCurrency(getTotalGastos())}",
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _chartLegend(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
+  Widget _buildResponsiveBarChart(bool isDark) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final data = getMovimientosPorCategoria(selectedChartType).entries.toList();
+        final chartWidth = data.isEmpty
+            ? constraints.maxWidth
+            : (data.length * 74.0)
+                .clamp(constraints.maxWidth, 900.0)
+                .toDouble();
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SizedBox(
+            height: constraints.maxWidth < 380 ? 280 : 320,
+            child: data.isEmpty
+                ? const Center(child: Text("No hay datos para graficar"))
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: chartWidth,
+                      child: BarChart(
+                        BarChartData(
+                          borderData: FlBorderData(show: false),
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              tooltipRoundedRadius: 14,
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
+                                final item = data[group.x];
+                                return BarTooltipItem(
+                                  "${item.key}\n${formatCurrency(item.value)}",
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          alignment: BarChartAlignment.spaceAround,
+                          titlesData: FlTitlesData(
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            leftTitles: const AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 44,
+                              ),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 44,
+                                getTitlesWidget: (value, meta) {
+                                  final index = value.toInt();
+                                  if (index < 0 || index >= data.length) {
+                                    return const SizedBox();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: SizedBox(
+                                      width: 64,
+                                      child: Text(
+                                        data[index].key,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                          ),
+                          barGroups: data.asMap().entries.map((entry) {
+                            final item = entry.value;
+                            return BarChartGroupData(
+                              x: entry.key,
+                              barRods: [
+                                BarChartRodData(
+                                  toY: item.value,
+                                  color: getCategoryColor(item.key),
+                                  width: 22,
+                                  borderRadius: BorderRadius.circular(8),
+                                )
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMovementFilters(bool isDark) {
+    final items = [
+      ("todos", "Todos", Icons.list_rounded, const Color(0xFF10B981)),
+      ("ingreso", "Ingresos", Icons.trending_up_rounded, const Color(0xFF059669)),
+      ("gasto", "Gastos", Icons.trending_down_rounded, const Color(0xFFEF4444)),
+    ];
+
+    return Row(
+      children: items.map((item) {
+        final selected = movementFilter == item.$1;
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => setState(() {
+                movementFilter = item.$1;
+                _showAllMovements = false;
+              }),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? item.$4
+                      : (isDark ? const Color(0xFF10231E) : Colors.white),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: selected
+                        ? item.$4
+                        : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                  ),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: item.$4.withOpacity(0.22),
+                            blurRadius: 14,
+                            offset: const Offset(0, 7),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(item.$3,
+                        color: selected ? Colors.white : item.$4, size: 20),
+                    const SizedBox(height: 5),
+                    FittedBox(
+                      child: Text(
+                        item.$2,
+                        style: TextStyle(
+                          color: selected
+                              ? Colors.white
+                              : (isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF334155)),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -2007,7 +2151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text("Se eliminarÃ¡ '${t.description}'"),
                   const SizedBox(height: 8),
-                  Text("Monto: \$${t.amount.toStringAsFixed(2)}",
+                  Text("Monto: ${formatCurrency(t.amount)}",
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.redAccent)),
@@ -2028,7 +2172,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: isDeleting
                       ? null
                       : () async {
-                          // ... tu lÃ³gica de borrado que ya tienes ...
+                          final auth = context.read<AuthProvider>();
+                          final token = auth.token;
+                          if (token == null || token.isEmpty || t.id == null) {
+                            _showTopNotice(
+                              "No se pudo eliminar el movimiento",
+                              icon: Icons.error_outline_rounded,
+                            );
+                            return;
+                          }
+
+                          setStateDialog(() => isDeleting = true);
+                          final success =
+                              await ApiService.deleteTransaction(token, t.id!);
+                          if (!mounted) return;
+                          Navigator.pop(context);
+
+                          if (success) {
+                            await loadTransactions();
+                            _showTopNotice(
+                              "Movimiento eliminado correctamente",
+                              isError: false,
+                              icon: Icons.check_circle_rounded,
+                            );
+                          } else {
+                            _showTopNotice(
+                              "Error al eliminar el movimiento",
+                              icon: Icons.error_outline_rounded,
+                            );
+                          }
                         },
                   child: isDeleting
                       ? const SizedBox(
@@ -2666,10 +2838,404 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String formatCurrency(double amount) {
-    // Crea un formato: $1,234.56
-    final formatter = NumberFormat.currency(locale: "en_US", symbol: "\$");
-    return formatter.format(amount);
+  String formatCurrency(double valor) {
+    final formato = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: '\$',
+      decimalDigits: 2,
+    );
+
+    return formato.format(valor);
+  }
+
+  String formatearDinero(double valor) => formatCurrency(valor);
+
+  void _showTopNotice(
+    String message, {
+    bool isError = true,
+    IconData icon = Icons.info_rounded,
+  }) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    final color = isError ? const Color(0xFFEF4444) : const Color(0xFF10B981);
+
+    entry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 12,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.28),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (entry.mounted) entry.remove();
+    });
+  }
+
+  String _formatInputAmount(double amount) {
+    return NumberFormat.currency(
+      locale: "es_CO",
+      symbol: "",
+      decimalDigits: 2,
+    ).format(amount).trim();
+  }
+
+  double _parseMoney(String value) {
+    final clean = value.trim().replaceAll(RegExp(r'[^0-9,.-]'), '');
+    if (clean.isEmpty) return 0;
+    final normalized = clean.replaceAll('.', '').replaceAll(',', '.');
+    return double.tryParse(normalized) ?? 0;
+  }
+
+  Future<String?> _pickGoalImageData() async {
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 55,
+      maxWidth: 900,
+    );
+    if (image == null) return null;
+    return base64Encode(await image.readAsBytes());
+  }
+
+  void _crearMetaResponsive() => _showMetaSheet();
+
+  void _editarMetaResponsive(int index) => _showMetaSheet(index: index);
+
+  void _showMetaSheet({int? index}) {
+    final editing = index != null;
+    final meta = editing ? context.read<AuthProvider>().metas[index] : null;
+    final nombre = TextEditingController(text: meta?.nombre ?? "");
+    final montoMeta = TextEditingController(
+        text: meta == null ? "" : _formatInputAmount(meta.montoMeta));
+    final ahorroMensual = TextEditingController(
+        text: meta == null ? "" : _formatInputAmount(meta.ahorroMensual));
+    String? imageData = meta?.imageData;
+    bool showErrors = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final nombreError = showErrors && nombre.text.trim().isEmpty;
+          final montoError = showErrors && _parseMoney(montoMeta.text) <= 0;
+          final ahorroError =
+              showErrors && _parseMoney(ahorroMensual.text) <= 0;
+
+          OutlineInputBorder border(bool error) => OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: BorderSide(
+                  color: error ? Colors.redAccent : const Color(0xFFE2E8F0),
+                  width: error ? 1.8 : 1,
+                ),
+              );
+
+          return DraggableScrollableSheet(
+            initialChildSize: 0.88,
+            minChildSize: 0.62,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (context, scrollController) => Container(
+              padding: EdgeInsets.only(
+                left: 22,
+                right: 22,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 22,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF10231E) : Colors.white,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color:
+                            isDark ? Colors.white24 : const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(13),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: const Icon(Icons.savings_rounded,
+                            color: Color(0xFF10B981)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          editing ? "Editar meta" : "Nueva meta",
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(22),
+                    onTap: () async {
+                      final picked = await _pickGoalImageData();
+                      if (picked != null) {
+                        setSheetState(() => imageData = picked);
+                      }
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Container(
+                        height: 170,
+                        color: const Color(0xFF10B981).withOpacity(0.12),
+                        child: imageData == null || imageData!.isEmpty
+                            ? const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add_photo_alternate_rounded,
+                                      color: Color(0xFF10B981), size: 42),
+                                  SizedBox(height: 8),
+                                  Text("Agregar foto opcional"),
+                                ],
+                              )
+                            : Image.memory(
+                                base64Decode(imageData!),
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _metaField(nombre, "Nombre de la meta", Icons.flag_rounded,
+                      nombreError, isDark, setSheetState),
+                  if (nombreError)
+                    _metaFieldError("Escribe el nombre de la meta"),
+                  const SizedBox(height: 14),
+                  _metaField(montoMeta, "Monto objetivo",
+                      Icons.attach_money_rounded, montoError, isDark,
+                      setSheetState,
+                      money: true),
+                  if (montoError)
+                    _metaFieldError("Ingresa un monto objetivo valido"),
+                  const SizedBox(height: 14),
+                  _metaField(ahorroMensual, "Ahorro mensual",
+                      Icons.calendar_month_rounded, ahorroError, isDark,
+                      setSheetState,
+                      money: true),
+                  if (ahorroError)
+                    _metaFieldError("Ingresa un ahorro mensual valido"),
+                  if (editing) ...[
+                    const SizedBox(height: 22),
+                    const Text("Historial de aportes",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w900, fontSize: 16)),
+                    const SizedBox(height: 10),
+                    if (meta!.aportes.isEmpty)
+                      _emptyHistoryTile(isDark)
+                    else
+                      ...meta.aportes.take(8).map(
+                            (aporte) => _aporteTile(aporte, isDark),
+                          ),
+                  ],
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setSheetState(() => showErrors = true);
+                        final objetivo = _parseMoney(montoMeta.text);
+                        final mensual = _parseMoney(ahorroMensual.text);
+                        if (nombre.text.trim().isEmpty ||
+                            objetivo <= 0 ||
+                            mensual <= 0) {
+                          _showTopNotice(
+                            "Completa los campos obligatorios de la meta",
+                            icon: Icons.error_outline_rounded,
+                          );
+                          return;
+                        }
+
+                        final nueva = MetaAhorro(
+                          nombre: nombre.text.trim(),
+                          montoMeta: objetivo,
+                          ahorroMensual: mensual,
+                          montoActual: meta?.montoActual ?? 0,
+                          aportes: meta?.aportes,
+                          imageData: imageData,
+                        );
+
+                        if (editing) {
+                          context.read<AuthProvider>().editarMeta(index, nueva);
+                        } else {
+                          context.read<AuthProvider>().addMeta(nueva);
+                        }
+
+                        Navigator.pop(context);
+                        _showTopNotice(
+                          editing
+                              ? "Meta actualizada correctamente"
+                              : "Meta creada correctamente",
+                          isError: false,
+                          icon: Icons.check_circle_rounded,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(
+                        editing ? "Guardar cambios" : "Crear meta",
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _metaField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    bool error,
+    bool isDark,
+    void Function(void Function()) setSheetState, {
+    bool money = false,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: money ? TextInputType.number : TextInputType.text,
+      inputFormatters:
+          money ? [FilteringTextInputFormatter.digitsOnly, CurrencyInputFormatter()] : null,
+      onChanged: (_) => setSheetState(() {}),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+        border: _metaBorder(error),
+        enabledBorder: _metaBorder(error),
+        focusedBorder: _metaBorder(error),
+      ),
+    );
+  }
+
+  OutlineInputBorder _metaBorder(bool error) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(
+          color: error ? Colors.redAccent : const Color(0xFFE2E8F0),
+          width: error ? 1.8 : 1,
+        ),
+      );
+
+  Widget _metaFieldError(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 7, left: 4),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyHistoryTile(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: const Text("Aun no hay aportes registrados"),
+    );
+  }
+
+  Widget _aporteTile(MetaAporte aporte, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.add_circle_rounded, color: Color(0xFF10B981)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              DateFormat("dd/MM/yyyy").format(aporte.fecha),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          Text(
+            formatCurrency(aporte.monto),
+            style: const TextStyle(
+              color: Color(0xFF10B981),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _crearMeta() {
@@ -3407,6 +3973,168 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
           ),
         ],
+      ),
+    );
+  }
+
+  void _agregarMontoMeta(int index) {
+    final meta = context.read<AuthProvider>().metas[index];
+    final controller = TextEditingController();
+    bool showError = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final invalid = showError && _parseMoney(controller.text) <= 0;
+
+          return Container(
+            padding: EdgeInsets.only(
+              left: 22,
+              right: 22,
+              top: 22,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 22,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF10231E) : Colors.white,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(30)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.add_card_rounded,
+                          color: Color(0xFF10B981)),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        "Agregar monto a la meta",
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF064E3B), Color(0xFF10B981)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        meta.nombre,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "${formatCurrency(meta.montoActual)} de ${formatCurrency(meta.montoMeta)}",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: meta.progreso.clamp(0, 1),
+                          minHeight: 7,
+                          backgroundColor: Colors.white24,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    CurrencyInputFormatter(),
+                  ],
+                  onChanged: (_) => setSheetState(() {}),
+                  decoration: InputDecoration(
+                    labelText: "Monto",
+                    prefixIcon: const Icon(Icons.attach_money_rounded),
+                    filled: true,
+                    fillColor: isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+                    border: _metaBorder(invalid),
+                    enabledBorder: _metaBorder(invalid),
+                    focusedBorder: _metaBorder(invalid),
+                  ),
+                ),
+                if (invalid) _metaFieldError("Ingresa un monto valido"),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setSheetState(() => showError = true);
+                      final monto = _parseMoney(controller.text);
+                      if (monto <= 0) {
+                        _showTopNotice(
+                          "Completa el monto para aportar",
+                          icon: Icons.error_outline_rounded,
+                        );
+                        return;
+                      }
+
+                      context.read<AuthProvider>().agregarDineroMeta(index, monto);
+                      Navigator.pop(context);
+                      _showTopNotice(
+                        "Monto agregado a la meta",
+                        isError: false,
+                        icon: Icons.check_circle_rounded,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Agregar",
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
