@@ -184,6 +184,12 @@ def delete_user(
 
     try:
 
+        db.query(Transaction)\
+            .filter(
+                Transaction.user_id
+                == user_id
+            ).delete()
+
         db.query(Category)\
             .filter(
                 Category.user_id
@@ -229,12 +235,6 @@ def delete_user(
                 status_code=404,
                 detail="Usuario no encontrado"
             )
-
-        db.query(Transaction)\
-            .filter(
-                Transaction.user_id
-                == user_id
-            ).delete()
 
         db.query(PasswordResetToken)\
             .filter(
