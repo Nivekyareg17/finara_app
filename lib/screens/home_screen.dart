@@ -8,7 +8,7 @@ import '../widgets/QuickActionTile.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/quick_wins.dart';
 import '../widgets/statcard.dart';
-import 'chat_screen.dart';
+import 'chat_list_screen.dart';
 import '../widgets/calculators_card.dart';
 import '../widgets/app_drawer.dart';
 
@@ -86,9 +86,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
+                      child: StatCard(
+                        title: "MENSAJES",
+                        count: "💬",
+                        unit: "Chats",
+                        icon: Icons.chat,
+                        accentColor: Colors.green,
+
                         onTap: () {
+                          print("CLICK DETECTADO");
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -96,13 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         },
-                        child: StatCard(
-                          title: "MENSAJES",
-                          count: "💬",
-                          unit: "Chats",
-                          icon: Icons.chat,
-                          accentColor: Colors.green,
-                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -117,6 +116,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             : "Restantes",
                         icon: Icons.auto_awesome,
                         accentColor: const Color(0xFF2ECC71),
+                        onTap: () {
+                          print("CLICK DETECTADO");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ChatListScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
