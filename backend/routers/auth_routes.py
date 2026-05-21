@@ -87,6 +87,9 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         f"finara://verify-email?token={token}"
     )
 
+    print("VERIFY TOKEN:", token)
+    print("VERIFY LINK:", link)
+
     send_email(
         new_user.email,
         link
