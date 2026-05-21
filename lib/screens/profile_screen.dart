@@ -721,7 +721,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           top: Radius.circular(20)),
                                       child: Image.memory(
                                         base64Decode(meta.imageData!),
-                                        height: 100, // ✅ antes 250 ❌
+                                        height: 100,
                                         width: double.infinity,
                                         fit: BoxFit.cover,
                                       ),
@@ -3087,6 +3087,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 nombre: nombre.text,
                                 montoMeta: double.parse(montoMeta.text),
                                 ahorroMensual: double.parse(ahorroMensual.text),
+                                montoActual: meta.montoActual,
+                                aportes: meta.aportes,
                               ),
                             );
 

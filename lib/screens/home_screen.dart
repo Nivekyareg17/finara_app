@@ -115,6 +115,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             : "Restantes",
                         icon: Icons.auto_awesome,
                         accentColor: const Color(0xFF2ECC71),
+                        onTap: () {
+                          print("CLICK DETECTADO");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ChatListScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],

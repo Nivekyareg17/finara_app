@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 import models
 from routers.user_routes import get_current_user
 from database import SessionLocal
-from models import User, PasswordResetToken
+from models import User, PasswordResetToken, EmailVerificationToken
 from security import hash_password, verify_password, create_reset_token, get_expiration
-from email_utils import send_email
+from email_utils import send_email, send_verification_email
 from datetime import datetime
 from auth import create_access_token, require_admin
 from pydantic import BaseModel
@@ -64,14 +64,41 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         name=user.name,
         email=user.email,
         password=hashed_password,
-        role_id=2
+        role_id=2,
+        is_verified=False
     )
 
-    db.add(new_user)    # Agrega el usuario a la sesión
-    db.commit() # Guarda los datos en PostgreSQL
-    db.refresh(new_user)    # Actualiza el objeto con los datos finales guardados
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
 
-    return {"message": "Usuario creado"}    # Respuesta del backend
+    token = create_reset_token()
+
+    verification = EmailVerificationToken(
+        user_id=new_user.id,
+        token=token,
+        expires_at=get_expiration()
+    )
+
+    db.add(verification)
+    db.commit()
+
+    link = (
+        f"finara://verify-email?token={token}"
+    )
+
+    print("VERIFY TOKEN:", token)
+    print("VERIFY LINK:", link)
+
+    send_verification_email(
+        new_user.email,
+        link
+    )
+
+    return {
+        "message":
+        "Usuario creado. Revisa tu correo."
+    }
 
 
 
@@ -94,6 +121,17 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 # Verificar si la contraseña es correcta (contraseña ingresada vs contraseña hash en db)
     if not verify_password(user.password, db_user.password):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+    
+    if not db_user.is_verified:
+
+        raise HTTPException(
+
+            status_code=403,
+
+            detail=
+            "Debes verificar tu correo antes de iniciar sesión"
+
+        )
     
 # Crear el token JWT
 # El token guarda email y rol
@@ -163,6 +201,46 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
 
     return {"msg": "Contraseña actualizada"}
+
+
+@router.get("/verify-email")
+def verify_email(
+    token: str,
+    db: Session = Depends(get_db)
+):
+
+    verification = db.query(
+        EmailVerificationToken
+    ).filter(
+        EmailVerificationToken.token == token
+    ).first()
+
+    if (
+        not verification
+        or verification.expires_at
+        < datetime.utcnow()
+    ):
+
+        return {
+            "error":
+            "Token inválido o expirado"
+        }
+
+    user = db.query(User).filter(
+        User.id == verification.user_id
+    ).first()
+
+    user.is_verified = True
+
+    db.delete(verification)
+
+    db.commit()
+
+    return {
+        "msg":
+        "Correo verificado correctamente"
+    }
+
 
 @router.post("/upload-profile-picture")
 async def upload_image(
