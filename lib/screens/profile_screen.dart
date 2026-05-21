@@ -1,4 +1,4 @@
-﻿import 'package:finara_app_v1/models/category_model.dart';
+﻿﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
@@ -1268,6 +1268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         bool isLoadingDialog = false;
+        bool showValidationErrors = false;
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
@@ -1374,11 +1375,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF064E3B),
                             ),
-                            decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.attach_money,
+                            // DESPUÉS
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.attach_money,
                                   size: 35, color: Color(0xFF064E3B)),
                               hintText: "0.00",
                               border: InputBorder.none,
+                              errorText: (showValidationErrors &&
+                                      (double.tryParse(amount.text.replaceAll(
+                                                  RegExp(r'[^0-9.]'), '')) ??
+                                              0) <=
+                                          0)
+                                  ? "Ingresa un monto válido"
+                                  : null,
                             ),
                           ),
 
@@ -1763,20 +1772,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: desc,
+                            // DESPUÉS
                             decoration: InputDecoration(
                               hintText: "Escribe una nota...",
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
+                              errorText: (showValidationErrors &&
+                                      desc.text.trim().isEmpty)
+                                  ? "La descripción es obligatoria"
+                                  : null,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
+                                borderSide: BorderSide(
+                                  color: (showValidationErrors &&
+                                          desc.text.trim().isEmpty)
+                                      ? Colors.redAccent
+                                      : Colors.grey[200]!,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
+                                borderSide: BorderSide(
+                                  color: (showValidationErrors &&
+                                          desc.text.trim().isEmpty)
+                                      ? Colors.redAccent
+                                      : Colors.grey[200]!,
+                                ),
                               ),
                             ),
                           ),
@@ -1800,6 +1822,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ? null
                                   : () async {
                                       // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
+                                      setStateDialog(
+                                          () => showValidationErrors = true);
+
                                       String cleanText = amount.text
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
@@ -1807,14 +1832,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       DateTime fechaFinal =
                                           DateFormat("MM/dd/yyyy")
                                               .parse(dateController.text);
-                                      if (selectedCategoryId == null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "Selecciona una categorÃ­a")),
-                                        );
-                                        return;
+
+                                      // Validar todo junto
+                                      if (selectedCategoryId == null ||
+                                          montoFinal <= 0 ||
+                                          desc.text.trim().isEmpty) {
+                                        return; // Los campos en rojo ya indican el error
                                       }
 
                                       int categoryId = selectedCategoryId!;
@@ -2756,6 +2779,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               focusedBorder: metaBorder(nombreError),
                             ),
                           ),
+                          // Después del TextField de nombre
+                          if (nombreError)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6, left: 4),
+                              child: Text(
+                                "Este campo es obligatorio",
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 12),
+                              ),
+                            ),
 
                           const SizedBox(height: 25),
 
@@ -2783,6 +2816,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               focusedBorder: metaBorder(montoError),
                             ),
                           ),
+                          // Después del TextField de nombre
+                          if (nombreError)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6, left: 4),
+                              child: Text(
+                                "Este campo es obligatorio",
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 12),
+                              ),
+                            ),
 
                           const SizedBox(height: 25),
 
@@ -2810,6 +2853,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               focusedBorder: metaBorder(ahorroError),
                             ),
                           ),
+                          // Después del TextField de nombre
+                          if (ahorroError)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6, left: 4),
+                              child: Text(
+                                "Este campo es obligatorio",
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 12),
+                              ),
+                            ),
 
                           const SizedBox(height: 20),
 
@@ -2966,84 +3019,367 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   top: 20,
                   bottom: MediaQuery.of(context).viewInsets.bottom + 20,
                 ),
-                child: Column(
-                  children: [
-                    const Text("Editar Meta",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF064E3B))),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: nombre,
-                      onChanged: (_) => setStateDialog(() {}),
-                      decoration: InputDecoration(
-                        labelText: "Nombre",
-                        filled: true,
-                        fillColor: isDark ? Colors.black12 : Colors.grey[50],
-                        border: metaBorder(nombreError),
-                        enabledBorder: metaBorder(nombreError),
-                        focusedBorder: metaBorder(nombreError),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: montoMeta,
-                      onChanged: (_) => setStateDialog(() {}),
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Monto objetivo",
-                        filled: true,
-                        fillColor: isDark ? Colors.black12 : Colors.grey[50],
-                        border: metaBorder(montoError),
-                        enabledBorder: metaBorder(montoError),
-                        focusedBorder: metaBorder(montoError),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: ahorroMensual,
-                      onChanged: (_) => setStateDialog(() {}),
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Ahorro mensual",
-                        filled: true,
-                        fillColor: isDark ? Colors.black12 : Colors.grey[50],
-                        border: metaBorder(ahorroError),
-                        enabledBorder: metaBorder(ahorroError),
-                        focusedBorder: metaBorder(ahorroError),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        setStateDialog(() => showValidationErrors = true);
-                        if (nombre.text.trim().isEmpty ||
-                            montoMeta.text.trim().isEmpty ||
-                            ahorroMensual.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Completa los campos obligatorios"),
-                            ),
-                          );
-                          return;
-                        }
-                        context.read<AuthProvider>().editarMeta(
-                              index,
-                              MetaAhorro(
-                                nombre: nombre.text,
-                                montoMeta: double.parse(montoMeta.text),
-                                ahorroMensual: double.parse(ahorroMensual.text),
-                                montoActual: meta.montoActual,
-                                aportes: meta.aportes,
-                              ),
-                            );
+                child: SingleChildScrollView(
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context)
+              .colorScheme
+              .primary
+              .withOpacity(0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.savings_rounded,
+          size: 34,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
 
-                        Navigator.pop(context);
-                      },
-                      child: const Text("Guardar"),
-                    )
-                  ],
+      const SizedBox(height: 18),
+
+      Text(
+        "Editar Meta",
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+      ),
+
+      const SizedBox(height: 8),
+
+      Text(
+        "Actualiza la información de tu meta",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 14,
+          color: isDark
+              ? Colors.white70
+              : Colors.black54,
+        ),
+      ),
+
+      const SizedBox(height: 28),
+
+      // ================= NOMBRE =================
+      TextField(
+        controller: nombre,
+        onChanged: (_) => setStateDialog(() {}),
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        decoration: InputDecoration(
+          labelText: "Nombre",
+          prefixIcon: Icon(
+            Icons.flag_rounded,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          labelStyle: TextStyle(
+            color: isDark
+                ? Colors.white70
+                : Colors.black54,
+          ),
+          hintText: "Ej: Viaje a Japón",
+          hintStyle: TextStyle(
+            color: isDark
+                ? Colors.white38
+                : Colors.black38,
+          ),
+          filled: true,
+          fillColor: isDark
+              ? const Color(0xFF2A2A2A)
+              : const Color(0xFFF5F5F5),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 18,
+            horizontal: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: nombreError
+                  ? Colors.redAccent
+                  : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: nombreError
+                  ? Colors.redAccent
+                  : Theme.of(context).colorScheme.primary,
+              width: 2,
+            ),
+          ),
+        ),
+      ),
+
+      if (nombreError)
+        const Padding(
+          padding: EdgeInsets.only(top: 8, left: 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Este campo es obligatorio",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+
+      const SizedBox(height: 18),
+
+      // ================= MONTO =================
+      TextField(
+        controller: montoMeta,
+        onChanged: (_) => setStateDialog(() {}),
+        keyboardType: TextInputType.number,
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        decoration: InputDecoration(
+          labelText: "Monto objetivo",
+          prefixIcon: Icon(
+            Icons.attach_money_rounded,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          labelStyle: TextStyle(
+            color: isDark
+                ? Colors.white70
+                : Colors.black54,
+          ),
+          hintText: "Ej: 5000000",
+          hintStyle: TextStyle(
+            color: isDark
+                ? Colors.white38
+                : Colors.black38,
+          ),
+          filled: true,
+          fillColor: isDark
+              ? const Color(0xFF2A2A2A)
+              : const Color(0xFFF5F5F5),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 18,
+            horizontal: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: montoError
+                  ? Colors.redAccent
+                  : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: montoError
+                  ? Colors.redAccent
+                  : Theme.of(context).colorScheme.primary,
+              width: 2,
+            ),
+          ),
+        ),
+      ),
+
+      if (montoError)
+        const Padding(
+          padding: EdgeInsets.only(top: 8, left: 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Este campo es obligatorio",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+
+      const SizedBox(height: 18),
+
+      // ================= AHORRO =================
+      TextField(
+        controller: ahorroMensual,
+        onChanged: (_) => setStateDialog(() {}),
+        keyboardType: TextInputType.number,
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        decoration: InputDecoration(
+          labelText: "Ahorro mensual",
+          prefixIcon: Icon(
+            Icons.trending_up_rounded,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          labelStyle: TextStyle(
+            color: isDark
+                ? Colors.white70
+                : Colors.black54,
+          ),
+          hintText: "Ej: 300000",
+          hintStyle: TextStyle(
+            color: isDark
+                ? Colors.white38
+                : Colors.black38,
+          ),
+          filled: true,
+          fillColor: isDark
+              ? const Color(0xFF2A2A2A)
+              : const Color(0xFFF5F5F5),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 18,
+            horizontal: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: ahorroError
+                  ? Colors.redAccent
+                  : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: ahorroError
+                  ? Colors.redAccent
+                  : Theme.of(context).colorScheme.primary,
+              width: 2,
+            ),
+          ),
+        ),
+      ),
+
+      if (ahorroError)
+        const Padding(
+          padding: EdgeInsets.only(top: 8, left: 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Este campo es obligatorio",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+
+      const SizedBox(height: 30),
+
+      Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                side: BorderSide(
+                  color: isDark
+                      ? Colors.white24
+                      : Colors.black12,
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                "Cancelar",
+                style: TextStyle(
+                  color: isDark
+                      ? Colors.white70
+                      : Colors.black87,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              onPressed: () {
+                setStateDialog(
+                    () => showValidationErrors = true);
+
+                if (nombre.text.trim().isEmpty ||
+                    montoMeta.text.trim().isEmpty ||
+                    ahorroMensual.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Completa los campos obligatorios",
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                context.read<AuthProvider>().editarMeta(
+                      index,
+                      MetaAhorro(
+                        nombre: nombre.text,
+                        montoMeta:
+                            double.parse(montoMeta.text),
+                        ahorroMensual:
+                            double.parse(ahorroMensual.text),
+                        montoActual: meta.montoActual,
+                        aportes: meta.aportes,
+                      ),
+                    );
+
+                Navigator.pop(context);
+              },
+              child: const Text(
+                "Guardar",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ],
+  ),
+
                 ),
               ),
             );
@@ -3079,26 +3415,180 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final controller = TextEditingController();
 
     showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Agregar dinero"),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
+  context: context,
+  builder: (_) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Dialog(
+      backgroundColor:
+          isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.account_balance_wallet_rounded,
+                size: 32,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            Text(
+              "Agregar dinero",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              "Ingresa el monto que deseas añadir",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark
+                    ? Colors.white70
+                    : Colors.black54,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 18,
+              ),
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.attach_money_rounded,
+                  color:
+                      Theme.of(context).colorScheme.primary,
+                ),
+                hintText: "Ej: 50000",
+                hintStyle: TextStyle(
+                  color: isDark
+                      ? Colors.white38
+                      : Colors.black38,
+                ),
+                filled: true,
+                fillColor: isDark
+                    ? const Color(0xFF2A2A2A)
+                    : const Color(0xFFF5F5F5),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 18,
+                  horizontal: 16,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(
+                    color:
+                        Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(
+                        color: isDark
+                            ? Colors.white24
+                            : Colors.black12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "Cancelar",
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.white70
+                            : Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 14),
+
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () {
+                      final monto =
+                          double.tryParse(controller.text) ?? 0;
+
+                      context
+                          .read<AuthProvider>()
+                          .agregarDineroMeta(index, monto);
+
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      "Guardar",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              final monto = double.tryParse(controller.text) ?? 0;
-
-              context.read<AuthProvider>().agregarDineroMeta(index, monto);
-
-              Navigator.pop(context);
-            },
-            child: const Text("Guardar"),
-          )
-        ],
       ),
     );
+  },
+);
   }
 }
