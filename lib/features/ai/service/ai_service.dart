@@ -13,6 +13,7 @@ class AIService {
     required String token,
     required List<ChatMessage> history,
     required String sessionId,
+    required String tool
   }) async {
     final url = Uri.parse('$_baseUrl/consultar');
 
