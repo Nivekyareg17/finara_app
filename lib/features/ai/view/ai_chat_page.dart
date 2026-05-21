@@ -333,40 +333,44 @@ Widget _buildToolSelector(bool isDark) {
   // ==========================================
 // SECCIÓN: LÓGICA DE ENVÍO DE MENSAJES (CHAT)
 // ==========================================
-  void _sendMessage() async {
-    if (_chatController.text.isEmpty) return;
-    
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    final userMsg = ChatMessage(
-      text: _chatController.text, 
-      sender: MessageSender.user, 
-      timestamp: DateTime.now()
-    );
+ void _sendMessage() async {
+  if (_chatController.text.isEmpty) return;
 
-    setState(() { 
-      _messages.insert(0, userMsg); 
-      _isLoading = true; 
-    });
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final userMsg = ChatMessage(
+    text: _chatController.text,
+    sender: MessageSender.user,
+    timestamp: DateTime.now(),
+  );
 
-    _chatController.clear();
+  setState(() {
+    _messages.insert(0, userMsg);
+    _isLoading = true;
+  });
+  _chatController.clear();
 
-    // Llamada corregida con el parámetro 'tool' incluido
-    final response = await _aiService.sendMessageToDaiko(
-      prompt: userMsg.text, 
-      token: authProvider.token!, 
-      history: _messages, 
-      sessionId: _currentSessionId,
-      tool: _selectedTool.toLowerCase(), // <--- Parámetro necesario
-    );
-
-    if (mounted) {
-      setState(() { 
-        _messages.insert(0, response); 
-        _isLoading = false; 
-      });
-    }
+  // ✅ Cargar gastos solo cuando el tool lo requiere
+  List<Map<String, dynamic>> contextoGastos = [];
+  if (_selectedTool == "Gastos") {
+    contextoGastos = await _aiService.obtenerGastosParaDaiko(authProvider.token!);
   }
+
+  final response = await _aiService.sendMessageToDaiko(
+    prompt: userMsg.text,
+    token: authProvider.token!,
+    history: _messages.skip(1).toList(), 
+    sessionId: _currentSessionId,
+    tool: _selectedTool.toLowerCase(),
+    contextoGastos: contextoGastos,      
+  );
+
+  if (mounted) {
+    setState(() {
+      _messages.insert(0, response);
+      _isLoading = false;
+    });
+  }
+}
 // FIN DE LÓGICA DE ENVÍO
 
 // ==========================================

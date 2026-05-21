@@ -38,6 +38,10 @@
                     android:scheme="finara"
                     android:host="reset-password"/>
 
+                <data
+                    android:scheme="finara"
+                    android:host="verify-email"/>
+
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

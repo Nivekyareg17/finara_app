@@ -3,26 +3,24 @@ import 'package:http/http.dart' as http;
 import '../model/chat_message.dart';
 
 class AIService {
- 
   final String _baseUrl = 'https://daiko-ai.onrender.com/ai';
 
-  
   Future<ChatMessage> sendMessageToDaiko({
     required String prompt,
     required String token,
     required List<ChatMessage> history,
     required String sessionId,
     required String tool,
+    List<Map<String, dynamic>> contextoGastos = const [],
   }) async {
     final url = Uri.parse('$_baseUrl/consultar');
 
     try {
-    
       final lastMessages = history
           .take(5)
           .map((m) => {
                 "role": m.sender == MessageSender.user ? "user" : "model",
-                "content": m.text
+                "content": m.text,
               })
           .toList();
 
@@ -35,20 +33,19 @@ class AIService {
             },
             body: jsonEncode({
               "pregunta": prompt,
-              "session_id":
-                  sessionId, 
+              "session_id": sessionId,
               "historial": lastMessages,
-              "contexto_gastos":
-                  [], 
-              "user_name": "Kevin"
+              "contexto_gastos": contextoGastos,
+              "user_name": "Kevin",
+              "tool": tool,
             }),
           )
-          .timeout(const Duration(seconds: 25));
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return ChatMessage(
-          text: data['text'] ?? 'Sin respuesta de Daiko',
+          text: data['text'] ?? 'Sin respuesta de Daiko.',
           sender: MessageSender.daiko,
           timestamp: DateTime.now(),
         );
@@ -61,14 +58,40 @@ class AIService {
       }
     } catch (e) {
       return ChatMessage(
-        text: "Error de conexión: Revisa si Render está activo.",
+        text: "Error de conexión: Verifica si el servidor está activo.",
         sender: MessageSender.daiko,
         timestamp: DateTime.now(),
       );
     }
   }
 
-  
+  // Carga las transacciones del usuario y las convierte al formato que necesita DAIKO
+  Future<List<Map<String, dynamic>>> obtenerGastosParaDaiko(String token) async {
+    final url = Uri.parse('https://finara-api-1lmd.onrender.com/transactions/');
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> transacciones = jsonDecode(response.body);
+        return transacciones
+            .map((t) => {
+                  "item": t["description"] ?? "Sin descripción",
+                  "valor": t["amount"] ?? 0,
+                  "tipo": t["type"] ?? "gasto",
+                  "fecha": t["date"] ?? "",
+                })
+            .toList()
+            .cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      print("Error cargando transacciones para DAIKO: $e");
+    }
+    return [];
+  }
+
   Future<List<Map<String, dynamic>>> getSessions(String token) async {
     final url = Uri.parse('$_baseUrl/sessions');
     try {
@@ -96,10 +119,10 @@ class AIService {
       );
 
       if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
         return data.map((m) {
           return ChatMessage(
-            text: m['ai_response'], 
+            text: m['ai_response'] ?? '',
             sender: MessageSender.daiko,
             timestamp: DateTime.parse(m['created_at']),
           );
