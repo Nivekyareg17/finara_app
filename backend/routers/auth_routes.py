@@ -11,7 +11,7 @@ from routers.user_routes import get_current_user
 from database import SessionLocal
 from models import User, PasswordResetToken, EmailVerificationToken
 from security import hash_password, verify_password, create_reset_token, get_expiration
-from email_utils import send_email
+from email_utils import send_email, send_verification_email
 from datetime import datetime
 from auth import create_access_token, require_admin
 from pydantic import BaseModel
@@ -90,7 +90,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     print("VERIFY TOKEN:", token)
     print("VERIFY LINK:", link)
 
-    send_email(
+    send_verification_email(
         new_user.email,
         link
     )
