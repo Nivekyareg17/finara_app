@@ -263,11 +263,14 @@ class _AppDrawerState extends State<AppDrawer> {
               color: Colors.purple,
               onTap: () {
                 auth.toggleView();
-                Navigator.pop(context);
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  "/home",
+                  (route) => false,
+                );
               },
             ),
 
-          
           //LOGOUT
           _buildDrawerItem(
             icon: Icons.logout,

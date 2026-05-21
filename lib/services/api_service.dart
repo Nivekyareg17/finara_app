@@ -168,21 +168,40 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  static Future<bool> deleteTransaction(String token, int id) async {
-    final url = Uri.parse("$baseUrl/transactions/$id");
+  static Future<bool> deleteTransaction(
+  String token,
+  int id,
+) async {
+  try {
+    final url = Uri.parse(
+      "$baseUrl/transactions/$id",
+    );
+
+    print("DELETE URL: $url");
 
     final response = await http.delete(
       url,
-      headers: {"Authorization": "Bearer $token"},
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
     );
 
-    return response.statusCode == 200;
+    print("DELETE STATUS: ${response.statusCode}");
+    print("DELETE BODY: ${response.body}");
+
+    return response.statusCode == 200 ||
+        response.statusCode == 204;
+  } catch (e) {
+    print("DELETE ERROR: $e");
+    return false;
   }
+}
 
   static Future<List<dynamic>> getTransactionCategories(String token) async {
     try {
       // CAMBIO AQUÍ: Solo una vez la palabra categories y sin barra final
-      final url = Uri.parse("$baseUrl/categories");
+      final url = Uri.parse("$baseUrl/categories/");
 
       final response = await http.get(
         url,
@@ -267,33 +286,34 @@ class ApiService {
   }
 
   // --- ELIMINAR (DELETE) ---
-  static Future<bool> deleteCategory(String token, int id) async {
-    try {
-      // IMPORTANTE: Agregamos el prefijo doble /categories/categories/
-      final url = Uri.parse(
-          "$baseUrl/categories/$id"); // Verifica si tu API requiere / al final
+  static Future<bool> deleteCategory(
+  String token,
+  int id,
+) async {
+  try {
+    final url =
+        Uri.parse("$baseUrl/categories/$id");
 
-      final response = await http.delete(
-        url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
-      );
+    print("DELETE URL: $url");
 
-      // FastAPI suele devolver 200 o 204 (No Content) al borrar con éxito
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        print("Categoría eliminada con éxito");
-        return true;
-      } else {
-        print("Error al borrar: ${response.statusCode} - ${response.body}");
-        return false;
-      }
-    } catch (e) {
-      print("Error de red al borrar: $e");
-      return false;
-    }
+    final response = await http.delete(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    print("DELETE STATUS: ${response.statusCode}");
+    print("DELETE BODY: ${response.body}");
+
+    return response.statusCode == 200 ||
+        response.statusCode == 204;
+  } catch (e) {
+    print("DELETE ERROR: $e");
+    return false;
   }
+}
 
   static Future<bool> resetPassword(String token, String newPassword) async {
     final url = Uri.parse("$baseUrl/auth/reset-password");

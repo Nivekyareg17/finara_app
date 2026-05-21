@@ -119,10 +119,30 @@ class _MyAppState extends State<MyApp> {
             themeMode: themeProvider.themeMode,
             initialRoute: "/",
             routes: {
-              "/": (context) => const SplashScreen(),
+              "/": (context) {
+                final auth = Provider.of<AuthProvider>(context);
+
+                if (!auth.isAuthenticated) {
+                  return const SplashScreen();
+                }
+
+                if (auth.isAdmin && auth.isAdminView) {
+                  return const AdminScreen();
+                }
+
+                return HomeScreen();
+              },
               "/login": (context) => const LoginScreen(),
               "/register": (context) => const RegisterScreen(),
-              "/home": (context) => HomeScreen(),
+              "/home": (context) {
+                final auth = Provider.of<AuthProvider>(context);
+
+                if (auth.isAdmin && auth.isAdminView) {
+                  return const AdminScreen();
+                }
+
+                return HomeScreen();
+              },
               '/daiko_ai': (context) => const AIChatPage(),
               "/news": (context) => const NewsScreen(),
               "/profile": (context) => const ProfileScreen(),
