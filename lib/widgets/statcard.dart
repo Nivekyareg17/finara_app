@@ -12,7 +12,7 @@ class StatCard extends StatelessWidget {
     required this.count,
     required this.unit,
     required this.icon,
-    required this.accentColor,
+    required this.accentColor, required Null Function() onTap,
   });
 
   @override

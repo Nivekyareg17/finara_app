@@ -1173,11 +1173,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 if (localCategories.any((c) =>
                                     c.name.toLowerCase() ==
                                     nueva.toLowerCase())) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text("Esa categorÃ­a ya existe")),
-                                  );
+                                  _showTopNotice("Esa categoria ya existe",
+                                      icon: Icons.warning_rounded);
                                   return;
                                 }
 
@@ -1613,11 +1610,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       if (selectedCategoryId == null ||
                                           montoFinal <= 0 ||
                                           desc.text.trim().isEmpty) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "Completa los campos obligatorios")),
+                                        _showTopNotice(
+                                          "Completa los campos obligatorios del movimiento",
+                                          icon: Icons.error_outline_rounded,
                                         );
                                         return;
                                       }
@@ -1884,14 +1879,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final hasError = showError && controller.text.trim().isEmpty;
 
           return Dialog(
-            insetPadding: const EdgeInsets.symmetric(horizontal: 22),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20),
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
             child: Container(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF10231E) : Colors.white,
-                borderRadius: BorderRadius.circular(26),
+                borderRadius: BorderRadius.circular(28),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1908,6 +1903,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: const Icon(
                           Icons.category_rounded,
                           color: Color(0xFF10B981),
+                          size: 30,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1930,6 +1926,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       color: isDark ? Colors.white60 : Colors.black54,
                       height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.lightbulb_outline_rounded,
+                            color: Color(0xFF10B981), size: 18),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Usa nombres cortos: Comida, Transporte, Nomina.",
+                            style: TextStyle(
+                              color: Color(0xFF047857),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -2006,7 +2028,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: ElevatedButton(
                           onPressed: () {
                             setStateDialog(() => showError = true);
-                            if (controller.text.trim().isEmpty) return;
+                            if (controller.text.trim().isEmpty) {
+                              _showTopNotice(
+                                "Escribe el nombre de la categoria",
+                                icon: Icons.error_outline_rounded,
+                              );
+                              return;
+                            }
                             Navigator.pop(context, controller.text.trim());
                           },
                           style: ElevatedButton.styleFrom(
@@ -2481,6 +2509,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return base64Encode(bytes);
   }
 
+  void _showTopNotice(
+    String message, {
+    bool isError = true,
+    IconData icon = Icons.info_rounded,
+  }) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    final color = isError ? const Color(0xFFEF4444) : const Color(0xFF10B981);
+
+    entry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 12,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.28),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (entry.mounted) entry.remove();
+    });
+  }
+
   String formatCurrency(double amount) {
     final formatter =
         NumberFormat.currency(locale: "es_CO", symbol: "\$", decimalDigits: 2);
@@ -2730,10 +2813,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 if (nombre.text.trim().isEmpty ||
                                     montoObjetivo <= 0 ||
                                     aporteMensual <= 0) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            "Completa los campos obligatorios")),
+                                  _showTopNotice(
+                                    "Completa los campos obligatorios de la meta",
+                                    icon: Icons.error_outline_rounded,
                                   );
                                   return;
                                 }
@@ -2748,10 +2830,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     );
 
                                 Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text("Meta creada correctamente")),
+                                _showTopNotice(
+                                  "Meta creada correctamente",
+                                  isError: false,
+                                  icon: Icons.check_circle_rounded,
                                 );
                               },
                               child: const Text(
@@ -2777,6 +2859,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _agregarMontoMeta(int index) {
+    final meta = context.read<AuthProvider>().metas[index];
     final controller = TextEditingController();
     bool showError = false;
 
@@ -2806,9 +2889,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Agregar monto a la meta",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.add_card_rounded,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          "Agregar monto a la meta",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF064E3B), Color(0xFF10B981)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meta.nombre,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "${formatCurrency(meta.montoActual)} de ${formatCurrency(meta.montoMeta)}",
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: meta.progreso.clamp(0, 1),
+                            minHeight: 7,
+                            backgroundColor: Colors.white24,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 18),
                   TextField(
@@ -2823,17 +2971,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       labelText: "Monto",
                       prefixIcon: const Icon(Icons.attach_money_rounded),
                       filled: true,
-                      fillColor: isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+                      fillColor:
+                          isDark ? Colors.black12 : const Color(0xFFF8FAFC),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: invalid ? Colors.redAccent : const Color(0xFFE2E8F0),
+                          color: invalid
+                              ? Colors.redAccent
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: invalid ? Colors.redAccent : const Color(0xFFE2E8F0),
+                          color: invalid
+                              ? Colors.redAccent
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: invalid
+                              ? Colors.redAccent
+                              : const Color(0xFF10B981),
+                          width: 1.6,
                         ),
                       ),
                     ),
@@ -2854,10 +3016,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         setSheetState(() => showError = true);
                         final monto = _parseMoney(controller.text);
                         if (monto <= 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Completa el monto para aportar"),
-                            ),
+                          _showTopNotice(
+                            "Completa el monto para aportar",
+                            icon: Icons.error_outline_rounded,
                           );
                           return;
                         }
@@ -2867,10 +3028,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               monto,
                             );
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Monto agregado a la meta"),
-                          ),
+                        _showTopNotice(
+                          "Monto agregado a la meta",
+                          isError: false,
+                          icon: Icons.check_circle_rounded,
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -3108,10 +3269,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (nombre.text.trim().isEmpty ||
                             montoObjetivo <= 0 ||
                             aporteMensual <= 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Completa los campos obligatorios"),
-                            ),
+                          _showTopNotice(
+                            "Completa los campos obligatorios de la meta",
+                            icon: Icons.error_outline_rounded,
                           );
                           return;
                         }
@@ -3128,10 +3288,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
 
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Meta actualizada correctamente"),
-                          ),
+                        _showTopNotice(
+                          "Meta actualizada correctamente",
+                          isError: false,
+                          icon: Icons.check_circle_rounded,
                         );
                       },
                       child: const Text("Guardar"),
