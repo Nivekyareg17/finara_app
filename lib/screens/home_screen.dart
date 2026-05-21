@@ -92,7 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         unit: "Chats",
                         icon: Icons.chat,
                         accentColor: Colors.green,
-
                         onTap: () {
                           print("CLICK DETECTADO");
                           Navigator.push(
