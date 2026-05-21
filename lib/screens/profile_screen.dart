@@ -1,4 +1,4 @@
-﻿import 'package:finara_app_v1/models/category_model.dart';
+﻿﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
 import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
