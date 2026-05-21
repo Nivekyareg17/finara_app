@@ -20,6 +20,7 @@ import 'screens/register_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/video_screen.dart';
+import 'screens/verify_email_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,22 +60,33 @@ class _MyAppState extends State<MyApp> {
     final initialUri = await _appLinks.getInitialLink();
 
     if (initialUri != null) {
-      _openReset(initialUri);
+      _handleLink(initialUri);
+      ;
     }
 
     _sub = _appLinks.uriLinkStream.listen(
       (uri) {
-        _openReset(uri);
+        _handleLink(uri);
+        ;
       },
     );
   }
 
-  void _openReset(Uri uri) {
+  void _handleLink(Uri uri) {
     final token = uri.queryParameters["token"];
 
-    if (token != null) {
+    if (token == null) return;
+
+    if (uri.host == "reset-password") {
       navigatorKey.currentState?.pushNamed(
         "/reset-password",
+        arguments: token,
+      );
+    }
+
+    if (uri.host == "verify-email") {
+      navigatorKey.currentState?.pushNamed(
+        "/verify-email",
         arguments: token,
       );
     }
@@ -121,6 +133,14 @@ class _MyAppState extends State<MyApp> {
                     ModalRoute.of(context)!.settings.arguments as String;
 
                 return ResetPasswordScreen(
+                  token: token,
+                );
+              },
+              "/verify-email": (context) {
+                final token =
+                    ModalRoute.of(context)!.settings.arguments as String;
+
+                return VerifyEmailScreen(
                   token: token,
                 );
               },
