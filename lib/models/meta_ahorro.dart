@@ -81,4 +81,9 @@ class MetaAhorro {
           : [],
     );
   }
+
+  void agregarAporte(double monto) {
+  aportes.add(MetaAporte(monto: monto));
+  montoActual += monto;
+}
 }

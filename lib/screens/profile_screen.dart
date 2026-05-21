@@ -18,6 +18,9 @@ import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -48,7 +51,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 }
 
 Map<String, dynamic> _getCategoryData(String description) {
-  // Comparamos la descripciÃ³n para asignar icono y color
+  // Comparamos la descripcion para asignar icono y color
   String desc = description.toLowerCase();
   if (desc.contains("mercado")) {
     return {'icon': Icons.shopping_basket_rounded, 'color': Colors.orange};
@@ -276,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(
-                    12), // Bordes mÃ¡s redondeados son tendencia
+                    12), // Bordes mas redondeados son tendencia
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF00C853).withOpacity(0.3),
@@ -302,7 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  "Mi Perfil", // SubtÃ­tulo indicativo
+                  "Mi Perfil", // Subtitulo indicativo
                   style: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey[600],
                     fontSize: 12,
@@ -332,13 +335,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(
                           color: Colors.white24,
-                          width: 2), // Un borde lo hace ver mÃ¡s fino
+                          width: 2), // Un borde lo hace ver mas fino
                     ),
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.white12,
                       // Usamos un try-catch visual con errorBuilder si fuera necesario,
-                      // pero aquÃ­ optimizamos la lÃ³gica de carga
+                      // pero aqui­ optimizamos la logica de carga
                       backgroundImage: (profileImageUrl != null &&
                               profileImageUrl!.isNotEmpty)
                           ? NetworkImage(profileImageUrl!)
@@ -356,7 +359,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: AnimatedContainer(
-                        // PequeÃ±a animaciÃ³n al tocar
+                        // Pequena animacion al tocar
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(
                             6), // Un poquito mÃ¡s grande para el dedo
@@ -400,7 +403,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text("CONFIGURACIÃ“N",
+                    child: Text("CONFIGURACION",
                         style: TextStyle(
                             color: Colors.grey,
                             fontWeight: FontWeight.bold,
@@ -515,7 +518,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12)),
                 tileColor: Colors.red.withOpacity(0.1),
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const TranslatedText("Cerrar sesiÃ³n",
+                title: const TranslatedText("Cerrar sesion",
                     style: TextStyle(
                         color: Colors.red, fontWeight: FontWeight.bold)),
                 onTap: () async {
@@ -682,7 +685,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 10),
 
                 SizedBox(
-                  height: 180,
+                  height: MediaQuery.of(context).size.height * 0.34,
                   child: metas.isEmpty
                       ? const Center(child: Text("No hay metas aún"))
                       : ListView.builder(
@@ -694,7 +697,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return Container(
                               width: 220,
                               margin: const EdgeInsets.only(right: 10),
-                              padding: const EdgeInsets.all(15),
                               decoration: BoxDecoration(
                                 color: isDark
                                     ? const Color.fromARGB(255, 6, 78, 59)
@@ -704,59 +706,127 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ? []
                                     : [
                                         BoxShadow(
-                                            color:
-                                                Colors.black.withOpacity(0.05),
-                                            blurRadius: 10)
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 10,
+                                        )
                                       ],
                               ),
                               child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(meta.nombre,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16)),
-                                        ),
-                                        Row(
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () => _editarMeta(index),
-                                              child: const Icon(Icons.edit,
-                                                  size: 18,
-                                                  color: Color.fromARGB(
-                                                      255, 5, 46, 35)),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            GestureDetector(
-                                              onTap: () => _eliminarMeta(index),
-                                              child: const Icon(Icons.delete,
-                                                  size: 18, color: Colors.red),
-                                            ),
-                                          ],
-                                        )
-                                      ],
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (meta.imageData != null &&
+                                      meta.imageData!.isNotEmpty)
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(
+                                          top: Radius.circular(20)),
+                                      child: Image.memory(
+                                        base64Decode(meta.imageData!),
+                                        height: 100, // ✅ antes 250 ❌
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
-                                    const SizedBox(height: 10),
-                                    LinearProgressIndicator(
-                                      value: meta.progreso.clamp(0, 1),
-                                      backgroundColor: Colors.grey[300],
-                                      color: const Color(0xFF00C853),
+
+                                  //CONTENIDO FLEXIBLE
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(15),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // NOMBRE + ICONOS
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  meta.nombre,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              Row(
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () =>
+                                                        _agregarAporte(index),
+                                                    child: const Icon(
+                                                        Icons.add_circle,
+                                                        color: Colors.green),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  GestureDetector(
+                                                    onTap: () =>
+                                                        _editarMeta(index),
+                                                    child: const Icon(
+                                                        Icons.edit,
+                                                        size: 18,
+                                                        color: Color.fromARGB(
+                                                            255, 5, 46, 35)),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  GestureDetector(
+                                                    onTap: () =>
+                                                        _eliminarMeta(index),
+                                                    child: const Icon(
+                                                        Icons.delete,
+                                                        size: 18,
+                                                        color: Colors.red),
+                                                  ),
+                                                ],
+                                              )
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 8),
+
+                                          LinearProgressIndicator(
+                                            value: meta.progreso.clamp(0, 1),
+                                            backgroundColor: Colors.grey[300],
+                                            color: const Color(0xFF00C853),
+                                          ),
+
+                                          const SizedBox(height: 6),
+
+                                          Text(
+                                            "${meta.porcentaje.toStringAsFixed(1)}% completado",
+                                            style:
+                                                const TextStyle(fontSize: 12),
+                                          ),
+
+                                          const SizedBox(height: 4),
+
+                                          Text(
+                                            "Llevas: ${formatCurrency(meta.montoActual)}",
+                                            style:
+                                                const TextStyle(fontSize: 12),
+                                          ),
+
+                                          Text(
+                                            "Faltan: ${formatCurrency(meta.montoMeta - meta.montoActual)}",
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.redAccent),
+                                          ),
+
+                                          Text(
+                                            "Faltan: ${meta.mesesRestantes} meses",
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                        "${meta.porcentaje.toStringAsFixed(1)}% completado"),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      "Faltan: ${meta.mesesRestantes} meses",
-                                      style: const TextStyle(
-                                          fontSize: 12, color: Colors.grey),
-                                    ),
-                                  ]),
+                                  ),
+                                ],
+                              ),
                             );
                           },
                         ),
@@ -1367,15 +1437,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           const SizedBox(height: 25),
 
-                          // SELECTOR CATEGORÃA
-                          const TranslatedText("CategorÃ­a",
+                          // SELECTOR CATEGORA
+                          const TranslatedText("Categoria",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
 
-// 1. BotÃ³n para crear nueva
-                          // 1. BotÃ³n para crear nueva
+                          // 1. Btn para crear nueva
                           TextButton(
                             onPressed: () async {
                               String? nueva =
@@ -1389,7 +1458,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                         content:
-                                            Text("Esa categorÃ­a ya existe")),
+                                            Text("Esa categoria ya existe")),
                                   );
                                   return;
                                 }
@@ -1427,7 +1496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               }
                             },
-                            child: const Text("Agregar categorÃ­a",
+                            child: const Text("Agregar categoria",
                                 style: TextStyle(color: Colors.green)),
                           ),
 
@@ -2638,6 +2707,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     TextEditingController montoMeta = TextEditingController();
     TextEditingController ahorroMensual = TextEditingController();
     bool showValidationErrors = false;
+    XFile? pickedImage;
 
     showModalBottomSheet(
       context: context,
@@ -2646,6 +2716,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (_) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            final ImagePicker picker = ImagePicker();
+
+            Future<void> pickMetaImage() async {
+              final image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null) {
+                setStateDialog(() {
+                  pickedImage = image;
+                });
+              }
+            }
+
             final isDark = Theme.of(context).brightness == Brightness.dark;
             OutlineInputBorder metaBorder(bool hasError) => OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -2693,7 +2774,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          //TÃTULO
+                          //TITULO
                           const Center(
                             child: Text(
                               "Nueva meta de ahorro",
@@ -2783,6 +2864,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
 
+                          const SizedBox(height: 20),
+
+                          GestureDetector(
+                            onTap: pickMetaImage,
+                            child: Container(
+                              height: 120,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                color: Colors.grey[200],
+                              ),
+                              child: pickedImage == null
+                                  ? const Center(
+                                      child: Icon(Icons.add_a_photo,
+                                          size: 40, color: Colors.grey),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      child: Image.file(
+                                        File(pickedImage!.path),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                            ),
+                          ),
+
                           const SizedBox(height: 35),
 
                           //BTN GUARDAR
@@ -2796,7 +2903,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15)),
                               ),
-                              onPressed: () {
+                              onPressed: () async {
+                                String? base64Image;
+
+                                if (pickedImage != null) {
+                                  final bytes =
+                                      await pickedImage!.readAsBytes();
+                                  base64Image = base64Encode(bytes);
+                                }
+
                                 setStateDialog(
                                     () => showValidationErrors = true);
                                 if (nombre.text.trim().isEmpty ||
@@ -2817,6 +2932,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ahorroMensual: double.tryParse(
                                                 ahorroMensual.text) ??
                                             0,
+                                        imageData: base64Image,
                                       ),
                                     );
 
@@ -2844,7 +2960,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-// ðŸ‘‡ AQUÃ PEGAS ESTAS
   void _editarMeta(int index) {
     final metas = context.read<AuthProvider>().metas;
     final meta = metas[index];
@@ -2863,6 +2978,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (_) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            // Funciones para seleccionar imagen de meta
+            final ImagePicker picker = ImagePicker();
+            XFile? pickedImage;
+
+            Future<void> pickMetaImage() async {
+              final image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null) {
+                pickedImage = image;
+              }
+            }
+
+            // Estilos y validaciones
             final isDark = Theme.of(context).brightness == Brightness.dark;
             OutlineInputBorder metaBorder(bool hasError) => OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -2994,6 +3121,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
             child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _agregarAporte(int index) {
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Agregar dinero"),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final monto = double.tryParse(controller.text) ?? 0;
+
+              context.read<AuthProvider>().agregarDineroMeta(index, monto);
+
+              Navigator.pop(context);
+            },
+            child: const Text("Guardar"),
+          )
         ],
       ),
     );
