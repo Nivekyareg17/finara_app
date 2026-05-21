@@ -210,12 +210,14 @@ def delete_user(
         
         db.query(MessageRequest)\
             .filter(
-                (MessageRequest.sender_id == user_id)
-                |
+                (MessageRequest.sender_id == user_id) |
                 (MessageRequest.receiver_id == user_id)
-            ).delete(
-                synchronize_session=False
+            )\
+            .delete(
+                synchronize_session='fetch'
             )
+
+        db.flush()
 
         user = db.query(User)\
             .filter(User.id == user_id)\
