@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import 'chat_screen.dart';
+import '../widgets/custom_bottom_nav.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -93,6 +94,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
             ),
           );
         },
+      ),
+      bottomNavigationBar: const CustomBottomNav(
+        selectedIndex: 0,
       ),
     );
   }

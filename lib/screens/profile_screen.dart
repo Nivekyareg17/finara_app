@@ -1,5 +1,6 @@
 ﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
+import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
+import 'package:fl_chart/fl_chart.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 
@@ -73,7 +75,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<TransactionModel> transactions = [];
   List<CategoryModel> categories = [];
-  String movementFilter = "todos";
+
+  String selectedChartType = "gasto";
 
   @override
   void initState() {
@@ -177,16 +180,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
-  List<TransactionModel> get filteredTransactions {
-    if (movementFilter == "gasto") {
-      return transactions.where((t) => t.type == "gasto").toList();
+  double getTotalIngresos() {
+    return transactions
+        .where((t) => t.type == "ingreso")
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double getTotalGastos() {
+    return transactions
+        .where((t) => t.type == "gasto")
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double getTotalGeneral() {
+    return getTotalIngresos() + getTotalGastos();
+  }
+
+  Map<String, double> getGastosPorCategoria() {
+    Map<String, double> data = {};
+
+    for (var t in transactions) {
+      if (t.type == "gasto") {
+        String categoria = getCategoryName(int.tryParse(t.categoryId) ?? 0);
+
+        data[categoria] = (data[categoria] ?? 0) + t.amount;
+      }
     }
 
-    if (movementFilter == "ingreso") {
-      return transactions.where((t) => t.type == "ingreso").toList();
+    return data;
+  }
+
+  Map<String, double> getMovimientosPorCategoria(String tipo) {
+    Map<String, double> data = {};
+
+    for (var t in transactions) {
+      if (t.type == tipo) {
+        String categoria = getCategoryName(
+          int.tryParse(
+                t.categoryId,
+              ) ??
+              0,
+        );
+
+        data[categoria] = (data[categoria] ?? 0) + t.amount;
+      }
     }
 
-    return transactions;
+    final sorted = data.entries.toList()
+      ..sort(
+        (a, b) => b.value.compareTo(a.value),
+      );
+
+    return Map.fromEntries(sorted);
+  }
+
+  Color getCategoryColor(String categoria) {
+    String c = categoria.toLowerCase();
+
+    if (c.contains("comida")) return Colors.orange;
+    if (c.contains("mercado")) return Colors.deepOrange;
+    if (c.contains("transporte")) return Colors.blue;
+    if (c.contains("salud")) return Colors.red;
+    if (c.contains("ahorro")) return Colors.green;
+    if (c.contains("trabajo")) return Colors.indigo;
+    if (c.contains("educacion")) return Colors.purple;
+
+    return const Color(0xFF00C853);
   }
 
   @override
@@ -372,7 +431,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildDrawerItem(
                     icon: Icons.badge_rounded,
                     title: "Informacion personal",
-                    subtitle: username.isEmpty ? "Completa tu perfil" : "@$username",
+                    subtitle:
+                        username.isEmpty ? "Completa tu perfil" : "@$username",
                     color: const Color(0xFFE1306C),
                     onTap: () {
                       Navigator.pop(context);
@@ -391,6 +451,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
 
+                  const Divider(),
+
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text("MÓDULOS",
+                        style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2)),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.home_rounded,
+                    title: "Inicio",
+                    color: const Color(0xFF10B981),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/home"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.newspaper_rounded,
+                    title: "Noticias",
+                    color: Colors.blue,
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/news"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.auto_awesome,
+                    title: "Daiko AI",
+                    color: Colors.purple,
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/daiko_ai"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.school_rounded,
+                    title: "Aprendizaje",
+                    color: Colors.teal,
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, "/video"),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.calculate_rounded,
+                    title: "Calculadora",
+                    color: Colors.indigo,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CalculatorsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -424,437 +536,693 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
 
       //BODY CRUD
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            //PERFIL
-            Row(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
               children: [
-                CircleAvatar(
-                  radius: 20, // MÃ¡s pequeÃ±o
-                  backgroundColor: Colors.white12,
-                  // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
-                  backgroundImage:
-                      (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                //PERFIL
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20, // Más pequeño
+                      backgroundColor: Colors.white12,
+                      // <-- ESTA ES LA CLAVE: Lee la MISMA variable 'profileImageUrl'
+                      backgroundImage: (profileImageUrl != null &&
+                              profileImageUrl!.isNotEmpty)
                           ? NetworkImage(profileImageUrl!)
                           : null,
-                  child: (profileImageUrl == null || profileImageUrl!.isEmpty)
-                      ? const Icon(Icons.person_outline_rounded,
-                          size: 20, color: Colors.white54)
-                      : null,
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name.isEmpty ? "Cargando..." : name,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      child:
+                          (profileImageUrl == null || profileImageUrl!.isEmpty)
+                              ? const Icon(Icons.person_outline_rounded,
+                                  size: 20, color: Colors.white54)
+                              : null,
                     ),
-                    Text(
-                      email.isEmpty ? "Cargando..." : email,
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // TARJETA DE BALANCE MEJORADA
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24), // Un poco mÃ¡s de aire
-              decoration: BoxDecoration(
-                // Un degradado sutil lo hace ver mÃ¡s "Premium"
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isDark
-                      ? [const Color(0xFF064E3B), const Color(0xFF065F46)]
-                      : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Balance Total",
-                        style: TextStyle(
-                          color: isDark
-                              ? Colors.white70
-                              : const Color(0xFF1B4332).withOpacity(0.7),
-                          fontSize: 16,
-                          letterSpacing: 0.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: isDark
-                            ? Colors.white38
-                            : const Color(0xFF1B4332).withOpacity(0.3),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    formatCurrency(getBalance()), // <-- Usando la funciÃ³n nueva
-                    style: TextStyle(
-                      fontSize: 36, // Un poco mÃ¡s grande
-                      fontWeight: FontWeight.w900, // MÃ¡s grueso
-                      letterSpacing:
-                          -1, // Un poco mÃ¡s juntas las letras se ve pro
-                      color: isDark ? Colors.white : const Color(0xFF1B4332),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Un pequeÃ±o indicador extra le da el toque final
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white10 : Colors.white54,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      "Actualizado hace un momento",
-                      style: TextStyle(
-                        fontSize: 10,
-                        color:
-                            isDark ? Colors.white60 : const Color(0xFF1B4332),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            //SECCIÃ“N METAS
-           // SECCIÓN METAS
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Metas de ahorro",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                onPressed: _crearMeta,
-                icon: const Icon(Icons.add, color: Color(0xFF00C853)),
-              )
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // CORRECCIÓN DE ESPACIO: Reducimos el alto de 180 a 140 para eliminar el hueco
-          SizedBox(
-            height: 140, 
-            child: metas.isEmpty
-                ? const Center(child: Text("No hay metas aún"))
-                : ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: metas.length,
-                    itemBuilder: (context, index) {
-                      final meta = metas[index];
-                      return Container(
-                        width: 240, // Un poco más ancho para que los textos respiren mejor
-                        margin: const EdgeInsets.only(right: 12, bottom: 4), // Pequeño margen inferior para la sombra
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color.fromARGB(255, 6, 78, 59)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: isDark
-                              ? []
-                              : [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  )
-                                ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribuye el contenido limpiamente
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    meta.nombre,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis, // Si el nombre es muy largo, añade "..."
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Row(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () => _editarMeta(index),
-                                      child: Icon(Icons.edit,
-                                          size: 18,
-                                          color: isDark ? Colors.white70 : const Color.fromARGB(255, 5, 46, 35)),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    GestureDetector(
-                                      onTap: () => _eliminarMeta(index),
-                                      child: const Icon(Icons.delete,
-                                          size: 18, color: Colors.red),
-                                    ),
-                                  ],
-                                )
-                              ],
-                            ),
-                            
-                            // Agrupamos la barra y los textos inferiores
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ClipRRect( // Hace que las esquinas de la barra de progreso sean redondeadas
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: meta.progreso.clamp(0, 1),
-                                    backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
-                                    color: const Color(0xFF00C853),
-                                    minHeight: 6, // Un poco más gruesa para que se vea premium
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      "${meta.porcentaje.toStringAsFixed(0)}% completado", // Sin decimales innecesarios (.0)
-                                      style: TextStyle(
-                                        fontSize: 12, 
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark ? Colors.white70 : Colors.  grey[600],  
-                                      ),
-                                    ),
-                                    Text(
-                                      "Faltan: ${meta.mesesRestantes} m",
-                                      style: const TextStyle(
-                                          fontSize: 11, color: Colors.grey),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-          ), // Espacio controlado antes de Movimientos
-
-            const SizedBox(height: 20),
-
-            //TÃTULO Y BOTÃ“N AGREGAR
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const TranslatedText(
-                  "Movimientos",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                TextButton.icon(
-                  onPressed: () => showForm(),
-                  icon: const Icon(Icons.add, color: Color(0xFF00C853)),
-                  label: const TranslatedText("Agregar",
-                      style: TextStyle(color: Color(0xFF00C853))),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(
-                  value: "todos",
-                  label: Text("Todos"),
-                  icon: Icon(Icons.list_rounded),
-                ),
-                ButtonSegment(
-                  value: "gasto",
-                  label: Text("Gastos"),
-                  icon: Icon(Icons.trending_down_rounded),
-                ),
-                ButtonSegment(
-                  value: "ingreso",
-                  label: Text("Ingresos"),
-                  icon: Icon(Icons.trending_up_rounded),
-                ),
-              ],
-              selected: {movementFilter},
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(
-                  const Color(0xFF10B981).withOpacity(0.16),
-                ),
-                foregroundColor: MaterialStateProperty.all(
-                  const Color(0xFF064E3B),
-                ),
-              ),
-              onSelectionChanged: (selection) {
-                setState(() => movementFilter = selection.first);
-              },
-            ),
-
-            const SizedBox(height: 12),
-
-            //LISTA DE TRANSACCIONES
-            Expanded(
-              child: ListView.separated(
-                itemCount: filteredTransactions.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final t = filteredTransactions[index];
-                  final bool isIngreso = t.type == "ingreso";
-                  final bool isFuture = t.isFutureMovement;
-                  final categoryName =
-                      getCategoryName(int.tryParse(t.categoryId) ?? 0);
-                  final catData = _getCategoryData(categoryName);
-                  return Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: isFuture
-                          ? (isDark
-                              ? const Color(0xFF172554)
-                              : const Color(0xFFEFF6FF))
-                          : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
-                      borderRadius: BorderRadius.circular(20),
-                      border: isFuture
-                          ? Border.all(color: const Color(0xFF3B82F6))
-                          : null,
-                      boxShadow: isDark
-                          ? []
-                          : [
-                              BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10)
-                            ],
-                    ),
-                    child: Row(
+                    const SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //ICON SEGÃšN LA IMAGEN
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: catData['color'].withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(catData['icon'],
-                              color: catData['color'], size: 24),
+                        Text(
+                          name.isEmpty ? "Cargando..." : name,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 15),
-
-                        //DESCRIPCIÃ“N Y FECHA
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                categoryName,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                t.description,
-                                style: TextStyle(
-                                    color: Colors.grey[500], fontSize: 12),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat("dd/MM/yyyy").format(t.date),
-                                style: TextStyle(
-                                    color: Colors.grey[500], fontSize: 12),
-                              ),
-                              if (isFuture) ...[
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6)
-                                        .withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: const Text(
-                                    "PrÃ³ximo movimiento",
-                                    style: TextStyle(
-                                      color: Color(0xFF2563EB),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        //MONTO Y ACCIONES
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              "${isIngreso ? '+' : '-'} ${formatCurrency(t.amount)}",
-                              style: TextStyle(
-                                color:
-                                    isIngreso ? Colors.green : Colors.redAccent,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  onTap: () => showForm(edit: t),
-                                  child: const Icon(Icons.edit_note,
-                                      size: 20, color: Colors.blueGrey),
-                                ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => confirmDelete(t),
-                                  child: const Icon(Icons.delete_outline,
-                                      size: 20, color: Colors.redAccent),
-                                ),
-                              ],
-                            ),
-                          ],
+                        Text(
+                          email.isEmpty ? "Cargando..." : email,
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // TARJETA DE BALANCE MEJORADA
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24), // Un poco más de aire
+                  decoration: BoxDecoration(
+                    // Un degradado sutil lo hace ver más "Premium"
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [const Color(0xFF064E3B), const Color(0xFF065F46)]
+                          : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Balance Total",
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF1B4332).withOpacity(0.7),
+                              fontSize: 16,
+                              letterSpacing: 0.5,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Icon(
+                            Icons.account_balance_wallet_outlined,
+                            color: isDark
+                                ? Colors.white38
+                                : const Color(0xFF1B4332).withOpacity(0.3),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        formatCurrency(
+                            getBalance()), // <-- Usando la función nueva
+                        style: TextStyle(
+                          fontSize: 36, // Un poco más grande
+                          fontWeight: FontWeight.w900, // Más grueso
+                          letterSpacing:
+                              -1, // Un poco más juntas las letras se ve pro
+                          color:
+                              isDark ? Colors.white : const Color(0xFF1B4332),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Un pequeño indicador extra le da el toque final
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white10 : Colors.white54,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "Actualizado hace un momento",
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark
+                                ? Colors.white60
+                                : const Color(0xFF1B4332),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                //SECCIÓN METAS
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Metas de ahorro",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: _crearMeta,
+                      icon: const Icon(Icons.add, color: Color(0xFF00C853)),
+                    )
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                SizedBox(
+                  height: 180,
+                  child: metas.isEmpty
+                      ? const Center(child: Text("No hay metas aún"))
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: metas.length,
+                          itemBuilder: (context, index) {
+                            final meta = metas[index];
+
+                            return Container(
+                              width: 220,
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color.fromARGB(255, 6, 78, 59)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: isDark
+                                    ? []
+                                    : [
+                                        BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.05),
+                                            blurRadius: 10)
+                                      ],
+                              ),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(meta.nombre,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16)),
+                                        ),
+                                        Row(
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () => _editarMeta(index),
+                                              child: const Icon(Icons.edit,
+                                                  size: 18,
+                                                  color: Color.fromARGB(
+                                                      255, 5, 46, 35)),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            GestureDetector(
+                                              onTap: () => _eliminarMeta(index),
+                                              child: const Icon(Icons.delete,
+                                                  size: 18, color: Colors.red),
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    LinearProgressIndicator(
+                                      value: meta.progreso.clamp(0, 1),
+                                      backgroundColor: Colors.grey[300],
+                                      color: const Color(0xFF00C853),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                        "${meta.porcentaje.toStringAsFixed(1)}% completado"),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      "Faltan: ${meta.mesesRestantes} meses",
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
+                                  ]),
+                            );
+                          },
+                        ),
+                ),
+
+                const SizedBox(height: 20),
+
+                //TÍTULO Y BOTÓN AGREGAR
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const TranslatedText(
+                      "Movimientos",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => showForm(),
+                      icon: const Icon(Icons.add, color: Color(0xFF00C853)),
+                      label: const TranslatedText("Agregar",
+                          style: TextStyle(color: Color(0xFF00C853))),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  height: 370,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: isDark
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                            )
+                          ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Resumen financiero",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      SizedBox(
+                        height: 210,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            PieChart(
+                              PieChartData(
+                                centerSpaceRadius: 55,
+                                sectionsSpace: 4,
+                                centerSpaceColor: isDark
+                                    ? const Color(0xFF1E1E1E)
+                                    : Colors.white,
+                                sections: [
+                                  PieChartSectionData(
+                                    value: getTotalIngresos(),
+                                    color: Colors.green,
+                                    radius: 65,
+                                    title: getTotalGeneral() == 0
+                                        ? "0%"
+                                        : "${((getTotalIngresos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                                    titleStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  PieChartSectionData(
+                                    value: getTotalGastos(),
+                                    color: Colors.redAccent,
+                                    radius: 65,
+                                    title: getTotalGeneral() == 0
+                                        ? "0%"
+                                        : "${((getTotalGastos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                                    titleStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    "Balance",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    formatCurrency(getBalance()),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Ingresos: ${formatCurrency(getTotalIngresos())}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Gastos: ${formatCurrency(getTotalGastos())}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black26 : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedChartType = "ingreso";
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selectedChartType == "ingreso"
+                                  ? const Color(0xFF00C853)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "Ingresos",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedChartType = "gasto";
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selectedChartType == "gasto"
+                                  ? Colors.redAccent
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "Gastos",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Container(
+                  height: 330,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: BarChart(
+                    BarChartData(
+                      borderData: FlBorderData(show: false),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipRoundedRadius: 14,
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final categorias = getMovimientosPorCategoria(
+                              selectedChartType,
+                            ).entries.toList();
+
+                            final item = categorias[group.x];
+
+                            return BarTooltipItem(
+                              "${item.key}\n${formatCurrency(item.value)}",
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      alignment: BarChartAlignment.start,
+                      titlesData: FlTitlesData(
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final categorias = getMovimientosPorCategoria(
+                                selectedChartType,
+                              ).keys.toList();
+
+                              if (value.toInt() >= categorias.length) {
+                                return const SizedBox();
+                              }
+
+                              return Text(
+                                categorias[value.toInt()],
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: false,
+                          ),
+                        ),
+                      ),
+                      barGroups: getMovimientosPorCategoria(
+                        selectedChartType,
+                      ).entries.toList().asMap().entries.map((entry) {
+                        int index = entry.key;
+                        final item = entry.value;
+
+                        return BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY: item.value,
+                              color: getCategoryColor(
+                                item.key,
+                              ),
+                              width: 22,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+
+                //LISTA DE TRANSACCIONES
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: transactions.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final t = transactions[index];
+                    final bool isIngreso = t.type == "ingreso";
+                    final bool isFuture = t.isFutureMovement;
+                    final categoryName =
+                        getCategoryName(int.tryParse(t.categoryId) ?? 0);
+                    final catData = _getCategoryData(categoryName);
+                    return Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: isFuture
+                            ? (isDark
+                                ? const Color(0xFF172554)
+                                : const Color(0xFFEFF6FF))
+                            : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+                        borderRadius: BorderRadius.circular(20),
+                        border: isFuture
+                            ? Border.all(color: const Color(0xFF3B82F6))
+                            : null,
+                        boxShadow: isDark
+                            ? []
+                            : [
+                                BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10)
+                              ],
+                      ),
+                      child: Row(
+                        children: [
+                          //ICON SEGÚN LA IMAGEN
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: catData['color'].withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(catData['icon'],
+                                color: catData['color'], size: 24),
+                          ),
+                          const SizedBox(width: 15),
+
+                          //DESCRIPCIÓN Y FECHA
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  categoryName,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  t.description,
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 12),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat("dd/MM/yyyy").format(t.date),
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 12),
+                                ),
+                                if (isFuture) ...[
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF3B82F6)
+                                          .withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: const Text(
+                                      "Próximo movimiento",
+                                      style: TextStyle(
+                                        color: Color(0xFF2563EB),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          //MONTO Y ACCIONES
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "${isIngreso ? '+' : '-'} ${formatCurrency(t.amount)}",
+                                style: TextStyle(
+                                  color: isIngreso
+                                      ? Colors.green
+                                      : Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => showForm(edit: t),
+                                    child: const Icon(Icons.edit_note,
+                                        size: 20, color: Colors.blueGrey),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () => confirmDelete(t),
+                                    child: const Icon(Icons.delete_outline,
+                                        size: 20, color: Colors.redAccent),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1148,8 +1516,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     bool? confirmar = await showDialog<bool>(
                                       context: context,
                                       builder: (ctx) => AlertDialog(
-                                        title:
-                                            const Text("Â¿Eliminar categorÃ­a?"),
+                                        title: const Text(
+                                            "Â¿Eliminar categorÃ­a?"),
                                         content: const Text(
                                             "Esta acciÃ³n no se puede deshacer."),
                                         actions: [
@@ -1215,8 +1583,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 allowFutureMovement = !allowFutureMovement;
                                 final parsed = DateFormat("MM/dd/yyyy")
                                     .tryParse(dateController.text);
-                                final todayOnly =
-                                    DateTime(today.year, today.month, today.day);
+                                final todayOnly = DateTime(
+                                    today.year, today.month, today.day);
                                 if (!allowFutureMovement &&
                                     parsed != null &&
                                     parsed.isAfter(todayOnly)) {
@@ -1630,7 +1998,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
                       : const Text("Eliminar"),
-          
                 ),
               ],
             );
@@ -1953,10 +2320,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 profileImageUrl!.isNotEmpty)
                             ? NetworkImage(profileImageUrl!)
                             : null,
-                        child:
-                            (profileImageUrl == null || profileImageUrl!.isEmpty)
-                                ? const Icon(Icons.person_rounded, size: 32)
-                                : null,
+                        child: (profileImageUrl == null ||
+                                profileImageUrl!.isEmpty)
+                            ? const Icon(Icons.person_rounded, size: 32)
+                            : null,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -2109,8 +2476,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide:
-                const BorderSide(color: Color(0xFFE1306C), width: 1.6),
+            borderSide: const BorderSide(color: Color(0xFFE1306C), width: 1.6),
           ),
         ),
       ),
@@ -2152,8 +2518,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 "Estamos listos para ayudarte con tu cuenta, movimientos, metas o dudas de la app.",
               ),
               const SizedBox(height: 18),
-              _supportTile(Icons.email_rounded, "Correo",
-                  "soporte@finara.app"),
+              _supportTile(Icons.email_rounded, "Correo", "soporte@finara.app"),
               _supportTile(Icons.chat_rounded, "Chat de ayuda",
                   "Respuesta en horario laboral"),
               _supportTile(Icons.bug_report_rounded, "Reportar problema",
@@ -2185,7 +2550,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(title,
                     style: const TextStyle(fontWeight: FontWeight.w900)),
                 Text(subtitle,
-                    style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                    style:
+                        const TextStyle(color: Colors.black54, fontSize: 12)),
               ],
             ),
           ),
