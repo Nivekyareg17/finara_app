@@ -821,148 +821,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 10),
 
-                Container(
-                  height: 370,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: isDark
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                            )
-                          ],
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Resumen financiero",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      SizedBox(
-                        height: 210,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            PieChart(
-                              PieChartData(
-                                centerSpaceRadius: 55,
-                                sectionsSpace: 4,
-                                centerSpaceColor: isDark
-                                    ? const Color(0xFF1E1E1E)
-                                    : Colors.white,
-                                sections: [
-                                  PieChartSectionData(
-                                    value: getTotalIngresos(),
-                                    color: Colors.green,
-                                    radius: 65,
-                                    title: getTotalGeneral() == 0
-                                        ? "0%"
-                                        : "${((getTotalIngresos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
-                                    titleStyle: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  PieChartSectionData(
-                                    value: getTotalGastos(),
-                                    color: Colors.redAccent,
-                                    radius: 65,
-                                    title: getTotalGeneral() == 0
-                                        ? "0%"
-                                        : "${((getTotalGastos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
-                                    titleStyle: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text(
-                                    "Balance",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    formatCurrency(getBalance()),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Ingresos: ${formatCurrency(getTotalIngresos())}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.redAccent,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Gastos: ${formatCurrency(getTotalGastos())}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                ),
+                _buildResponsivePieChart(isDark),
 
                 const SizedBox(height: 20),
 
@@ -1031,99 +890,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 20),
 
-                Container(
-                  height: 330,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: BarChart(
-                    BarChartData(
-                      borderData: FlBorderData(show: false),
-                      barTouchData: BarTouchData(
-                        enabled: true,
-                        touchTooltipData: BarTouchTooltipData(
-                          tooltipRoundedRadius: 14,
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            final categorias = getMovimientosPorCategoria(
-                              selectedChartType,
-                            ).entries.toList();
-
-                            final item = categorias[group.x];
-
-                            return BarTooltipItem(
-                              "${item.key}\n${formatCurrency(item.value)}",
-                              const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      alignment: BarChartAlignment.start,
-                      titlesData: FlTitlesData(
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                          ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final categorias = getMovimientosPorCategoria(
-                                selectedChartType,
-                              ).keys.toList();
-
-                              if (value.toInt() >= categorias.length) {
-                                return const SizedBox();
-                              }
-
-                              return Text(
-                                categorias[value.toInt()],
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: false,
-                          ),
-                        ),
-                      ),
-                      barGroups: getMovimientosPorCategoria(
-                        selectedChartType,
-                      ).entries.toList().asMap().entries.map((entry) {
-                        int index = entry.key;
-                        final item = entry.value;
-
-                        return BarChartGroupData(
-                          x: index,
-                          barRods: [
-                            BarChartRodData(
-                              toY: item.value,
-                              color: getCategoryColor(
-                                item.key,
-                              ),
-                              width: 22,
-                              borderRadius: BorderRadius.circular(8),
-                            )
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
+                _buildResponsiveBarChart(isDark),
 
                 _buildMovementFilters(isDark),
                 const SizedBox(height: 14),
@@ -1288,6 +1055,264 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildResponsivePieChart(bool isDark) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isNarrow = width < 380;
+        final chartSize =
+            (width * (isNarrow ? 0.62 : 0.5)).clamp(160.0, 220.0).toDouble();
+        final radius = (chartSize * 0.30).clamp(48.0, 66.0).toDouble();
+        final centerRadius =
+            (chartSize * 0.25).clamp(38.0, 55.0).toDouble();
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isNarrow ? 16 : 20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                    )
+                  ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Resumen financiero",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: chartSize,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        centerSpaceRadius: centerRadius,
+                        sectionsSpace: 4,
+                        centerSpaceColor:
+                            isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        sections: [
+                          PieChartSectionData(
+                            value: getTotalIngresos(),
+                            color: Colors.green,
+                            radius: radius,
+                            title: getTotalGeneral() == 0
+                                ? "0%"
+                                : "${((getTotalIngresos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                            titleStyle: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isNarrow ? 12 : 15,
+                            ),
+                          ),
+                          PieChartSectionData(
+                            value: getTotalGastos(),
+                            color: Colors.redAccent,
+                            radius: radius,
+                            title: getTotalGeneral() == 0
+                                ? "0%"
+                                : "${((getTotalGastos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                            titleStyle: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isNarrow ? 12 : 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "Balance",
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: centerRadius * 1.9,
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              formatCurrency(getBalance()),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 14,
+                runSpacing: 10,
+                children: [
+                  _chartLegend(
+                    Colors.green,
+                    "Ingresos: ${formatCurrency(getTotalIngresos())}",
+                  ),
+                  _chartLegend(
+                    Colors.redAccent,
+                    "Gastos: ${formatCurrency(getTotalGastos())}",
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _chartLegend(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
+  Widget _buildResponsiveBarChart(bool isDark) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final data = getMovimientosPorCategoria(selectedChartType).entries.toList();
+        final chartWidth = data.isEmpty
+            ? constraints.maxWidth
+            : (data.length * 74.0)
+                .clamp(constraints.maxWidth, 900.0)
+                .toDouble();
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SizedBox(
+            height: constraints.maxWidth < 380 ? 280 : 320,
+            child: data.isEmpty
+                ? const Center(child: Text("No hay datos para graficar"))
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: chartWidth,
+                      child: BarChart(
+                        BarChartData(
+                          borderData: FlBorderData(show: false),
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              tooltipRoundedRadius: 14,
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
+                                final item = data[group.x];
+                                return BarTooltipItem(
+                                  "${item.key}\n${formatCurrency(item.value)}",
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          alignment: BarChartAlignment.spaceAround,
+                          titlesData: FlTitlesData(
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            leftTitles: const AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 44,
+                              ),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 44,
+                                getTitlesWidget: (value, meta) {
+                                  final index = value.toInt();
+                                  if (index < 0 || index >= data.length) {
+                                    return const SizedBox();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: SizedBox(
+                                      width: 64,
+                                      child: Text(
+                                        data[index].key,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                          ),
+                          barGroups: data.asMap().entries.map((entry) {
+                            final item = entry.value;
+                            return BarChartGroupData(
+                              x: entry.key,
+                              barRods: [
+                                BarChartRodData(
+                                  toY: item.value,
+                                  color: getCategoryColor(item.key),
+                                  width: 22,
+                                  borderRadius: BorderRadius.circular(8),
+                                )
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        );
+      },
     );
   }
 
