@@ -5,6 +5,7 @@ class StatCard extends StatelessWidget {
   final String title, count, unit;
   final IconData icon;
   final Color accentColor;
+  final VoidCallback? onTap;
 
   const StatCard({
     super.key,
@@ -13,6 +14,7 @@ class StatCard extends StatelessWidget {
     required this.unit,
     required this.icon,
     required this.accentColor,
+    this.onTap,
   });
 
   @override
@@ -21,8 +23,8 @@ class StatCard extends StatelessWidget {
 
     if (title == "MENSAJES") {
       return _AnimatedTouchCard(
+        onTap: onTap,
         child: Container(
-          width: 132,
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -83,6 +85,7 @@ class StatCard extends StatelessWidget {
     }
 
     return _AnimatedTouchCard(
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -140,9 +143,10 @@ class StatCard extends StatelessWidget {
 }
 
 class _AnimatedTouchCard extends StatefulWidget {
-  const _AnimatedTouchCard({required this.child});
+  const _AnimatedTouchCard({required this.child,this.onTap });
 
   final Widget child;
+  final VoidCallback? onTap;
 
   @override
   State<_AnimatedTouchCard> createState() => _AnimatedTouchCardState();
@@ -163,6 +167,8 @@ class _AnimatedTouchCardState extends State<_AnimatedTouchCard> {
       onEnter: (_) => _setActive(true),
       onExit: (_) => _setActive(false),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
         onTapDown: (_) => _setActive(true),
         onTapCancel: () => _setActive(false),
         onTapUp: (_) => _setActive(false),
