@@ -486,7 +486,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
 
       //BODY CRUD
-      body : SafeArea(
+      body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -1268,6 +1268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         bool isLoadingDialog = false;
+        bool showValidationErrors = false;
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
@@ -1374,11 +1375,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF064E3B),
                             ),
-                            decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.attach_money,
+                            // DESPUÉS
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.attach_money,
                                   size: 35, color: Color(0xFF064E3B)),
                               hintText: "0.00",
                               border: InputBorder.none,
+                              errorText: (showValidationErrors &&
+                                      (double.tryParse(amount.text.replaceAll(
+                                                  RegExp(r'[^0-9.]'), '')) ??
+                                              0) <=
+                                          0)
+                                  ? "Ingresa un monto válido"
+                                  : null,
                             ),
                           ),
 
@@ -1763,20 +1772,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: desc,
+                            // DESPUÉS
                             decoration: InputDecoration(
                               hintText: "Escribe una nota...",
                               filled: true,
                               fillColor:
                                   isDark ? Colors.black12 : Colors.grey[50],
+                              errorText: (showValidationErrors &&
+                                      desc.text.trim().isEmpty)
+                                  ? "La descripción es obligatoria"
+                                  : null,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
+                                borderSide: BorderSide(
+                                  color: (showValidationErrors &&
+                                          desc.text.trim().isEmpty)
+                                      ? Colors.redAccent
+                                      : Colors.grey[200]!,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[200]!),
+                                borderSide: BorderSide(
+                                  color: (showValidationErrors &&
+                                          desc.text.trim().isEmpty)
+                                      ? Colors.redAccent
+                                      : Colors.grey[200]!,
+                                ),
                               ),
                             ),
                           ),
@@ -1800,6 +1822,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ? null
                                   : () async {
                                       // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
+                                      setStateDialog(
+                                          () => showValidationErrors = true);
+
                                       String cleanText = amount.text
                                           .replaceAll(RegExp(r'[^0-9.]'), '');
                                       double montoFinal =
@@ -1807,14 +1832,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       DateTime fechaFinal =
                                           DateFormat("MM/dd/yyyy")
                                               .parse(dateController.text);
-                                      if (selectedCategoryId == null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "Selecciona una categorÃ­a")),
-                                        );
-                                        return;
+
+                                      // Validar todo junto
+                                      if (selectedCategoryId == null ||
+                                          montoFinal <= 0 ||
+                                          desc.text.trim().isEmpty) {
+                                        return; // Los campos en rojo ya indican el error
                                       }
 
                                       int categoryId = selectedCategoryId!;
@@ -2756,6 +2779,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               focusedBorder: metaBorder(nombreError),
                             ),
                           ),
+                          // Después del TextField de nombre
+                          if (nombreError)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6, left: 4),
+                              child: Text(
+                                "Este campo es obligatorio",
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 12),
+                              ),
+                            ),
 
                           const SizedBox(height: 25),
 
@@ -2783,6 +2816,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               focusedBorder: metaBorder(montoError),
                             ),
                           ),
+                          // Después del TextField de nombre
+                          if (nombreError)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6, left: 4),
+                              child: Text(
+                                "Este campo es obligatorio",
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 12),
+                              ),
+                            ),
 
                           const SizedBox(height: 25),
 
@@ -2810,6 +2853,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               focusedBorder: metaBorder(ahorroError),
                             ),
                           ),
+                          // Después del TextField de nombre
+                          if (ahorroError)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6, left: 4),
+                              child: Text(
+                                "Este campo es obligatorio",
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 12),
+                              ),
+                            ),
 
                           const SizedBox(height: 20),
 
@@ -2986,6 +3039,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         focusedBorder: metaBorder(nombreError),
                       ),
                     ),
+                    // Después del TextField de nombre
+                    if (nombreError)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6, left: 4),
+                        child: Text(
+                          "Este campo es obligatorio",
+                          style:
+                              TextStyle(color: Colors.redAccent, fontSize: 12),
+                        ),
+                      ),
                     const SizedBox(height: 14),
                     TextField(
                       controller: montoMeta,
@@ -3000,6 +3063,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         focusedBorder: metaBorder(montoError),
                       ),
                     ),
+                    // Después del TextField de nombre
+                    if (montoError)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6, left: 4),
+                        child: Text(
+                          "Este campo es obligatorio",
+                          style:
+                              TextStyle(color: Colors.redAccent, fontSize: 12),
+                        ),
+                      ),
                     const SizedBox(height: 14),
                     TextField(
                       controller: ahorroMensual,
@@ -3014,6 +3087,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         focusedBorder: metaBorder(ahorroError),
                       ),
                     ),
+                    // Después del TextField de nombre
+                    if (ahorroError)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6, left: 4),
+                        child: Text(
+                          "Este campo es obligatorio",
+                          style:
+                              TextStyle(color: Colors.redAccent, fontSize: 12),
+                        ),
+                      ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
