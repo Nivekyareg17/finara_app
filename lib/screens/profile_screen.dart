@@ -486,7 +486,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
 
       //BODY CRUD
-      body : SafeArea(
+      body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20),
