@@ -365,10 +365,25 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  static Future<void> deleteUser(String token, int id) async {
-    await http.delete(
-      Uri.parse("$baseUrl/users/delete/$id"),
-      headers: {"Authorization": "Bearer $token"},
+  static Future<void> deleteUser(
+    String token,
+    int id,
+  ) async {
+    final response = await http.delete(
+      Uri.parse(
+        "$baseUrl/users/delete/$id",
+      ),
+      headers: {
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    print(
+      "DELETE STATUS: ${response.statusCode}",
+    );
+
+    print(
+      "DELETE BODY: ${response.body}",
     );
   }
 
