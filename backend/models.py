@@ -33,11 +33,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password = Column(String)
 
-    is_verified = Column(
-        Boolean,
-        default=False
-    )
-    
+
     profile_image_url = Column(String, nullable=True)
     username = Column(String, nullable=True)
     age = Column(Integer, nullable=True)
