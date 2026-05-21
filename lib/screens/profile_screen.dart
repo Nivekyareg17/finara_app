@@ -453,59 +453,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _showSupportSheet();
                     },
                   ),
-
-                  const Divider(),
-
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text("MÓDULOS",
-                        style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2)),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.home_rounded,
-                    title: "Inicio",
-                    color: const Color(0xFF10B981),
-                    onTap: () =>
-                        Navigator.pushReplacementNamed(context, "/home"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.newspaper_rounded,
-                    title: "Noticias",
-                    color: Colors.blue,
-                    onTap: () =>
-                        Navigator.pushReplacementNamed(context, "/news"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.auto_awesome,
-                    title: "Daiko AI",
-                    color: Colors.purple,
-                    onTap: () =>
-                        Navigator.pushReplacementNamed(context, "/daiko_ai"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.school_rounded,
-                    title: "Aprendizaje",
-                    color: Colors.teal,
-                    onTap: () =>
-                        Navigator.pushReplacementNamed(context, "/video"),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.calculate_rounded,
-                    title: "Calculadora",
-                    color: Colors.indigo,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CalculatorsScreen(),
-                        ),
-                      );
-                    },
-                  ),
                 ],
               ),
             ),
@@ -539,7 +486,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
 
       //BODY CRUD
-      body: SafeArea(
+      body : SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20),
