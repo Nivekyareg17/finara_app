@@ -14,7 +14,7 @@ class AdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color.fromARGB(255, 10, 109, 82);
-    final auth = context.read<AuthProvider>();
+    final auth = context.watch<AuthProvider>();
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -25,6 +25,15 @@ class AdminScreen extends StatelessWidget {
         ),
         iconTheme: const IconThemeData(color: primaryColor),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.switch_account),
+            tooltip: "Cambiar a vista usuario",
+            onPressed: () {
+              auth.toggleView();
+
+              Navigator.pushReplacementNamed(context, "/home");
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -68,7 +77,8 @@ class AdminScreen extends StatelessWidget {
                 subtitle: const TranslatedText(
                   "Administrar usuarios y roles",
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, color: primaryColor),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: primaryColor),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -87,7 +97,8 @@ class AdminScreen extends StatelessWidget {
                 subtitle: const TranslatedText(
                   "Crear, editar y eliminar lecturas",
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, color: primaryColor),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: primaryColor),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -106,7 +117,8 @@ class AdminScreen extends StatelessWidget {
                 subtitle: const TranslatedText(
                   "Crear, editar y eliminar videos",
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, color: primaryColor),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: primaryColor),
                 onTap: () {
                   Navigator.push(
                     context,

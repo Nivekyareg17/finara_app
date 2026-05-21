@@ -75,14 +75,17 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Lógica para alternar entre vista de admin y usuario
-  bool _isAdminView = true;
+  bool _isAdminView = false;
 
-  bool get isAdminView => _isAdminView;
 
-  void toggleView() {
-    _isAdminView = !_isAdminView;
-    notifyListeners();
-  }
+
+bool get isAdminView => _isAdminView;
+
+void toggleView() {
+  if (!isAdmin) return;
+  _isAdminView = !_isAdminView;
+  notifyListeners();
+}
 
   // Métodos relacionados con metas de ahorro
   Future<void> loadMetas() async {
