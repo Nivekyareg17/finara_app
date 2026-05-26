@@ -19,26 +19,16 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   List messages = [];
+  bool isTyping = false;
 
   @override
   void initState() {
     super.initState();
 
     loadMessages();
-
-    //auto refresco
-    Future.delayed(Duration.zero, () {
-      startAutoRefresh();
-    });
   }
 
   late final periodicRefresh;
-
-  void startAutoRefresh() {
-    periodicRefresh = Stream.periodic(const Duration(seconds: 3)).listen((_) {
-      loadMessages();
-    });
-  }
 
   @override
   void dispose() {
@@ -171,7 +161,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
+      final isAtBottom = scrollController.offset <= 100;
+
+      if (isAtBottom) {
         scrollController.animateTo(
           0,
           duration: const Duration(milliseconds: 300),
@@ -226,27 +218,83 @@ class _ChatScreenState extends State<ChatScreen> {
                 final msg = messages[i];
                 final isMe = msg["sender_id"] != widget.userId;
 
-                return TweenAnimationBuilder(
-                  duration: const Duration(milliseconds: 300),
-                  tween: Tween<double>(begin: 0, end: 1),
-                  builder: (context, value, child) {
-                    return Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: Opacity(
-                        opacity: value,
-                        child: child,
+                bool shouldShowDate(int index) {
+                  if (index == messages.length - 1) return true;
+
+                  final current = DateTime.parse(messages[index]["timestamp"]);
+                  final next = DateTime.parse(messages[index + 1]["timestamp"]);
+
+                  return current.day != next.day ||
+                      current.month != next.month ||
+                      current.year != next.year;
+                }
+
+                return Column(
+                  children: [
+                    //fecha entre mensajes
+                    if (shouldShowDate(i))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          formatTimestamp(
+                            DateTime.parse(messages[i]["timestamp"]),
+                          ),
+                          style: const TextStyle(color: Colors.grey),
+                        ),
                       ),
-                    );
-                  },
-                  child: Align(
-                    alignment:
-                        isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: buildMessageBubble(msg, isMe),
-                  ),
+
+                    //mensaje con animación
+                    TweenAnimationBuilder(
+                      duration: const Duration(milliseconds: 300),
+                      tween: Tween<double>(begin: 0, end: 1),
+                      builder: (context, value, child) {
+                        return Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: Opacity(
+                            opacity: value,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: isMe
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
+                        children: [
+                          if (!isMe)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: CircleAvatar(
+                                radius: 14,
+                                backgroundColor: Colors.grey,
+                                child: Text(widget.userName[0].toUpperCase()),
+                              ),
+                            ),
+                          Flexible(
+                            child: buildMessageBubble(msg, isMe),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
           ),
+
+          // "Escribiendo..."
+          if (isTyping)
+            const Padding(
+              padding: EdgeInsets.only(left: 16, bottom: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Escribiendo...",
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ),
+            ),
 
           //INPUT
           SafeArea(
@@ -269,6 +317,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       child: TextField(
                         controller: controller,
+                        onChanged: (text) {
+                          setState(() {
+                            isTyping = text.isNotEmpty;
+                          });
+                        },
                         minLines: 1,
                         maxLines: 4, // permite crecer como WhatsApp
                         textCapitalization: TextCapitalization.sentences,
@@ -276,11 +329,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           hintText: "Escribe un mensaje...",
                           border: InputBorder.none,
 
-                          // ICONO IZQUIERDA (opcional)
-                          prefixIcon: Icon(
-                            Icons.emoji_emotions_outlined,
-                            color: Colors.grey,
-                          ),
                         ),
                       ),
                     ),
@@ -294,13 +342,14 @@ class _ChatScreenState extends State<ChatScreen> {
                       final text = controller.text.trim();
                       if (text.isEmpty) return;
 
-                      controller.clear();
-
                       await ApiService.sendMessage(
                         context.read<AuthProvider>().token!,
                         widget.userId,
                         text,
                       );
+
+                      controller.clear();
+                      loadMessages();
 
                       loadMessages();
                     },
@@ -321,7 +370,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
