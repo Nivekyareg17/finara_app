@@ -87,10 +87,10 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                     final contenido = contenidoController.text.trim();
                     final tiempo = tiempoController.text.trim();
 
-                    //VALIDACIÓN
                     if (titulo.isEmpty || contenido.isEmpty || tiempo.isEmpty) {
                       showSnack(context, "Todos los campos son obligatorios",
                           isError: true);
+                      Navigator.pop(context); //cerrar en error
                       return;
                     }
 
@@ -100,10 +100,14 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                       tiempo,
                     );
 
+                    Navigator.pop(context); //cerrar SIEMPRE (éxito o fallo)
+
                     if (success) {
                       showSnack(context, "Lectura creada", isSuccess: true);
+                      await loadLecturas(); //refrescar
                     } else {
                       showSnack(context, "Campos inválidos", isError: true);
+                      await loadLecturas(); //refrescar para mostrar datos anteriores (si no se guardó) o cambios (si se guardó pero hubo error en respuesta)
                     }
                   },
                   child: const Text(
@@ -173,6 +177,7 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
               if (titulo.isEmpty || contenido.isEmpty || tiempo.isEmpty) {
                 showSnack(context, "Todos los campos son obligatorios",
                     isError: true);
+                Navigator.pop(context); //cerrar en error
                 return;
               }
 
@@ -183,10 +188,14 @@ class _AdminLecturasScreenState extends State<AdminLecturasScreen> {
                 tiempo,
               );
 
+              Navigator.pop(context); //cerrar SIEMPRE
+
               if (success) {
                 showSnack(context, "Lectura actualizada", isSuccess: true);
+                await loadLecturas(); //refrescar
               } else {
                 showSnack(context, "Error al actualizar", isError: true);
+                await loadLecturas(); //refrescar para mostrar datos anteriores (si no se guardó) o cambios (si se guardó pero hubo error en respuesta)
               }
             },
             child: const Text("Guardar"),
