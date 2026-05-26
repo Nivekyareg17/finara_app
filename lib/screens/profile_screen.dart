@@ -1418,6 +1418,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context, setStateDialog) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
 
+              final double amountValue = _parseMoney(amount.text);
+
             final filteredCategories =
                 localCategories.where((c) => c.type == type).toList();
 
@@ -1526,10 +1528,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               hintText: "0.00",
                               border: InputBorder.none,
                               errorText: (showValidationErrors &&
-                                      (double.tryParse(amount.text.replaceAll(
-                                                  RegExp(r'[^0-9.]'), '')) ??
-                                              0) <=
-                                          0)
+                                    amount.text.trim().isNotEmpty &&
+                                      amountValue == 0)
                                   ? "Ingresa un monto válido"
                                   : null,
                             ),
@@ -1984,17 +1984,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       setStateDialog(
                                           () => showValidationErrors = true);
 
-                                      String cleanText = amount.text
-                                          .replaceAll(RegExp(r'[^0-9.]'), '');
-                                      double montoFinal =
-                                          double.tryParse(cleanText) ?? 0.0;
+                                        double montoFinal = _parseMoney(amount.text);
                                       DateTime fechaFinal =
                                           DateFormat("MM/dd/yyyy")
                                               .parse(dateController.text);
 
                                       // Validar todo junto
                                       if (selectedCategoryId == null ||
-                                          montoFinal <= 0 ||
+                                          montoFinal == 0 ||
                                           desc.text.trim().isEmpty) {
                                         return; // Los campos en rojo ya indican el error
                                       }
