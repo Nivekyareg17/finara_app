@@ -19,6 +19,7 @@ class AdminCategoryVideosScreen extends StatefulWidget {
 class _AdminCategoryVideosScreenState extends State<AdminCategoryVideosScreen> {
   List videos = [];
   bool isLoading = true;
+  
 
   @override
   void initState() {
@@ -37,6 +38,16 @@ class _AdminCategoryVideosScreenState extends State<AdminCategoryVideosScreen> {
     } catch (e) {
       setState(() => isLoading = false);
     }
+  }
+
+  void showSnack(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : primaryColor,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void showVideoDialog({Map? video}) {
@@ -83,10 +94,12 @@ class _AdminCategoryVideosScreenState extends State<AdminCategoryVideosScreen> {
             onPressed: () async {
               bool success = false;
 
+              //Validación: evitar update innecesario
               if (isEdit &&
                   titleController.text == video["title"] &&
                   urlController.text == video["url"]) {
                 Navigator.pop(context);
+                showSnack("No hubo cambios");
                 return;
               }
 
@@ -108,6 +121,14 @@ class _AdminCategoryVideosScreenState extends State<AdminCategoryVideosScreen> {
               if (success) {
                 Navigator.pop(context);
                 loadVideos();
+
+                showSnack(
+                  isEdit
+                      ? "Video actualizado correctamente"
+                      : "Video creado correctamente",
+                );
+              } else {
+                showSnack("Error al guardar video", isError: true);
               }
             },
             child: Text(isEdit ? "Actualizar" : "Crear"),
@@ -122,6 +143,9 @@ class _AdminCategoryVideosScreenState extends State<AdminCategoryVideosScreen> {
 
     if (success) {
       loadVideos();
+      showSnack("Video eliminado correctamente");
+    } else {
+      showSnack("Error al eliminar video", isError: true);
     }
   }
 
