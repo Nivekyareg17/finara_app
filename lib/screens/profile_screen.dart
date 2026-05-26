@@ -1572,8 +1572,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await loadCategories(); // Recarga la lista global 'categories'
 
                                   setStateDialog(() {
-                                    // ACTUALIZACIÃ“N CRÃTICA:
-                                    // 1. Sincronizamos la lista local con la global reciÃ©n cargada
+                                    // ACTUALIZACIÓN CRÍTICA:
+                                    // 1. Sincronizamos la lista local con la global recién cargada
                                     localCategories = List.from(categories);
 
                                     // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
@@ -1583,7 +1583,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     if (filtered.isNotEmpty) {
                                       // 3. Intentamos encontrar la que acabamos de crear por nombre
-                                      // (Es mÃ¡s seguro que .last si la lista viene ordenada del servidor)
+                                      // (Es más seguro que .last si la lista viene ordenada del servidor)
                                       final creada = filtered.firstWhere(
                                         (c) =>
                                             c.name.toLowerCase() ==
@@ -1593,6 +1593,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       selectedCategoryId = int.parse(creada.id);
                                     }
                                   });
+
+                                  _showTopNotice(
+                                    "Categoría creada correctamente",
+                                    isError: false,
+                                    icon: Icons.check_circle_rounded,
+                                  );
                                 }
                               }
                             },
@@ -1673,6 +1679,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                         });
+                                        _showTopNotice(
+                                          "Categoría actualizada correctamente",
+                                          isError: false,
+                                          icon: Icons.check_circle_rounded,
+                                        );
+                                      } else {
+                                        _showTopNotice(
+                                          "Error al actualizar la categoría",
+                                          isError: true,
+                                          icon: Icons.error_outline_rounded,
+                                        );
                                       }
                                     }
                                   },
@@ -1686,9 +1703,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title: const Text(
-                                            "Â¿Eliminar categorÃ­a?"),
+                                            "¿Eliminar categoría?"),
                                         content: const Text(
-                                            "Esta acciÃ³n no se puede deshacer."),
+                                            "Esta acción no se puede deshacer."),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
@@ -1719,20 +1736,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           localCategories =
                                               List.from(categories);
                                           selectedCategoryId =
-                                              null; // Reset de selecciÃ³n
+                                              null; // Reset de selección
                                         });
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "CategorÃ­a eliminada con Ã©xito")),
+                                        _showTopNotice(
+                                          "Categoría eliminada correctamente",
+                                          isError: false,
+                                          icon: Icons.check_circle_rounded,
                                         );
                                       } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "Error al eliminar la categorÃ­a")),
+                                        _showTopNotice(
+                                          "Error al eliminar la categoría",
+                                          isError: true,
+                                          icon: Icons.error_outline_rounded,
                                         );
                                       }
                                     }
@@ -1991,7 +2006,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa un monto vÃ¡lido")),
+                                                  "Por favor ingresa un monto válido")),
                                         );
                                         return;
                                       }
@@ -2001,7 +2016,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           const SnackBar(
                                               content: TranslatedText(
-                                                  "Por favor ingresa una descripciÃ³n")),
+                                                  "Por favor ingresa una descripción")),
                                         );
                                         return;
                                       }
@@ -2052,8 +2067,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             .showSnackBar(
                                           SnackBar(
                                               content: Text(edit == null
-                                                  ? "Creado con Ã©xito"
-                                                  : "Actualizado con Ã©xito")),
+                                                  ? "Creado con éxito"
+                                                  : "Actualizado con éxito")),
                                         );
                                       } else {
                                         setStateDialog(
@@ -2143,13 +2158,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-              title: const Text("Â¿Eliminar movimiento?",
+              title: const Text("¿Eliminar movimiento?",
                   style: TextStyle(fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Se eliminarÃ¡ '${t.description}'"),
+                  Text("Se eliminará '${t.description}'"),
                   const SizedBox(height: 8),
                   Text("Monto: ${formatCurrency(t.amount)}",
                       style: const TextStyle(
@@ -2225,7 +2240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const TranslatedText("Nueva categorÃ­a"),
+        title: const TranslatedText("Nueva categoría"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -2825,7 +2840,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Foto de perfil actualizada âœ…")),
+          const SnackBar(content: Text("Foto de perfil actualizada ✔")),
         );
       } else {
         throw "Error del servidor: ${response.statusCode}";
@@ -3960,7 +3975,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Eliminar meta"),
-        content: const Text("Â¿Seguro?"),
+        content: const Text("¿Seguro?"),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
@@ -3969,6 +3984,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               context.read<AuthProvider>().eliminarMeta(index);
               Navigator.pop(context);
+              _showTopNotice(
+                "Meta eliminada correctamente",
+                isError: false,
+                icon: Icons.check_circle_rounded,
+              );
             },
             child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
           ),
