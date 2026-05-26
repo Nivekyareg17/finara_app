@@ -80,7 +80,9 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
               final description = descriptionController.text.trim();
 
               if (title.isEmpty || description.isEmpty) {
-                _showSnack("Todos los campos son obligatorios");
+                showSnack(context, "Todos los campos son obligatorios",
+                    isError: true);
+                Navigator.pop(context); //cerrar en error
                 return;
               }
 
@@ -89,12 +91,15 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
                 description,
               );
 
+              Navigator.pop(context); //cerrar SIEMPRE
+
               if (success) {
                 showSnack(context, "Categoría creada", isSuccess: true);
               } else {
-                showSnack(context, "Todos los campos son obligatorios",
-                    isError: true);
+                showSnack(context, "Error al crear", isError: true);
               }
+
+              await loadCategories(); //refrescar SIEMPRE
             },
           ),
         ],
@@ -140,8 +145,20 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
               final title = titleController.text.trim();
               final description = descriptionController.text.trim();
 
+              //VALIDACIÓN CAMPOS VACÍOS
               if (title.isEmpty || description.isEmpty) {
-                _showSnack("Todos los campos son obligatorios");
+                showSnack(context, "Todos los campos son obligatorios",
+                    isError: true);
+                Navigator.pop(context);
+                return;
+              }
+
+              //VALIDACIÓN: SIN CAMBIOS
+              if (title == category["title"] &&
+                  description == category["description"]) {
+                showSnack(context, "No hay cambios para actualizar",
+                    isError: true);
+                Navigator.pop(context);
                 return;
               }
 
@@ -151,12 +168,15 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
                 description,
               );
 
+              Navigator.pop(context); //cerrar SIEMPRE
+
               if (success) {
                 showSnack(context, "Categoría actualizada", isSuccess: true);
-                loadCategories();
               } else {
                 showSnack(context, "Error al actualizar", isError: true);
               }
+
+              await loadCategories(); //refrescar
             },
           ),
         ],
@@ -179,7 +199,7 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
   }
 
   void _showSnack(String text) {
-    showSnack(context, "Todos los campos son obligatorios", isError: true);
+    showSnack(context, text, isError: true);
   }
 
   @override
@@ -257,18 +277,48 @@ class _AdminVideosScreenState extends State<AdminVideosScreen> {
                                 icon: const Icon(Icons.delete,
                                     color: Colors.redAccent),
                                 onPressed: () async {
-                                  final success =
-                                      await ApiService.deleteVideoCategory(
-                                    category["id"],
+                                  final confirm = await showDialog(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      title: const Text("Eliminar categoría"),
+                                      content: const Text(
+                                        "¿Seguro que deseas eliminar esta categoría? Esta acción no se puede deshacer.",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: const Text("Cancelar"),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent,
+                                          ),
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text("Eliminar"),
+                                        ),
+                                      ],
+                                    ),
                                   );
 
-                                  if (success) {
-                                    showSnack(context, "Categoría eliminada",
-                                        isSuccess: true);
-                                    loadCategories();
-                                  } else {
-                                    showSnack(context, "Error al eliminar",
-                                        isError: true);
+                                  if (confirm == true) {
+                                    final success =
+                                        await ApiService.deleteVideoCategory(
+                                      category["id"],
+                                    );
+
+                                    if (success) {
+                                      showSnack(context, "Categoría eliminada",
+                                          isSuccess: true);
+                                      await loadCategories(); //refrescar
+                                    } else {
+                                      showSnack(context, "Error al eliminar",
+                                          isError: true);
+                                    }
                                   }
                                 },
                               ),

@@ -16,8 +16,7 @@ class AdminCategoryVideosScreen extends StatefulWidget {
       _AdminCategoryVideosScreenState();
 }
 
-class _AdminCategoryVideosScreenState
-    extends State<AdminCategoryVideosScreen> {
+class _AdminCategoryVideosScreenState extends State<AdminCategoryVideosScreen> {
   List videos = [];
   bool isLoading = true;
 
@@ -29,8 +28,7 @@ class _AdminCategoryVideosScreenState
 
   Future<void> loadVideos() async {
     try {
-      final response =
-          await ApiService.getVideos(widget.categoryId);
+      final response = await ApiService.getVideos(widget.categoryId);
 
       setState(() {
         videos = response;
@@ -42,11 +40,9 @@ class _AdminCategoryVideosScreenState
   }
 
   void showVideoDialog({Map? video}) {
-    final titleController =
-        TextEditingController(text: video?["title"] ?? "");
+    final titleController = TextEditingController(text: video?["title"] ?? "");
 
-    final urlController =
-        TextEditingController(text: video?["url"] ?? "");
+    final urlController = TextEditingController(text: video?["url"] ?? "");
 
     final isEdit = video != null;
 
@@ -65,9 +61,7 @@ class _AdminCategoryVideosScreenState
                 labelText: "Título",
               ),
             ),
-
             const SizedBox(height: 12),
-
             TextField(
               controller: urlController,
               decoration: const InputDecoration(
@@ -81,13 +75,20 @@ class _AdminCategoryVideosScreenState
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancelar"),
           ),
-
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
             ),
             onPressed: () async {
               bool success = false;
+
+              if (isEdit &&
+                  titleController.text == video["title"] &&
+                  urlController.text == video["url"]) {
+                Navigator.pop(context);
+                return;
+              }
 
               if (isEdit) {
                 success = await ApiService.updateVideo(
@@ -124,6 +125,35 @@ class _AdminCategoryVideosScreenState
     }
   }
 
+  void showDeleteDialog(int id) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Eliminar video"),
+        content: const Text(
+          "¿Estás seguro de que quieres eliminar este video?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              await deleteVideo(id);
+            },
+            child: const Text("Eliminar"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,7 +166,6 @@ class _AdminCategoryVideosScreenState
           color: primaryColor,
         ),
       ),
-
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(),
@@ -154,9 +183,7 @@ class _AdminCategoryVideosScreenState
                       margin: const EdgeInsets.all(10),
                       child: ListTile(
                         title: Text(video["title"]),
-
                         subtitle: Text(video["url"]),
-
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -165,17 +192,14 @@ class _AdminCategoryVideosScreenState
                                 Icons.edit,
                                 color: primaryColor,
                               ),
-                              onPressed: () =>
-                                  showVideoDialog(video: video),
+                              onPressed: () => showVideoDialog(video: video),
                             ),
-
                             IconButton(
                               icon: const Icon(
                                 Icons.delete,
                                 color: Colors.red,
                               ),
-                              onPressed: () =>
-                                  deleteVideo(video["id"]),
+                              onPressed: () => showDeleteDialog(video["id"]),
                             ),
                           ],
                         ),
@@ -183,7 +207,6 @@ class _AdminCategoryVideosScreenState
                     );
                   },
                 ),
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         onPressed: () => showVideoDialog(),
