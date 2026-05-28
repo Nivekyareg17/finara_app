@@ -10,7 +10,6 @@ import 'discountScreen.dart';
 import 'netSalaryScreen.dart';
 import 'housingGoalScreen.dart';
 
-
 class CalculatorsScreen extends StatelessWidget {
   const CalculatorsScreen({super.key});
 
@@ -78,7 +77,7 @@ class CalculatorsScreen extends StatelessWidget {
             crossAxisCount: isNarrow ? 1 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: isNarrow ? 2.25 : 0.72,
+            childAspectRatio: isNarrow ? 2.2 : 0.6,
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             children: const [
@@ -250,85 +249,109 @@ class _CalculatorTileState extends State<_CalculatorTile> {
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: _active
-                              ? Colors.white.withOpacity(0.18)
-                              : widget.color.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(widget.icon,
-                            color: _active ? Colors.white : widget.color,
-                            size: 24),
+
+              // 🔥 AQUI ESTA EL FIX REAL
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
-                      const Spacer(),
-                      Icon(Icons.arrow_forward_rounded,
-                          color: _active ? Colors.white : widget.color,
-                          size: 20),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 9, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: _active
-                                  ? Colors.white.withOpacity(0.18)
-                                  : widget.color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              widget.metric,
-                              style: TextStyle(
-                                color: _active ? Colors.white : widget.color,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment:
+                            MainAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: _active
+                                      ? Colors.white.withOpacity(0.18)
+                                      : widget.color.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(widget.icon,
+                                    color:
+                                        _active ? Colors.white : widget.color,
+                                    size: 24),
                               ),
-                            ),
+                              const Spacer(),
+                              Icon(Icons.arrow_forward_rounded,
+                                  color: _active ? Colors.white : widget.color,
+                                  size: 20),
+                            ],
                           ),
-                        ),
+
+                          const SizedBox(
+                              height: 12),
+
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 9, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: _active
+                                          ? Colors.white.withOpacity(0.18)
+                                          : widget.color.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      widget.metric,
+                                      style: TextStyle(
+                                        color: _active
+                                            ? Colors.white
+                                            : widget.color,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                widget.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: _active ? Colors.white : null,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.12,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                widget.subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: _active
+                                      ? Colors.white70
+                                      : (isDark
+                                          ? Colors.white60
+                                          : Colors.black54),
+                                  fontSize: 12,
+                                  height: 1.25,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        widget.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: _active ? Colors.white : null,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          height: 1.12,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        widget.subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: _active
-                              ? Colors.white70
-                              : (isDark ? Colors.white60 : Colors.black54),
-                          fontSize: 12,
-                          height: 1.25,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  );
+                },
               ),
             ),
           ),
