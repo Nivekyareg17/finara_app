@@ -21,7 +21,9 @@ class AuthProvider extends ChangeNotifier {
   String? get token => _token;
   bool get isAuthenticated => _token != null;
   List<MetaAhorro> get metas => _metas;
-  bool get isAdmin => _user?["role"] == "admin";//admin-vs-usuario
+  bool get isAdmin => _user?["role"] == "admin";
+  String? get userName => _user?["name"];
+
 
   Future<bool> login(String email, String password) async {
     final token = await ApiService.login(email, password);
@@ -166,3 +168,10 @@ void toggleView() {
     notifyListeners();
   }
 }
+
+
+//code felipe
+//String? get token => _token;
+//  bool get isAuthenticated => _token != null;
+//  List<MetaAhorro> get metas => _metas;
+//  bool get isAdmin => _user?["role"] == "admin";//admin-vs-usuario

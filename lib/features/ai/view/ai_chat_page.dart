@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../models/note.dart';
 import '../../../services/notes_services.dart';
+
 // FIN DE IMPORTACIONES
 
 class AIChatPage extends StatefulWidget {
@@ -26,7 +27,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   final NoteService _noteService = NoteService();
 
   bool _isLoading = false;
-  bool _isDarkMode = true; // <-- NUEVO: toggle de tema
+  bool _isDarkMode = true;
   String _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
   String _selectedTool = "Rápido";
 
@@ -34,6 +35,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   late RichTextController _noteContentController;
   final TextEditingController _searchController = TextEditingController();
   int? _editingNoteId;
+  bool _isNoteReadOnly = false; // <-- NUEVO: Controla si la nota es de solo lectura
 
   final List<String> _categoriasPredeterminadas = [
     "Ahorros", "Inversiones", "Desarrollo", "Gastos", "Ideas", "General"
@@ -42,7 +44,6 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   String _filtroCategoria = "Todas";
 
   // ── PALETA DINÁMICA ─────────────────────────────────
-  // Oscuro (original)
   static const _darkBg         = Color(0xFF060B14);
   static const _darkSurface    = Color(0xFF0D1421);
   static const _darkCard       = Color(0xFF111827);
@@ -51,7 +52,6 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   static const _darkTextSec    = Color(0xFF6B8A9A);
   static const _darkUserBubble = Color(0xFF0F2B3D);
 
-  // Claro
   static const _lightBg         = Color(0xFFF5F7FA);
   static const _lightSurface    = Color(0xFFFFFFFF);
   static const _lightCard       = Color(0xFFF0F4F8);
@@ -60,9 +60,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   static const _lightTextSec    = Color(0xFF6B7E8F);
   static const _lightUserBubble = Color(0xFFDCEEF9);
 
-  // Colores fijos (iguales en ambos temas)
   static const _green      = Color(0xFF00D4AA);
-  static const _greenDim   = Color(0xFF00A882);
   static const _amber      = Color(0xFFFFB547);
   static const _bookColor  = Color(0xFFF4EAD5);
 
@@ -70,7 +68,6 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
       ? const Color(0x2200D4AA)
       : const Color(0x1500D4AA);
 
-  // Getters de paleta activa
   Color get _bg         => _isDarkMode ? _darkBg         : _lightBg;
   Color get _surface    => _isDarkMode ? _darkSurface    : _lightSurface;
   Color get _card       => _isDarkMode ? _darkCard       : _lightCard;
@@ -81,7 +78,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
 
   // ── TOOLS CONFIG ────────────────────────────────────
   final _tools = const [
-    {"id": "Rápido",  "sub": "Responde rápidamente",       "icon": Icons.bolt,                   "color": Color(0xFF00D4AA)},
+    {"id": "Rápido",  "sub": "Responde rápidamente",       "icon": Icons.bolt,                    "color": Color(0xFF00D4AA)},
     {"id": "Pensar",  "sub": "Resuelve problemas complejos","icon": Icons.psychology_outlined,    "color": Color(0xFF818CF8)},
     {"id": "Bolsa",   "sub": "Análisis de mercado",         "icon": Icons.show_chart,             "color": Color(0xFFFFB547)},
     {"id": "Gastos",  "sub": "Gestión financiera",          "icon": Icons.account_balance_wallet_outlined, "color": Color(0xFFF87171)},
@@ -115,6 +112,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
     HapticFeedback.lightImpact();
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final String usuarioReal = authProvider.userName?? "Usuario";
     final userMsg = ChatMessage(
       text: _chatController.text.trim(),
       sender: MessageSender.user,
@@ -136,6 +134,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
       sessionId: _currentSessionId,
       tool: _selectedTool.toLowerCase(),
       contextoGastos: contextoGastos,
+      userNameReal: usuarioReal,
     );
 
     if (mounted) setState(() { _messages.insert(0, response); _isLoading = false; });
@@ -145,6 +144,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   // NOTAS
   // ════════════════════════════════════════════════════
   void _aplicarFormato(String marcador) {
+    if (_isNoteReadOnly) return; // Si es de lectura, no aplicar formato
     final text = _noteContentController.text;
     final selection = _noteContentController.selection;
     if (!selection.isValid || selection.isCollapsed) return;
@@ -285,15 +285,15 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
       _noteTitleController.text = nota.title;
       _noteContentController.text = nota.content;
       _categoriaSeleccionada = nota.categoryName ?? "General";
+      _isNoteReadOnly = true; // <-- La nota guardada se bloquea
     } else {
       _editingNoteId = null;
       _noteTitleController.clear();
       _noteContentController.clear();
       _categoriaSeleccionada = "General";
+      _isNoteReadOnly = false; // <-- Nueva nota se puede editar
     }
 
-    // El editor de notas mantiene siempre el estilo "libro" (_bookColor)
-    // independientemente del tema, ya que es una decisión estética deliberada.
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -312,7 +312,8 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
               decoration: BoxDecoration(color: const Color(0xFFD4B896), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 12),
 
-            Container(
+            // Barra de herramientas: visible solo si no está bloqueada o si se fuerza la edición
+            if (!_isNoteReadOnly) Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.5),
@@ -334,38 +335,42 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                     onChanged: (v) => setE(() => _categoriaSeleccionada = v!)),
                 ]))),
 
+            if (_isNoteReadOnly) Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => setE(() => _isNoteReadOnly = false),
+                icon: const Icon(Icons.edit, color: Color(0xFF5D4037), size: 16),
+                label: const Text("Editar Nota", style: TextStyle(color: Color(0xFF5D4037))))
+            ),
+
             const SizedBox(height: 12),
 
             TextField(
               controller: _noteTitleController,
+              readOnly: _isNoteReadOnly,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF3E2723)),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: "Título...",
-                hintStyle: TextStyle(color: Color(0xFFBCAAA4)),
-                border: InputBorder.none)),
+                hintStyle: const TextStyle(color: Color(0xFFBCAAA4)),
+                border: InputBorder.none,
+                enabled: !_isNoteReadOnly)),
 
             const Divider(color: Color(0xFFD4B896), height: 1),
             const SizedBox(height: 8),
 
             Expanded(child: TextField(
               controller: _noteContentController,
+              readOnly: _isNoteReadOnly,
               maxLines: null,
               style: const TextStyle(fontSize: 15, color: Color(0xFF4E342E), height: 1.6),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: "Escribe tu apunte...",
-                hintStyle: TextStyle(color: Color(0xFFBCAAA4)),
-                border: InputBorder.none))),
+                hintStyle: const TextStyle(color: Color(0xFFBCAAA4)),
+                border: InputBorder.none,
+                enabled: !_isNoteReadOnly))),
 
             const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _guardarCambiosNota,
-              child: Container(
-                width: double.infinity, height: 50,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF5D4037),
-                  borderRadius: BorderRadius.circular(14)),
-                child: const Center(child: Text("GUARDAR APUNTE",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: 1.2))))),
+            if (!_isNoteReadOnly) DeltaGuardarNota(onTap: _guardarCambiosNota),
             const SizedBox(height: 12),
           ]),
         ),
@@ -430,6 +435,9 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   }
 
   void _confirmarEliminarSesion(String sessionId, String token) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final String usuarioReal = authProvider.userName ?? "Usuario";// 👈 Se obtiene el usuario
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -445,7 +453,8 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              final success = await _aiService.deleteSession(sessionId, token);
+              // Integrado el parámetro real del usuario requerido por el nuevo service 👈
+              final success = await _aiService.deleteSession(sessionId, token, usuarioReal);
               if (success && mounted) {
                 if (_currentSessionId == sessionId) {
                   setState(() { _messages = []; _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString(); });
@@ -456,6 +465,14 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
             },
             child: const Text("Eliminar", style: TextStyle(color: Color(0xFFF87171), fontWeight: FontWeight.w700))),
         ]));
+  }
+
+  // ── GESTORES DE HISTORIAL EN DRAWERS ───────────────
+  void _cargarHistorialDeSesion(String sid, String token, String usuarioReal) async {
+    setState(() => _isLoading = true);
+    // Agregado el parámetro de nombre real de usuario 👈
+    final msgs = await _aiService.getHistoryBySession(sid, token, usuarioReal);
+    setState(() { _messages = msgs; _currentSessionId = sid; _isLoading = false; });
   }
 
   // ════════════════════════════════════════════════════
@@ -549,6 +566,8 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
 
   // ── DRAWER ────────────────────────────────────────
   Widget _buildDrawer(AuthProvider authProvider) {
+    final String usuarioReal = authProvider.userName ?? "Usuario"; // 👈
+
     return Drawer(
       backgroundColor: _surface,
       child: Column(children: [
@@ -607,7 +626,8 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
           ])),
 
         Expanded(child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _aiService.getSessions(authProvider.token!),
+          // Agregado el argumento dynamic userNameReal al getSessions del FutureBuilder 👈
+          future: _aiService.getSessions(authProvider.token!, usuarioReal),
           builder: (ctx, snap) {
             if (!snap.hasData) return Center(
               child: CircularProgressIndicator(color: _green, strokeWidth: 2));
@@ -640,13 +660,12 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFF87171)),
                       onPressed: () => _confirmarEliminarSesion(sid, authProvider.token!)),
-                    onTap: () async {
+                    onTap: () {
                       Navigator.pop(context);
-                      setState(() => _isLoading = true);
-                      final msgs = await _aiService.getHistoryBySession(sid, authProvider.token!);
-                      setState(() { _messages = msgs; _currentSessionId = sid; _isLoading = false; });
+                      _cargarHistorialDeSesion(sid, authProvider.token!, usuarioReal);
                     }));
-              });
+              },
+            );
           })),
       ]));
   }
@@ -845,6 +864,25 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
       onPressed: onTap,
       elevation: 4,
       child: Icon(icon, color: Colors.white, size: mini ? 18 : 22));
+  }
+}
+
+// ── COMPONENTE AUXILIAR DEL EDITOR DE NOTAS ───────
+class DeltaGuardarNota extends StatelessWidget {
+  final VoidCallback onTap;
+  const DeltaGuardarNota({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity, height: 50,
+        decoration: BoxDecoration(
+          color: const Color(0xFF5D4037),
+          borderRadius: BorderRadius.circular(14)),
+        child: const Center(child: Text("GUARDAR APUNTE",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: 1.2)))));
   }
 }
 
