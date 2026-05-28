@@ -1550,56 +1550,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               String? nueva =
                                   await _mostrarDialogoCategoriaBonita();
 
+                              if (nueva != null) {
+                                nueva = nueva.trim();
+                              }
+
                               if (nueva != null && nueva.isNotEmpty) {
-                                // ValidaciÃ³n local: Usamos ignoreCase para mayor seguridad
+                                // Validación local: usamos ignoreCase para mayor seguridad
                                 if (localCategories.any((c) =>
-                                    c.name.toLowerCase() ==
-                                    nueva.toLowerCase())) {
+                                    c.type == type &&
+                                    c.name.trim().toLowerCase() ==
+                                        nueva!.toLowerCase())) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                        content:
-                                            Text("Esa categoria ya existe")),
+                                      content: Text(
+                                          "Esa categoria ya existe"),
+                                    ),
                                   );
                                   return;
                                 }
 
                                 final auth = context.read<AuthProvider>();
-                                // Asumimos que la API devuelve el objeto creado o al menos confirma el Ã©xito
                                 bool success = await ApiService.createCategory(
                                     auth.token!, nueva, type);
 
-                                if (success) {
-                                  await loadCategories(); // Recarga la lista global 'categories'
-
-                                  setStateDialog(() {
-                                    // ACTUALIZACIÓN CRÍTICA:
-                                    // 1. Sincronizamos la lista local con la global recién cargada
-                                    localCategories = List.from(categories);
-
-                                    // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
-                                    final filtered = localCategories
-                                        .where((c) => c.type == type)
-                                        .toList();
-
-                                    if (filtered.isNotEmpty) {
-                                      // 3. Intentamos encontrar la que acabamos de crear por nombre
-                                      // (Es más seguro que .last si la lista viene ordenada del servidor)
-                                      final creada = filtered.firstWhere(
-                                        (c) =>
-                                            c.name.toLowerCase() ==
-                                            nueva.toLowerCase(),
-                                        orElse: () => filtered.last,
-                                      );
-                                      selectedCategoryId = int.parse(creada.id);
-                                    }
-                                  });
-
-                                  _showTopNotice(
-                                    "Categoría creada correctamente",
-                                    isError: false,
-                                    icon: Icons.check_circle_rounded,
+                                if (!success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          "No se pudo crear la categoría. Intenta de nuevo."),
+                                    ),
                                   );
+                                  return;
                                 }
+
+                                await loadCategories(); // Recarga la lista global 'categories'
+
+                                setStateDialog(() {
+                                  // ACTUALIZACIÓN CRÍTICA:
+                                  // 1. Sincronizamos la lista local con la global recién cargada
+                                  localCategories = List.from(categories);
+
+                                  // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
+                                  final filtered = localCategories
+                                      .where((c) => c.type == type)
+                                      .toList();
+
+                                  if (filtered.isNotEmpty) {
+                                    // 3. Intentamos encontrar la que acabamos de crear por nombre
+                                    // (Es más seguro que .last si la lista venga ordenada del servidor)
+                                    final creada = filtered.firstWhere(
+                                      (c) =>
+                                          c.name.trim().toLowerCase() ==
+                                          nueva!.toLowerCase(),
+                                      orElse: () => filtered.last,
+                                    );
+                                    selectedCategoryId = int.parse(creada.id);
+                                  }
+                                });
+
+                                _showTopNotice(
+                                  "Categoría creada correctamente",
+                                  isError: false,
+                                  icon: Icons.check_circle_rounded,
+                                );
                               }
                             },
                             child: const Text("Agregar categoria",
@@ -1665,6 +1678,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     if (nuevoNombre != null &&
                                         nuevoNombre.isNotEmpty) {
+                                      if (localCategories.any((c) =>
+                                          c.id != catActual.id &&
+                                          c.type == type &&
+                                          c.name.toLowerCase() ==
+                                              nuevoNombre.toLowerCase())) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                "Esa categoría ya existe"),
+                                          ),
+                                        );
+                                        return;
+                                      }
+
                                       final auth = context.read<AuthProvider>();
                                       bool success =
                                           await ApiService.updateCategory(
@@ -2266,6 +2294,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return showDialog<String>(
       context: context,
+      useRootNavigator: true,
       builder: (_) => StatefulBuilder(
         builder: (context, setStateDialog) {
           final isDark = Theme.of(context).brightness == Brightness.dark;

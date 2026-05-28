@@ -227,7 +227,7 @@ class ApiService {
   static Future<bool> createCategory(
       String token, String name, String type) async {
     try {
-      final url = Uri.parse("$baseUrl/categories"); // Solo una vez categories
+      final url = Uri.parse("$baseUrl/categories/");
 
       final response = await http.post(
         url,
@@ -237,7 +237,7 @@ class ApiService {
           "Accept": "application/json",
         },
         body: jsonEncode({
-          "name": name,
+          "name": name.trim(),
           "type": type,
         }),
       );
@@ -246,7 +246,11 @@ class ApiService {
       print("📊 Status del Backend: ${response.statusCode}");
       print("📄 Body del Backend: ${response.body}");
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+
+      return false;
     } catch (e) {
       print("❌ Error de red: $e");
       return false;

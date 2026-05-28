@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import models
@@ -87,8 +88,20 @@ def create_category(
 ):
     user = get_user_from_token(token, db)
 
+    existing_category = db.query(Category).filter(
+        Category.user_id == user.id,
+        func.lower(Category.name) == category.name.strip().lower(),
+        Category.type == category.type,
+    ).first()
+
+    if existing_category:
+        raise HTTPException(
+            status_code=400,
+            detail="Ya existe una categoría con ese nombre y tipo",
+        )
+
     new_category = Category(
-        name=category.name,
+        name=category.name.strip(),
         type=category.type,
         user_id=user.id,
     )
@@ -118,7 +131,20 @@ def update_category(
     if not db_category:
         raise HTTPException(status_code=404, detail="Categoria no encontrada")
 
-    db_category.name = category_data.name
+    duplicate_category = db.query(Category).filter(
+        Category.user_id == user.id,
+        Category.id != category_id,
+        func.lower(Category.name) == category_data.name.strip().lower(),
+        Category.type == category_data.type,
+    ).first()
+
+    if duplicate_category:
+        raise HTTPException(
+            status_code=400,
+            detail="Ya existe una categoría con ese nombre y tipo",
+        )
+
+    db_category.name = category_data.name.strip()
     db_category.type = category_data.type
 
     db.commit()
