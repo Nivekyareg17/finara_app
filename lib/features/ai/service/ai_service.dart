@@ -14,6 +14,7 @@ class AIService {
     required List<ChatMessage> history,
     required String sessionId,
     required String tool,
+    required String userNameReal, // <-- NUEVO: Recibe el nombre real del usuario
     List<Map<String, dynamic>> contextoGastos = const [],
   }) async {
     final url = Uri.parse('$_baseUrl/consultar');
@@ -39,7 +40,7 @@ class AIService {
               "session_id": sessionId,
               "historial": lastMessages,
               "contexto_gastos": contextoGastos,
-              "user_name": "Kevin",
+              "user_name": userNameReal, // <-- REEMPLAZO: Ya no dice "Kevin"
               "tool": tool,
             }),
           )
@@ -103,8 +104,9 @@ class AIService {
   // ──────────────────────────────────────────────
   // OBTENER LISTA DE SESIONES
   // ──────────────────────────────────────────────
-  Future<List<Map<String, dynamic>>> getSessions(String token) async {
-    final url = Uri.parse('$_baseUrl/sessions');
+  Future<List<Map<String, dynamic>>> getSessions(String token, String userNameReal) async {
+    // <-- NUEVO: Agregado el user_name a la URL
+    final url = Uri.parse('$_baseUrl/sessions?user_name=$userNameReal'); 
     try {
       final response = await http.get(
         url,
@@ -126,8 +128,9 @@ class AIService {
   // Reconstruye tanto mensajes del usuario como de Daiko
   // ──────────────────────────────────────────────
   Future<List<ChatMessage>> getHistoryBySession(
-      String sessionId, String token) async {
-    final url = Uri.parse('$_baseUrl/historial/$sessionId');
+      String sessionId, String token, String userNameReal) async {
+    // <-- NUEVO: Agregado el user_name a la URL
+    final url = Uri.parse('$_baseUrl/historial/$sessionId?user_name=$userNameReal'); 
     try {
       final response = await http.get(
         url,
@@ -176,8 +179,9 @@ class AIService {
   // ──────────────────────────────────────────────
   // ELIMINAR UNA SESIÓN Y SU HISTORIAL
   // ──────────────────────────────────────────────
-  Future<bool> deleteSession(String sessionId, String token) async {
-    final url = Uri.parse('$_baseUrl/sessions/$sessionId');
+  Future<bool> deleteSession(String sessionId, String token, String userNameReal) async {
+    // <-- NUEVO: Agregado el user_name a la URL
+    final url = Uri.parse('$_baseUrl/sessions/$sessionId?user_name=$userNameReal'); 
     try {
       final response = await http.delete(
         url,
