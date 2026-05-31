@@ -6,7 +6,6 @@ import '../widgets/translate_widget.dart';
 import 'admin/admin_users_screen.dart';
 import 'admin/admin_lecturas_screen.dart';
 import 'admin/admin_videos_screen.dart';
-import '../widgets/app_drawer.dart';
 
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
@@ -17,7 +16,6 @@ class AdminScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const TranslatedText(
           "Panel de administración",

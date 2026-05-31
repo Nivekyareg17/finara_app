@@ -7,6 +7,7 @@ class TransactionModel {
 
   String categoryId;
   String categoryName;
+  String currency;
 
   DateTime date;
   String? imagePath;
@@ -18,6 +19,7 @@ class TransactionModel {
     required this.description,
     required this.categoryId,
     required this.categoryName,
+    this.currency = "COP",
     required this.date,
     this.imagePath,
   });
@@ -36,6 +38,7 @@ class TransactionModel {
         "description": description,
         "categoryId": categoryId,
         "categoryName": categoryName,
+        "currency": currency,
         "date": date.toIso8601String(),
         "imagePath": imagePath,
       };
@@ -51,10 +54,14 @@ class TransactionModel {
         (map["category_id"] ?? map["categoryId"] ?? 0).toString(),
 
     categoryName:
-        map["category_name"] ??
-        map["categoryName"] ??
-        map["category"] ??
-        "General",
+        map["category_name"] ?? map["categoryName"] ?? map["category"] ?? "General",
+    currency: (map["currency"] ??
+            map["currency_code"] ??
+            map["moneda"] ??
+            map["category_currency"] ??
+            "COP")
+        .toString()
+        .toUpperCase(),
 
    date: map["date"] != null
     ? (DateTime.tryParse(map["date"].toString()) ?? DateTime.now())

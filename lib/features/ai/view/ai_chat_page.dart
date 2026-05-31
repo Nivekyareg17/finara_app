@@ -27,7 +27,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   final NoteService _noteService = NoteService();
 
   bool _isLoading = false;
-  bool _isDarkMode = true;
+  bool get _isDarkMode => Theme.of(context).brightness == Brightness.dark;
   String _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
   String _selectedTool = "Rápido";
 
@@ -480,8 +480,6 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   // ════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       backgroundColor: _bg,
 
@@ -493,14 +491,9 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
           _fab(Icons.edit_rounded, const Color(0xFF5D4037), () => _abrirEditorNota(), "f2"),
         ])),
 
-      drawer: _buildDrawer(authProvider),
-
       appBar: AppBar(
         backgroundColor: _surface,
         elevation: 0,
-        leading: Builder(builder: (ctx) => IconButton(
-          icon: Icon(Icons.menu_rounded, color: _textSec),
-          onPressed: () => Scaffold.of(ctx).openDrawer())),
         title: Row(children: [
           Container(
             padding: const EdgeInsets.all(6),
@@ -513,22 +506,6 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
         ]),
         actions: [
           // ── TOGGLE MODO CLARO/OSCURO ──────────────
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              tooltip: _isDarkMode ? "Modo claro" : "Modo oscuro",
-              icon: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Icon(
-                  _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                  key: ValueKey(_isDarkMode),
-                  color: _isDarkMode ? _amber : _textSec,
-                  size: 20,
-                ),
-              ),
-              onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
-            )),
-
           // Indicador de sesión activa
           Container(
             margin: const EdgeInsets.only(right: 16),

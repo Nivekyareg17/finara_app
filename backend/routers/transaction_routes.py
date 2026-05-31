@@ -53,6 +53,7 @@ def create_transaction(
         type=transaction.type,
         description=transaction.description,
         category_id=transaction.category_id,
+        currency=transaction.currency.strip().upper(),
         user_id=user.id,
         date=transaction.date or datetime.utcnow()
     )
@@ -119,6 +120,7 @@ def update_transaction(
     db_transaction.type = transaction.type
     db_transaction.description = transaction.description
     db_transaction.category_id = transaction.category_id
+    db_transaction.currency = transaction.currency.strip().upper()
     db_transaction.date = transaction.date or db_transaction.date
 
     db.commit()

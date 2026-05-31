@@ -10,6 +10,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     type = Column(String)
+    currency = Column(String, default="COP")
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User")
@@ -64,6 +65,7 @@ class Transaction(Base):
     amount = Column(Float)
     type = Column(String)
     description = Column(String)
+    currency = Column(String, default="COP")
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="transactions")

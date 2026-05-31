@@ -96,32 +96,42 @@ class ApiService {
     String description,
     int categoryId,
     DateTime date,
+    String currency,
   ) async {
     final url = Uri.parse("$baseUrl/transactions/");
 
     final body = jsonEncode({
       "type": type.toLowerCase(),
       "amount": amount,
-      "description": description,
+      "description": description.trim(),
       "category_id": categoryId,
+      "currency": currency.toUpperCase(),
       "date": date.toIso8601String(),
     });
 
     print("CREATE BODY: $body");
 
-    final response = await http.post(
-      url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-      body: body,
-    );
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "Authorization": "Bearer $token",
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 60));
 
-    print("STATUS: ${response.statusCode}");
-    print("BODY: ${response.body}");
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
 
-    return response.statusCode == 200 || response.statusCode == 201;
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print("CREATE TRANSACTION ERROR: $e");
+      return false;
+    }
   }
 
   static Future<List<dynamic>> getTransactions(String token) async {
@@ -147,25 +157,30 @@ class ApiService {
     String description,
     int categoryId,
     DateTime date,
+    String currency,
   ) async {
     final url = Uri.parse("$baseUrl/transactions/$id");
 
-    final response = await http.put(
-      url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token"
-      },
-      body: jsonEncode({
-        "type": type.toLowerCase(),
-        "amount": amount,
-        "description": description,
-        "category_id": categoryId,
-        "date": date.toIso8601String(),
-      }),
-    );
+    final response = await http
+        .put(
+          url,
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+          body: jsonEncode({
+            "type": type.toLowerCase(),
+            "amount": amount,
+            "description": description.trim(),
+            "category_id": categoryId,
+            "currency": currency.toUpperCase(),
+            "date": date.toIso8601String(),
+          }),
+        )
+        .timeout(const Duration(seconds: 60));
 
-    return response.statusCode == 200;
+    return response.statusCode == 200 || response.statusCode == 201;
   }
 
   static Future<bool> deleteTransaction(
@@ -225,7 +240,7 @@ class ApiService {
 
   // 2. CREAR CATEGORÍA (POST)
   static Future<bool> createCategory(
-      String token, String name, String type) async {
+      String token, String name, String type, String currency) async {
     try {
       final url = Uri.parse("$baseUrl/categories/");
 
@@ -239,6 +254,7 @@ class ApiService {
         body: jsonEncode({
           "name": name.trim(),
           "type": type,
+          "currency": currency.toUpperCase(),
         }),
       );
 
@@ -259,7 +275,7 @@ class ApiService {
 
 // --- ACTUALIZAR CATEGORÍA (PUT) ---
   static Future<bool> updateCategory(
-      String token, int id, String name, String type) async {
+      String token, int id, String name, String type, String currency) async {
     try {
       // Aseguramos que la URL sea limpia: base + /categories/ + id
       final baseUrlClean = baseUrl.endsWith('/')
@@ -278,6 +294,7 @@ class ApiService {
         body: jsonEncode({
           "name": name,
           "type": type,
+          "currency": currency.toUpperCase(),
         }),
       );
 
@@ -627,7 +644,14 @@ class ApiService {
       headers: {"Authorization": "Bearer $token"},
     );
 
-    return jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return data is List ? data : [];
+    }
+
+    print("GET MESSAGES STATUS: ${res.statusCode}");
+    print("GET MESSAGES BODY: ${res.body}");
+    return [];
   }
 
   static Future<bool> sendMessage(
@@ -644,8 +668,8 @@ class ApiService {
       body: jsonEncode({"receiver_id": receiverId, "content": content}),
     );
 
-    print(res.statusCode);
-    print(res.body);
+    print("SEND MESSAGE STATUS: ${res.statusCode}");
+    print("SEND MESSAGE BODY: ${res.body}");
 
     return res.statusCode == 200 || res.statusCode == 201;
   }
@@ -844,6 +868,6 @@ class ApiService {
       headers: _jsonHeaders(token),
     );
 
-    return response.statusCode == 200;
+    return response.statusCode == 200 || response.statusCode == 204;
   }
 }

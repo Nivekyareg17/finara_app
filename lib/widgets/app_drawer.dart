@@ -5,8 +5,11 @@ import '../providers/auth_provider.dart';
 import '../providers/languaje_provider.dart';
 import '../widgets/translate_widget.dart';
 import '../services/pdf_service.dart';
+import '../services/api_service.dart';
 import '../providers/finance_provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class AppDrawer extends StatefulWidget {
@@ -20,11 +23,213 @@ class _AppDrawerState extends State<AppDrawer> {
   String? profileImageUrl;
   String name = "";
   String email = "";
+  String baseCurrency = "COP";
+
+  static const Map<String, String> supportedCurrencies = {
+    "COP": "Peso colombiano",
+    "USD": "Dolar estadounidense",
+    "EUR": "Euro",
+    "MXN": "Peso mexicano",
+    "ARS": "Peso argentino",
+    "BRL": "Real brasileno",
+    "GBP": "Libra esterlina",
+    "CAD": "Dolar canadiense",
+    "CLP": "Peso chileno",
+    "PEN": "Sol peruano",
+    "JPY": "Yen japones",
+    "CHF": "Franco suizo",
+  };
+
+  static const Map<String, String> currencySymbols = {
+    "COP": "\$",
+    "USD": "US\$",
+    "EUR": "€",
+    "MXN": "MX\$",
+    "ARS": "AR\$",
+    "BRL": "R\$",
+    "GBP": "£",
+    "CAD": "CA\$",
+    "CLP": "CLP\$",
+    "PEN": "S/",
+    "JPY": "¥",
+    "CHF": "CHF",
+  };
 
   @override
   void initState() {
     super.initState();
     loadUser();
+    _loadBaseCurrency();
+  }
+
+  Future<void> _loadBaseCurrency() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      baseCurrency = (prefs.getString("base_currency") ?? "COP").toUpperCase();
+    });
+  }
+
+  String _currencyLabel(String code) {
+    final normalized = code.toUpperCase();
+    final name = supportedCurrencies[normalized] ?? normalized;
+    return "$normalized - $name";
+  }
+
+  Future<void> _selectBaseCurrency() async {
+    final selected = await _showCurrencyPicker(baseCurrency);
+    if (selected == null || selected == baseCurrency) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("base_currency", selected);
+    if (!mounted) return;
+    setState(() => baseCurrency = selected);
+  }
+
+  Future<String?> _showCurrencyPicker(String currentCurrency) async {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.72,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF10231E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.35),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 18, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Moneda",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
+                  children: [
+                    ...supportedCurrencies.entries.map((entry) {
+                      final selected = entry.key == currentCurrency;
+                      return ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        leading: CircleAvatar(
+                          backgroundColor: selected
+                              ? const Color(0xFF064E3B)
+                              : const Color(0xFFE2E8F0),
+                          child: Text(
+                            currencySymbols[entry.key] ?? entry.key,
+                            style: TextStyle(
+                              color: selected ? Colors.white : Colors.black87,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        title: Text(entry.key,
+                            style: const TextStyle(fontWeight: FontWeight.w900)),
+                        subtitle: Text(entry.value),
+                        trailing: selected
+                            ? const Icon(Icons.check_circle_rounded,
+                                color: Color(0xFF10B981))
+                            : null,
+                        onTap: () => Navigator.pop(context, entry.key),
+                      );
+                    }),
+                    ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFE2E8F0),
+                        child: Icon(Icons.add_rounded, color: Colors.black87),
+                      ),
+                      title: const Text(
+                        "Otra moneda",
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      subtitle:
+                          const Text("Escribe un codigo ISO, ej: DOP, UYU, CNY"),
+                      onTap: () async {
+                        final custom = await _askCustomCurrency();
+                        if (custom != null && context.mounted) {
+                          Navigator.pop(context, custom);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<String?> _askCustomCurrency() async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text("Agregar moneda"),
+              content: TextField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                maxLength: 3,
+                decoration: InputDecoration(
+                  labelText: "Codigo ISO",
+                  hintText: "Ej: USD",
+                  errorText: errorText,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancelar"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final value = controller.text.trim().toUpperCase();
+                    if (!RegExp(r'^[A-Z]{3}$').hasMatch(value)) {
+                      setStateDialog(() {
+                        errorText = "Usa 3 letras, por ejemplo COP";
+                      });
+                      return;
+                    }
+                    Navigator.pop(context, value);
+                  },
+                  child: const Text("Usar"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void loadUser() async {
@@ -48,8 +253,10 @@ class _AppDrawerState extends State<AppDrawer> {
     if (imageUrl.startsWith("data:image")) {
       try {
         final commaIndex = imageUrl.indexOf(",");
+        if (commaIndex == -1) return null;
+        final imageData = imageUrl.substring(commaIndex + 1).split("?").first;
         return MemoryImage(
-          base64Decode(imageUrl.substring(commaIndex + 1)),
+          base64Decode(imageData),
         );
       } catch (_) {
         return null;
@@ -60,14 +267,71 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   Future<void> _pickImage() async {
+    final auth = context.read<AuthProvider>();
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
 
     if (picked == null) return;
 
-    setState(() {
-      profileImageUrl = picked.path;
-    });
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    var loaderOpen = true;
+
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiService.baseUrl}/users/upload-profile-picture'),
+      );
+      request.headers['Authorization'] = 'Bearer ${auth.token}';
+
+      final bytes = await picked.readAsBytes();
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: picked.name,
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (mounted && loaderOpen) {
+        Navigator.pop(context);
+        loaderOpen = false;
+      }
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final uploadedUrl = data["url"]?.toString() ?? "";
+        setState(() {
+          profileImageUrl = uploadedUrl.startsWith("data:image")
+              ? uploadedUrl
+              : "$uploadedUrl?v=${DateTime.now().millisecondsSinceEpoch}";
+        });
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Foto de perfil actualizada")),
+        );
+      } else {
+        throw "Error del servidor: ${response.statusCode}";
+      }
+    } catch (e) {
+      if (mounted && loaderOpen) {
+        Navigator.pop(context);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al subir imagen: $e")),
+      );
+    }
   }
 
   Widget _buildDrawerItem({
@@ -161,6 +425,19 @@ class _AppDrawerState extends State<AppDrawer> {
             color: Colors.amber,
             onTap: () {
               context.read<ThemeProvider>().toggleTheme();
+            },
+          ),
+
+          const Divider(height: 20),
+
+          _buildDrawerItem(
+            icon: Icons.currency_exchange_rounded,
+            title: "Moneda",
+            subtitle: _currencyLabel(baseCurrency),
+            color: const Color(0xFF10B981),
+            onTap: () {
+              Navigator.pop(context);
+              _selectBaseCurrency();
             },
           ),
 

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'video_list_screen.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/translate_widget.dart';
-import '../widgets/app_drawer.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -39,7 +38,6 @@ class _VideoScreenState extends State<VideoScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      drawer: const AppDrawer(),
       backgroundColor: isDark ? const Color(0xFF0B1220) : Colors.grey[50],
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 3),
       appBar: AppBar(

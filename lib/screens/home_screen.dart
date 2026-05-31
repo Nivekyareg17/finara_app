@@ -10,7 +10,6 @@ import '../widgets/quick_wins.dart';
 import '../widgets/statcard.dart';
 import 'chat_list_screen.dart';
 import '../widgets/calculators_card.dart';
-import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
         // 4. UNA VEZ CARGADO: Mostramos la UI real
         // Aquí ya NO hay parpadeo porque el Scaffold se dibuja con los datos listos
         return Scaffold(
-          drawer: const AppDrawer(),
           backgroundColor:
               isDark ? const Color(0xFF061A17) : const Color(0xFFF5F3F3),
           bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),

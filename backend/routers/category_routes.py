@@ -36,10 +36,10 @@ def get_user_from_token(token: str, db: Session) -> User:
 
 
 DEFAULT_CATEGORIES = (
-    {"name": "Salario", "type": "ingreso"},
-    {"name": "Otros ingresos", "type": "ingreso"},
-    {"name": "Comida", "type": "gasto"},
-    {"name": "Transporte", "type": "gasto"},
+    {"name": "Salario", "type": "ingreso", "currency": "COP"},
+    {"name": "Otros ingresos", "type": "ingreso", "currency": "COP"},
+    {"name": "Comida", "type": "gasto", "currency": "COP"},
+    {"name": "Transporte", "type": "gasto", "currency": "COP"},
 )
 
 
@@ -59,6 +59,7 @@ def ensure_default_categories(user: User, db: Session) -> None:
         db.add(Category(
             name=category["name"],
             type=category["type"],
+            currency=category["currency"],
             user_id=user.id,
         ))
         created = True
@@ -103,6 +104,7 @@ def create_category(
     new_category = Category(
         name=category.name.strip(),
         type=category.type,
+        currency=category.currency.strip().upper(),
         user_id=user.id,
     )
 
@@ -146,6 +148,7 @@ def update_category(
 
     db_category.name = category_data.name.strip()
     db_category.type = category_data.type
+    db_category.currency = category_data.currency.strip().upper()
 
     db.commit()
     db.refresh(db_category)

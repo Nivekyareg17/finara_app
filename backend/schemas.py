@@ -61,6 +61,7 @@ class CategoryResponse(CategoryBase):
 class CategoryCreate(BaseModel):
     name: str
     type: Literal["gasto", "ingreso"]
+    currency: str = "COP"
 
 # --- TRANSACCIONES (ACTUALIZADO) ---
 class TransactionCreate(BaseModel):
@@ -68,6 +69,7 @@ class TransactionCreate(BaseModel):
     type: str # "ingreso" o "gasto"
     description: str = Field(..., min_length=1, max_length=100)
     category_id: int  # <--- ESTE ES EL CAMPO QUE FALTABA
+    currency: str = "COP"
     date: Optional[datetime] = None
 
 class TransactionResponse(BaseModel):
@@ -76,6 +78,7 @@ class TransactionResponse(BaseModel):
     type: str
     description: str
     category_id: int
+    currency: str
     date: Optional[datetime] = None
 
     class Config:

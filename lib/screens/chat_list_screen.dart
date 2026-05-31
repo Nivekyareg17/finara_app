@@ -338,6 +338,9 @@ Future<void> openSearchDialog() async {
                                 builder: (_) => ChatScreen(
                                   userId: user["id"],
                                   userName: user["name"],
+                                  userImageUrl: user["profile_image_url"] ??
+                                      user["profileImageUrl"] ??
+                                      user["avatar"],
                                 ),
                               ),
                             );
