@@ -65,7 +65,7 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
                 label: "Rendimiento mensual (%)",
-                hint: "Ej: 1",
+                hint: "Ej: 1 o 0.5%",
                 icon: Icons.percent_rounded,
               ),
             ),

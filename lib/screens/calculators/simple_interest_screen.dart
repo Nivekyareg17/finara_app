@@ -63,7 +63,7 @@ class _SimpleInterestScreenState extends State<SimpleInterestScreen> {
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
                 label: "Tasa anual (%)",
-                hint: "Ej: 10",
+                hint: "Ej: 10 o 2.4%",
                 icon: Icons.percent_rounded,
               ),
             ),
@@ -72,7 +72,7 @@ class _SimpleInterestScreenState extends State<SimpleInterestScreen> {
               controller: timeController,
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
-                label: "Tiempo en anos",
+                label: "Tiempo en años",
                 hint: "Ej: 2",
                 icon: Icons.calendar_month_rounded,
               ),

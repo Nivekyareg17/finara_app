@@ -65,7 +65,7 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
                 label: "Tasa anual (%)",
-                hint: "Ej: 12",
+                hint: "Ej: 12 o 5.5%",
                 icon: Icons.percent_rounded,
               ),
             ),
@@ -74,7 +74,7 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
               controller: timeController,
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
-                label: "Tiempo en anos",
+                label: "Tiempo en años",
                 hint: "Ej: 5",
                 icon: Icons.timelapse_rounded,
               ),

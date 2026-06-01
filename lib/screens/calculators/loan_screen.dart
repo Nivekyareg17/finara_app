@@ -68,7 +68,7 @@ class _LoanScreenState extends State<LoanScreen> {
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
                 label: "Tasa mensual (%)",
-                hint: "Ej: 2",
+                hint: "Ej: 2 o 0.5%",
                 icon: Icons.percent_rounded,
               ),
             ),

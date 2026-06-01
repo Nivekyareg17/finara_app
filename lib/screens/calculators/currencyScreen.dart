@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class CurrencyScreen extends StatefulWidget {
   const CurrencyScreen({super.key});
@@ -11,7 +12,7 @@ class CurrencyScreen extends StatefulWidget {
 
 class _CurrencyScreenState extends State<CurrencyScreen> {
   final TextEditingController _montoController = TextEditingController();
-  
+
   // Colores profesionales
   final Color primaryGreen = const Color(0xFF10B981);
   final Color surfaceGreen = const Color(0xFFECFDF5);
@@ -21,12 +22,23 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
   double _resultado = 0;
   double _tasaActual = 0;
   bool _isLoading = false;
-  
+  final formatter = NumberFormat('#,##0.##', 'en_US');
+
   String _fromCurrency = 'USD';
   String _toCurrency = 'COP';
 
   // Lista de monedas más comunes
-  final List<String> _monedas = ['USD', 'COP', 'EUR', 'MXN', 'BRL', 'ARS', 'GBP', 'CAD', 'JPY'];
+  final List<String> _monedas = [
+    'USD',
+    'COP',
+    'EUR',
+    'MXN',
+    'BRL',
+    'ARS',
+    'GBP',
+    'CAD',
+    'JPY'
+  ];
 
   @override
   void initState() {
@@ -35,13 +47,14 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     _fetchTasaCambio();
   }
 
-  // --- CONEXIÓN A LA API ---
+  //CONEXIÓN A LA API
   Future<void> _fetchTasaCambio() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // API Gratuita y sin llave que soporta COP
-      final url = Uri.parse('https://api.exchangerate-api.com/v4/latest/$_fromCurrency');
+      final url = Uri.parse(
+          'https://api.exchangerate-api.com/v4/latest/$_fromCurrency');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -54,7 +67,9 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     } catch (e) {
       debugPrint("Error fetching currency: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al conectar. Verifica tu internet."), backgroundColor: Colors.redAccent),
+        const SnackBar(
+            content: Text("Error al conectar. Verifica tu internet."),
+            backgroundColor: Colors.redAccent),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -64,7 +79,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
   // --- LÓGICA DE CONVERSIÓN ---
   void _convertir() {
     setState(() {
-      double monto = double.tryParse(_montoController.text.replaceAll(',', '')) ?? 0;
+      double monto =
+          double.tryParse(_montoController.text.replaceAll(',', '')) ?? 0;
       _resultado = monto * _tasaActual;
     });
   }
@@ -76,7 +92,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       _toCurrency = temp;
     });
     // Al voltearlas, necesitamos pedir la tasa de nuevo
-    _fetchTasaCambio(); 
+    _fetchTasaCambio();
   }
 
   @override
@@ -84,7 +100,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Divisas en Tiempo Real", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Divisas en Tiempo Real",
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: primaryGreen,
         elevation: 0,
@@ -104,18 +121,40 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               ),
               child: TextField(
                 controller: _montoController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: darkText),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(
+                    fontSize: 28, fontWeight: FontWeight.bold, color: darkText),
                 decoration: InputDecoration(
                   labelText: "Monto a convertir",
                   labelStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
-                  prefixIcon: Icon(Icons.attach_money, color: primaryGreen, size: 30),
+                  prefixIcon:
+                      Icon(Icons.attach_money, color: primaryGreen, size: 30),
                   border: InputBorder.none,
                 ),
-                onChanged: (v) => _convertir(),
+                onChanged: (value) {
+                  String clean = value.replaceAll(',', '');
+
+                  if (clean.isEmpty) {
+                    _montoController.text = '';
+                    return;
+                  }
+
+                  double number = double.tryParse(clean) ?? 0;
+
+                  String formatted = formatter.format(number);
+
+                  _montoController.value = TextEditingValue(
+                    text: formatted,
+                    selection:
+                        TextSelection.collapsed(offset: formatted.length),
+                  );
+
+                  _convertir();
+                },
               ),
             ),
-            
+
             const SizedBox(height: 30),
 
             // --- SELECTORES DE MONEDA (CON ANIMACIÓN DE INTERCAMBIO) ---
@@ -126,7 +165,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                   setState(() => _fromCurrency = val!);
                   _fetchTasaCambio();
                 }),
-                
+
                 // Botón de Intercambio Animado
                 Material(
                   color: surfaceGreen,
@@ -136,7 +175,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                     onTap: _intercambiarMonedas,
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
-                      child: Icon(Icons.swap_horiz_rounded, color: primaryGreen, size: 28),
+                      child: Icon(Icons.swap_horiz_rounded,
+                          color: primaryGreen, size: 28),
                     ),
                   ),
                 ),
@@ -173,29 +213,42 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               ),
               child: Column(
                 children: [
-                  const Text("Monto Convertido", style: TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w500)),
+                  const Text("Monto Convertido",
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w500)),
                   const SizedBox(height: 10),
-                  
+
                   // Efecto de desvanecimiento al cambiar el número
-                  _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        transitionBuilder: (Widget child, Animation<double> animation) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
-                        child: Text(
-                          "\$${_resultado.toStringAsFixed(2)} $_toCurrency",
-                          key: ValueKey<double>(_resultado), // El key fuerza la animación cuando el valor cambia
-                          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white),
-                          textAlign: TextAlign.center,
+                  _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          transitionBuilder:
+                              (Widget child, Animation<double> animation) {
+                            return FadeTransition(
+                                opacity: animation, child: child);
+                          },
+                          child: Text(
+                            "\$${_resultado.toStringAsFixed(2)} $_toCurrency",
+                            key: ValueKey<double>(
+                                _resultado), // El key fuerza la animación cuando el valor cambia
+                            style: const TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
-                  
+
                   const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(20)),
                     child: Text(
                       "Tasa de mercado: 1 $_fromCurrency = ${_tasaActual.toStringAsFixed(2)} $_toCurrency",
                       style: const TextStyle(color: Colors.white, fontSize: 12),
@@ -223,7 +276,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         child: DropdownButton<String>(
           value: value,
           icon: Icon(Icons.keyboard_arrow_down_rounded, color: primaryGreen),
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: darkText),
+          style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: darkText),
           items: _monedas.map((String coin) {
             return DropdownMenuItem<String>(
               value: coin,

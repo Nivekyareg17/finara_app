@@ -61,7 +61,7 @@ class _InflationScreenState extends State<InflationScreen> {
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
                 label: "Inflacion anual (%)",
-                hint: "Ej: 8",
+                hint: "Ej: 8 o 3.5%",
                 icon: Icons.percent_rounded,
               ),
             ),
@@ -70,7 +70,7 @@ class _InflationScreenState extends State<InflationScreen> {
               controller: yearsController,
               keyboardType: TextInputType.number,
               decoration: calculatorInputDecoration(
-                label: "Tiempo en anos",
+                label: "Tiempo en años",
                 hint: "Ej: 5",
                 icon: Icons.hourglass_bottom_rounded,
               ),

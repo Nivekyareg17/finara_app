@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class DiscountScreen extends StatefulWidget {
   const DiscountScreen({super.key});
@@ -11,12 +12,18 @@ class _DiscountScreenState extends State<DiscountScreen> {
   final TextEditingController _precioController = TextEditingController();
   final TextEditingController _descuentoController = TextEditingController();
 
+  final formatter = NumberFormat('#,##0.00', 'en_US');
+
   double _ahorro = 0;
   double _precioFinal = 0;
 
   void _calcularDescuento() {
     setState(() {
-      double precio = double.tryParse(_precioController.text) ?? 0;
+      double precio = double.tryParse(
+            _precioController.text.replaceAll(',', ''),
+          ) ??
+          0;
+
       double descuento = double.tryParse(_descuentoController.text) ?? 0;
 
       if (descuento > 100) descuento = 100;
@@ -24,6 +31,25 @@ class _DiscountScreenState extends State<DiscountScreen> {
       _ahorro = precio * (descuento / 100);
       _precioFinal = precio - _ahorro;
     });
+  }
+
+  void _formatearPrecio(String value) {
+    String clean = value.replaceAll(',', '');
+
+    if (clean.isEmpty) {
+      _precioController.text = '';
+      return;
+    }
+
+    double number = double.tryParse(clean) ?? 0;
+    String formatted = NumberFormat('#,##0', 'en_US').format(number);
+
+    _precioController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+
+    _calcularDescuento();
   }
 
   @override
@@ -44,7 +70,7 @@ class _DiscountScreenState extends State<DiscountScreen> {
                   prefixIcon: Icon(Icons.sell),
                   border: OutlineInputBorder(),
                 ),
-                onChanged: (v) => _calcularDescuento(),
+                onChanged: _formatearPrecio,
               ),
               const SizedBox(height: 15),
               TextField(
@@ -69,7 +95,7 @@ class _DiscountScreenState extends State<DiscountScreen> {
                     const Text("Te ahorras",
                         style: TextStyle(fontSize: 16, color: Colors.grey)),
                     Text(
-                      "\$${_ahorro.toStringAsFixed(2)}",
+                      "\$${formatter.format(_ahorro)}",
                       style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -79,7 +105,7 @@ class _DiscountScreenState extends State<DiscountScreen> {
                     const Text("PRECIO FINAL",
                         style: TextStyle(fontSize: 16, color: Colors.grey)),
                     Text(
-                      "\$${_precioFinal.toStringAsFixed(2)}",
+                      "\$${formatter.format(_precioFinal)}",
                       style: const TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.w900,
