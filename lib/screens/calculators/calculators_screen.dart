@@ -261,8 +261,7 @@ class _CalculatorTileState extends State<_CalculatorTile> {
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment:
-                            MainAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Row(
                             children: [
@@ -285,10 +284,7 @@ class _CalculatorTileState extends State<_CalculatorTile> {
                                   size: 20),
                             ],
                           ),
-
-                          const SizedBox(
-                              height: 12),
-
+                          const SizedBox(height: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -373,11 +369,24 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
   double? _storedValue;
   String? _operator;
   bool _shouldResetDisplay = false;
+  String _expression = "";
+
+  List<String> _history = [];
+
+  void _addToHistory(String operation) {
+    setState(() {
+      _history.insert(0, operation);
+      if (_history.length > 10) {
+        _history.removeLast();
+      }
+    });
+  }
 
   void _press(String value) {
     setState(() {
       if (value == "C") {
         _display = "0";
+        _expression = "";
         _storedValue = null;
         _operator = null;
         _shouldResetDisplay = false;
@@ -385,15 +394,22 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
       }
 
       if (value == "DEL") {
-        _display = _display.length > 1
-            ? _display.substring(0, _display.length - 1)
-            : "0";
+        if (_display.length > 1) {
+          _display = _display.substring(0, _display.length - 1);
+          if (_expression.isNotEmpty) {
+            _expression = _expression.substring(0, _expression.length - 1);
+          }
+        } else {
+          _display = "0";
+          _expression = "";
+        }
         return;
       }
 
       if (["+", "-", "x", "/"].contains(value)) {
         _storedValue = double.tryParse(_display);
         _operator = value;
+        _expression += " $value ";
         _shouldResetDisplay = true;
         return;
       }
@@ -403,7 +419,9 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
         if (_storedValue == null || current == null || _operator == null) {
           return;
         }
+
         double result = current;
+
         if (_operator == "+") {
           result = _storedValue! + current;
         } else if (_operator == "-") {
@@ -413,7 +431,11 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
         } else if (_operator == "/") {
           result = current == 0 ? 0 : _storedValue! / current;
         }
+
+        _addToHistory("$_expression = ${_format(result)}");
+
         _display = _format(result);
+        _expression = "";
         _storedValue = null;
         _operator = null;
         _shouldResetDisplay = true;
@@ -423,8 +445,15 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
       if (value == "." && _display.contains(".") && !_shouldResetDisplay) {
         return;
       }
-      _display =
-          (_display == "0" || _shouldResetDisplay) ? value : "$_display$value";
+
+      if (_shouldResetDisplay) {
+        _display = value;
+        _expression += value;
+      } else {
+        _display = (_display == "0") ? value : "$_display$value";
+        _expression += value;
+      }
+
       _shouldResetDisplay = false;
     });
   }
@@ -432,6 +461,14 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
   String _format(double value) {
     if (value % 1 == 0) return value.toInt().toString();
     return value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+  }
+
+  bool _showHistory = false;
+
+  void _clearHistory() {
+    setState(() {
+      _history.clear();
+    });
   }
 
   @override
@@ -464,23 +501,86 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
         elevation: 0,
         foregroundColor: Colors.white,
         title: const Text("Calculadora rapida"),
+        actions: [
+          IconButton(
+            icon: Icon(_showHistory ? Icons.expand_less : Icons.history),
+            onPressed: () {
+              setState(() {
+                _showHistory = !_showHistory;
+              });
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
+            if (_showHistory)
+              Container(
+                constraints: const BoxConstraints(maxHeight: 150),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white12),
+                  color: Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Align(
-                  alignment: Alignment.bottomRight,
-                  child: FittedBox(
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Historial",
+                          style: TextStyle(color: Color.fromARGB(213, 221, 221, 221)),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            setState(() {
+                              _history.clear();
+                            });
+                          },
+                        )
+                      ],
+                    ),
+                    Expanded(
+                      child: ListView(
+                        reverse: true,
+                        children: _history
+                            .map((e) => Text(
+                                  e,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _expression,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 20,
+                    ),
+                  ),
+                  FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
                       _display,
@@ -492,44 +592,45 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
             const SizedBox(height: 18),
-            GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: keys.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+            Expanded(
+              child: GridView.builder(
+                itemCount: keys.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemBuilder: (context, index) {
+                  final key = keys[index];
+                  final isAccent = ["+", "-", "x", "/", "="].contains(key);
+
+                  return ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isAccent
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFF10231E),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      elevation: 0,
+                    ),
+                    onPressed: () => _press(key),
+                    child: Text(
+                      key,
+                      style: TextStyle(
+                        fontSize: key == "DEL" ? 15 : 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                },
               ),
-              itemBuilder: (context, index) {
-                final key = keys[index];
-                final isAccent = ["+", "-", "x", "/", "="].contains(key);
-                return ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isAccent
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFF10231E),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    elevation: 0,
-                  ),
-                  onPressed: () => _press(key),
-                  child: Text(
-                    key,
-                    style: TextStyle(
-                      fontSize: key == "DEL" ? 15 : 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              },
-            ),
+            )
           ],
         ),
       ),
