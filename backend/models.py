@@ -38,6 +38,11 @@ class User(Base):
         Boolean,
         default=False
     )
+
+    is_deleted = Column(
+        Boolean,
+        default=False
+    )
     
     profile_image_url = Column(String, nullable=True)
     username = Column(String, nullable=True)
