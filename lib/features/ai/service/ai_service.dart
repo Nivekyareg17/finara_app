@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../model/chat_message.dart';
 
 class AIService {
-  final String _baseUrl = 'https://daiko-ai-t4nn.onrender.com/ai';
+  final String _baseUrl = 'https://daiko-ai-1.onrender.com/ai';
 
   // ──────────────────────────────────────────────
   // ENVIAR MENSAJE A DAIKO
