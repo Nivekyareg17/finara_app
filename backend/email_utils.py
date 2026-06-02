@@ -3,13 +3,21 @@ import resend
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 
-def send_email(to_email, link):
+def send_email(
+    to_email,
+    link
+):
 
     resend.Emails.send({
 
-        "from": "onboarding@resend.dev",
-        "to": to_email,
-        "subject": "Recuperar contraseña - Finara",
+        "from":
+        "Finara <noreply@finaraapp.online>",
+
+        "to":
+        to_email,
+
+        "subject":
+        "Recuperar contraseña - Finara",
 
         "html": f"""
         <h2>Recuperar contraseña</h2>
@@ -32,6 +40,7 @@ def send_email(to_email, link):
         """
     })
 
+
 def send_verification_email(
     to_email,
     link
@@ -39,13 +48,16 @@ def send_verification_email(
 
     resend.Emails.send({
 
-        "from":"onboarding@resend.dev",
+        "from":
+        "Finara <noreply@finaraapp.online>",
 
-        "to":to_email,
+        "to":
+        to_email,
 
-        "subject":"Verifica tu cuenta Finara",
+        "subject":
+        "Verifica tu cuenta Finara",
 
-        "html":f"""
+        "html": f"""
         <h2>Bienvenido a Finara</h2>
 
         <p>
