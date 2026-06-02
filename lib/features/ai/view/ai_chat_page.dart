@@ -480,8 +480,11 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   // ════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     return Scaffold(
       backgroundColor: _bg,
+      drawer: _buildDrawer(authProvider),
 
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80),
@@ -494,6 +497,12 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: _surface,
         elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu_rounded, color: _green),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         title: Row(children: [
           Container(
             padding: const EdgeInsets.all(6),
