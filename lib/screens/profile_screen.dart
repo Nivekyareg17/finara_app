@@ -2188,21 +2188,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : DateFormat("MM/dd/yyyy").format(today));
 
     final desc = TextEditingController(text: edit?.description);
-    final ScrollController _formScrollController = ScrollController();
-    final FocusNode _descFocusNode = FocusNode();
-    _descFocusNode.addListener(() {
-      if (_descFocusNode.hasFocus) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_formScrollController.hasClients) {
-            _formScrollController.animateTo(
-              _formScrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          }
-        });
-      }
-    });
     final amount = TextEditingController(
       text: edit != null ? _formatInputAmount(edit.amount) : "",
     );
@@ -2214,7 +2199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : _categoryCurrencyById(selectedCategoryId);
     bool allowFutureMovement = edit?.isFutureMovement ?? false;
 
-    await showModalBottomSheet(
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -2265,7 +2250,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   Expanded(
                     child: SingleChildScrollView(
-                      controller: _formScrollController,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 25, vertical: 20),
                       child: Column(
@@ -2832,7 +2816,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: desc,
-                            focusNode: _descFocusNode,
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.w600,
@@ -2945,7 +2928,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         return;
                                       }
 
-                                        setStateDialog(
+                                      setStateDialog(
                                           () => isLoadingDialog = true);
 
                                       final auth = context.read<AuthProvider>();
@@ -2983,7 +2966,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           selectedMovementCurrency,
                                         );
                                       }
-                                    }
+
                                       if (success) {
                                         if (!mounted) return;
                                         Navigator.pop(
@@ -3052,14 +3035,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             );
-            },
-          );
-        }
-      );
-
-    // Limpieza de recursos del sheet después de cerrarlo
-    _descFocusNode.dispose();
-    _formScrollController.dispose();
+          },
+        );
       },
     );
   }
