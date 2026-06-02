@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:finara_app_v1/providers/languaje_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
@@ -21,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import '../services/exchange_rate_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -78,6 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final NumberFormat formatter = NumberFormat("#,##0.00", "en_US");
 
   String? profileImageUrl;
+  Uint8List? _localProfileImageBytes;
   String name = "";
   String email = "";
   String username = "";
@@ -134,10 +137,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   ImageProvider? _profileImageProvider() {
+    final localBytes = _localProfileImageBytes;
+    if (localBytes != null && localBytes.isNotEmpty) {
+      return MemoryImage(localBytes);
+    }
+
     final rawUrl = profileImageUrl?.trim();
     if (rawUrl == null || rawUrl.isEmpty) return null;
 
-    if (rawUrl.startsWith("data:image")) {
+    if (rawUrl.startsWith("data:")) {
       try {
         final commaIndex = rawUrl.indexOf(",");
         if (commaIndex != -1) {
@@ -169,36 +177,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final imageProvider = _profileImageProvider();
     final size = radius * 2;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fallback = Container(
+    final fallback = ColoredBox(
       color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.person_rounded,
-        size: iconSize ?? radius,
-        color: isDark ? Colors.white70 : const Color(0xFF64748B),
+      child: Center(
+        child: Icon(
+          Icons.person_rounded,
+          size: iconSize ?? radius,
+          color: isDark ? Colors.white70 : const Color(0xFF64748B),
+        ),
       ),
     );
 
-    return Container(
+    final avatar = ClipOval(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: imageProvider == null
+            ? fallback
+            : Image(
+                image: imageProvider,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, __, ___) => fallback,
+              ),
+      ),
+    );
+
+    if (!bordered) return avatar;
+
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: bordered
-            ? Border.all(color: Colors.white.withOpacity(0.32), width: 2)
-            : null,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.32), width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(2),
+          child: avatar,
+        ),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: imageProvider == null
-          ? fallback
-          : Image(
-              image: imageProvider,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => fallback,
-            ),
     );
+  }
+
+  MediaType _imageMediaType(String filename) {
+    final lower = filename.toLowerCase();
+    if (lower.endsWith(".png")) return MediaType("image", "png");
+    if (lower.endsWith(".webp")) return MediaType("image", "webp");
+    if (lower.endsWith(".gif")) return MediaType("image", "gif");
+    return MediaType("image", "jpeg");
   }
 
   Future<void> _loadCurrencySettings() async {
@@ -3697,6 +3727,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (image == null) return;
+    final imageBytes = await image.readAsBytes();
+    if (!mounted) return;
+
+    setState(() {
+      _localProfileImageBytes = imageBytes;
+    });
 
     // 2. Mostrar indicador de carga
     showDialog(
@@ -3715,14 +3751,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // 3. Agregar el Token (Indispensable para tu Backend)
       request.headers['Authorization'] = 'Bearer ${auth.token}';
 
-      if (kIsWeb) {
-        var bytes = await image.readAsBytes();
-        request.files.add(
-            http.MultipartFile.fromBytes('file', bytes, filename: image.name));
-      } else {
-        request.files
-            .add(await http.MultipartFile.fromPath('file', image.path));
-      }
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: image.name,
+          contentType: _imageMediaType(image.name),
+        ),
+      );
 
       // 4. Enviar y procesar
       var streamedResponse = await request.send();
@@ -3739,7 +3775,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final uploadedUrl = data['url']?.toString() ?? "";
 
         setState(() {
-          profileImageUrl = uploadedUrl.startsWith("data:image")
+          profileImageUrl = uploadedUrl.startsWith("data:")
               ? uploadedUrl
               : "$uploadedUrl?v=${DateTime.now().millisecondsSinceEpoch}";
         });
