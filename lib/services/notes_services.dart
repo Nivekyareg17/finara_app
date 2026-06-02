@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/note.dart';
 
 class NoteService {
-  final String baseUrl = "https://finara-api-1lmd.onrender.com/notes";
+  final String baseUrl = "https://finara-app-ohwq.onrender.com/notes";
 
 
   Future<List<Note>> fetchNotes(String token) async {
