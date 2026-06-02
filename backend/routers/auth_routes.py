@@ -51,10 +51,23 @@ def get_db():
 # db: Session = Depends(get_db) dice a fastAPI "obtén una conexión a la base de datos usando get_db" 
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
-    existing_user = db.query(User).filter(User.email == user.email).first()
+    existing_user = db.query(User)\
+        .filter(User.email == user.email)\
+        .first()
 
     if existing_user:
-        return {"error": "El email ya está registrado"}
+
+        if existing_user.is_deleted:
+
+            return {
+                "error":
+                "Esta cuenta fue eliminada. Recupera tu cuenta."
+            }
+
+        return {
+            "error":
+            "El email ya está registrado"
+        }
 
     # Contraseña encriptada
     hashed_password = hash_password(user.password)
@@ -117,6 +130,13 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 # Verificar si existe usuario
     if not db_user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    
+    if db_user.is_deleted:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Esta cuenta fue eliminada"
+        )
     
 # Verificar si la contraseña es correcta (contraseña ingresada vs contraseña hash en db)
     if not verify_password(user.password, db_user.password):

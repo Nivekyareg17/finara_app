@@ -119,7 +119,9 @@ def get_users_public(
 ):
     data = verify_token(token)
 
-    users = db.query(User).all()
+    users = db.query(User)\
+        .filter(User.is_deleted == False)\
+        .all()
 
     return [
         {
@@ -163,7 +165,9 @@ def get_users(
     db: Session = Depends(get_db),
     data = Depends(require_admin)
 ):
-    users = db.query(User).all()
+    users = db.query(User)\
+        .filter(User.is_deleted == False)\
+        .all()
 
     return [
         {
@@ -184,77 +188,22 @@ def delete_user(
 
     try:
 
-        db.query(Transaction)\
-            .filter(
-                Transaction.user_id
-                == user_id
-            ).delete()
-
-        db.query(Category)\
-            .filter(
-                Category.user_id
-                == user_id
-            ).delete()
-
-        db.query(Message)\
-            .filter(
-                (Message.sender_id == user_id)
-                |
-                (Message.receiver_id == user_id)
-            ).delete(
-                synchronize_session=False
-            )
-        
-        db.query(BlockedUser)\
-            .filter(
-                (BlockedUser.blocker_id == user_id)
-                |
-                (BlockedUser.blocked_id == user_id)
-            ).delete(
-                synchronize_session=False
-            )
-        
-        db.query(MessageRequest)\
-            .filter(
-                (MessageRequest.sender_id == user_id) |
-                (MessageRequest.receiver_id == user_id)
-            )\
-            .delete(
-                synchronize_session='fetch'
-            )
-
-        db.flush()
-
         user = db.query(User)\
             .filter(User.id == user_id)\
             .first()
 
         if not user:
-
             raise HTTPException(
                 status_code=404,
                 detail="Usuario no encontrado"
             )
 
-        db.query(PasswordResetToken)\
-            .filter(
-                PasswordResetToken.user_id
-                == user_id
-            ).delete()
-
-        db.query(EmailVerificationToken)\
-            .filter(
-                EmailVerificationToken.user_id
-                == user_id
-            ).delete()
-
-        db.delete(user)
+        user.is_deleted = True
 
         db.commit()
 
         return {
-            "message":
-            "Usuario eliminado"
+            "message": "Usuario eliminado"
         }
 
     except Exception as e:
@@ -268,7 +217,6 @@ def delete_user(
             status_code=500,
             detail=str(e)
         )
-
 
 # Cambiar Rol (admin <-> user)
 @router.put("/make-admin/{user_id}")
