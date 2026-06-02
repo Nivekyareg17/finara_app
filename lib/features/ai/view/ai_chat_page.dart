@@ -9,7 +9,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../models/note.dart';
 import '../../../services/notes_services.dart';
 import '../../../widgets/translate_widget.dart';
-
+import 'package:flutter_markdown/flutter_markdown.dart';
 // FIN DE IMPORTACIONES
 
 class AIChatPage extends StatefulWidget {
