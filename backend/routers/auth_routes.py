@@ -271,7 +271,19 @@ def verify_redirect(
 ):
 
     return RedirectResponse(
-        url=f"finara://verify-email?token={token}"
+        url=f"finara://app/verify-email?token={token}",
+        status_code=302
+    )
+
+
+@router.get("/reset")
+def reset_redirect(
+    token: str
+):
+
+    return RedirectResponse(
+        url=f"finara://app/reset-password?token={token}",
+        status_code=302
     )
 
 

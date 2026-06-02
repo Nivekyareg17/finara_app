@@ -77,14 +77,14 @@ class _MyAppState extends State<MyApp> {
 
     if (token == null) return;
 
-    if (uri.host == "reset-password") {
+    if (uri.path.contains("reset-password")) {
       navigatorKey.currentState?.pushNamed(
         "/reset-password",
         arguments: token,
       );
     }
 
-    if (uri.host == "verify-email") {
+    if (uri.path.contains("verify-email")) {
       navigatorKey.currentState?.pushNamed(
         "/verify-email",
         arguments: token,
