@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -57,6 +59,19 @@ class _ChatScreenState extends State<ChatScreen> {
   ImageProvider? get contactImageProvider {
     final rawUrl = widget.userImageUrl?.trim();
     if (rawUrl == null || rawUrl.isEmpty) return null;
+
+    if (rawUrl.startsWith("data:")) {
+      try {
+        final commaIndex = rawUrl.indexOf(",");
+        if (commaIndex == -1) return null;
+        final imageData = rawUrl.substring(commaIndex + 1).split("?").first;
+        return MemoryImage(base64Decode(imageData));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    if (!kIsWeb && rawUrl.startsWith("file:")) return null;
     if (rawUrl.startsWith("http")) return NetworkImage(rawUrl);
     return NetworkImage(
       "${ApiService.baseUrl}${rawUrl.startsWith("/") ? "" : "/"}$rawUrl",
@@ -66,6 +81,40 @@ class _ChatScreenState extends State<ChatScreen> {
   String get contactInitial {
     final name = widget.userName.trim();
     return name.isEmpty ? "U" : name[0].toUpperCase();
+  }
+
+  Widget contactAvatar(double size) {
+    final imageProvider = contactImageProvider;
+    final fallback = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.green.shade600,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          contactInitial,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: size * 0.42,
+          ),
+        ),
+      ),
+    );
+
+    if (imageProvider == null) return fallback;
+
+    return ClipOval(
+      child: Image(
+        image: imageProvider,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback,
+      ),
+    );
   }
 
   void openContactProfile() {
@@ -238,82 +287,188 @@ class _ChatScreenState extends State<ChatScreen> {
     final raw = msg["timestamp"];
     final date = parseMessageDate(raw);
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            gradient: isMe
-                ? LinearGradient(
-                    colors: [Colors.green.shade500, Colors.green.shade700],
-                  )
-                : null,
-            color: isMe ? null : (isDark ? Colors.grey.shade900 : Colors.white),
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: const Radius.circular(18),
-              bottomLeft:
-                  isMe ? const Radius.circular(18) : const Radius.circular(6),
-              bottomRight:
-                  isMe ? const Radius.circular(6) : const Radius.circular(18),
-            ),
-            border: isMe
-                ? null
-                : Border.all(
-                    color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
-                  ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0 : 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment:
-                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxBubbleWidth = (constraints.maxWidth * 0.74).clamp(180.0, 520.0);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          child: Row(
+            mainAxisAlignment:
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                msg["content"]?.toString() ?? "",
-                style: TextStyle(
-                  color: isMe
-                      ? Colors.white
-                      : (isDark ? Colors.white : Colors.black87),
-                  fontSize: 15,
-                  height: 1.35,
+              if (!isMe)
+                Padding(
+                  padding: const EdgeInsets.only(right: 7, bottom: 5),
+                  child: contactAvatar(28),
+                ),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isMe
+                        ? const Color(0xFF0F8F5F)
+                        : (isDark
+                            ? const Color(0xFF1F2933)
+                            : const Color(0xFFF0F2F5)),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: isMe
+                          ? const Radius.circular(20)
+                          : const Radius.circular(5),
+                      bottomRight: isMe
+                          ? const Radius.circular(5)
+                          : const Radius.circular(20),
+                    ),
+                    border: isMe
+                        ? null
+                        : Border.all(
+                            color: isDark
+                                ? Colors.white10
+                                : const Color(0xFFE4E6EB),
+                          ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment:
+                        isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        msg["content"]?.toString() ?? "",
+                        style: TextStyle(
+                          color: isMe
+                              ? Colors.white
+                              : (isDark
+                                  ? Colors.white
+                                  : const Color(0xFF050505)),
+                          fontSize: 15,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            formatTimestamp(date),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isMe ? Colors.white70 : Colors.grey,
+                            ),
+                          ),
+                          if (isMe) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              msg["is_read"] == true
+                                  ? Icons.done_all
+                                  : Icons.done,
+                              size: 14,
+                              color: msg["is_read"] == true
+                                  ? const Color(0xFF7DD3FC)
+                                  : Colors.white70,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    formatTimestamp(date),
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isMe ? Colors.white70 : Colors.grey,
-                    ),
-                  ),
-                  if (isMe) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      msg["is_read"] == true ? Icons.done_all : Icons.done,
-                      size: 14,
-                      color: msg["is_read"] == true
-                          ? Colors.blueAccent
-                          : Colors.white70,
-                    ),
-                  ],
-                ],
-              ),
             ],
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Future<void> showContactOptions() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF10231F) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : const Color(0xFFDADDE1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                contactAvatar(82),
+                const SizedBox(height: 12),
+                Text(
+                  widget.userName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.person_rounded),
+                  title: const Text("Ver perfil"),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    openContactProfile();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.refresh_rounded),
+                  title: const Text("Actualizar chat"),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await loadMessages();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cleaning_services_rounded),
+                  title: const Text("Limpiar vista"),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    setState(() => messages = []);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    isBlockedByMe
+                        ? Icons.lock_open_rounded
+                        : Icons.block_rounded,
+                    color: isBlockedByMe ? Colors.green : Colors.redAccent,
+                  ),
+                  title: Text(
+                    isBlockedByMe
+                        ? "Desbloquear contacto"
+                        : "Bloquear contacto",
+                  ),
+                  textColor: isBlockedByMe ? Colors.green : Colors.redAccent,
+                  onTap: isLoadingBlock
+                      ? null
+                      : () async {
+                          Navigator.pop(sheetContext);
+                          await toggleBlock();
+                        },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -455,31 +610,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       backgroundColor:
-          isDark ? const Color(0xFF071A16) : const Color(0xFFF6F8F7),
+          isDark ? const Color(0xFF071A16) : Colors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor:
-            isDark ? const Color(0xFF071A16) : const Color(0xFFF6F8F7),
+            isDark ? const Color(0xFF071A16) : Colors.white,
         titleSpacing: 0,
         title: Row(
           children: [
             InkWell(
-              onTap: openContactProfile,
+              onTap: showContactOptions,
               borderRadius: BorderRadius.circular(999),
-              child: CircleAvatar(
-                radius: 19,
-                backgroundColor: Colors.green.shade600,
-                backgroundImage: contactImageProvider,
-                child: contactImageProvider == null
-                    ? Text(
-                        contactInitial,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      )
-                    : null,
-              ),
+              child: contactAvatar(38),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -519,62 +661,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
-            onSelected: (value) async {
-              if (value == "refresh") {
-                await loadMessages();
-                return;
-              }
-              if (value == "clear") {
-                setState(() => messages = []);
-                return;
-              }
-              if (value == "block") {
-                await toggleBlock();
-              }
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: "refresh",
-                child: Row(
-                  children: [
-                    Icon(Icons.refresh_rounded, color: Colors.green),
-                    SizedBox(width: 10),
-                    Text("Actualizar chat"),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: "clear",
-                child: Row(
-                  children: [
-                    Icon(Icons.cleaning_services_rounded,
-                        color: Colors.blueGrey),
-                    SizedBox(width: 10),
-                    Text("Limpiar vista"),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: "block",
-                child: Row(
-                  children: [
-                    Icon(
-                      isBlockedByMe
-                          ? Icons.lock_open_rounded
-                          : Icons.block_rounded,
-                      color: isBlockedByMe ? Colors.green : Colors.redAccent,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(isBlockedByMe ? "Desbloquear" : "Bloquear contacto"),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -682,14 +768,23 @@ class _ChatScreenState extends State<ChatScreen> {
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                child: Row(
-                  children: [
-                    PopupMenuButton<String>(
-                      enabled: canSend,
-                      icon: Icon(
-                        Icons.add_circle_outline_rounded,
-                        color: canSend ? Colors.green : Colors.grey,
-                      ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey.shade900 : const Color(0xFFF0F2F5),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : const Color(0xFFE4E6EB),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      PopupMenuButton<String>(
+                        enabled: canSend,
+                        icon: Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: canSend ? const Color(0xFF0F8F5F) : Colors.grey,
+                        ),
                     onSelected: (value) {
                       final templates = {
                         "thanks": "Gracias, quedo atento.",
@@ -717,20 +812,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey.shade900 : Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: isDark
-                              ? Colors.white10
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: TextField(
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: TextField(
                         controller: controller,
                         enabled: canSend,
                         onChanged: (text) {
@@ -746,30 +830,22 @@ class _ChatScreenState extends State<ChatScreen> {
                           border: InputBorder.none,
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: canSend && !isLoadingBlock ? sendMessage : null,
-                    borderRadius: BorderRadius.circular(999),
-                    child: Container(
-                      padding: const EdgeInsets.all(13),
-                      decoration: BoxDecoration(
-                        gradient: canSend
-                            ? LinearGradient(
-                                colors: [
-                                  Colors.green.shade500,
-                                  Colors.green.shade700,
-                                ],
-                              )
-                            : null,
-                        color: canSend ? null : Colors.grey,
-                        shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send_rounded, color: Colors.white),
-                    ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: canSend && !isLoadingBlock ? sendMessage : null,
+                        borderRadius: BorderRadius.circular(999),
+                        child: Container(
+                          padding: const EdgeInsets.all(11),
+                          decoration: BoxDecoration(
+                            color: canSend ? const Color(0xFF0F8F5F) : Colors.grey,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.send_rounded, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )

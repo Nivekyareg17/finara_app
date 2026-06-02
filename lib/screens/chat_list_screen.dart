@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +24,106 @@ class _ChatListScreenState extends State<ChatListScreen>
   bool isLoadingRequests = true;
 
   late TabController tabController;
+
+  ImageProvider? imageProviderFrom(dynamic rawValue) {
+    final rawUrl = rawValue?.toString().trim();
+    if (rawUrl == null || rawUrl.isEmpty) return null;
+
+    if (rawUrl.startsWith("data:")) {
+      try {
+        final commaIndex = rawUrl.indexOf(",");
+        if (commaIndex == -1) return null;
+        final imageData = rawUrl.substring(commaIndex + 1).split("?").first;
+        return MemoryImage(base64Decode(imageData));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    if (!kIsWeb && rawUrl.startsWith("file:")) return null;
+    if (rawUrl.startsWith("http")) return NetworkImage(rawUrl);
+    return NetworkImage(
+      "${ApiService.baseUrl}${rawUrl.startsWith("/") ? "" : "/"}$rawUrl",
+    );
+  }
+
+  String initialFrom(dynamic name) {
+    final value = name?.toString().trim();
+    return value == null || value.isEmpty ? "U" : value[0].toUpperCase();
+  }
+
+  dynamic profileImageFrom(Map user) {
+    return user["profile_image_url"] ??
+        user["profileImageUrl"] ??
+        user["avatar"] ??
+        user["sender_profile_image_url"];
+  }
+
+  Widget chatAvatar({
+    required double size,
+    required dynamic name,
+    dynamic imageUrl,
+    bool showRing = false,
+  }) {
+    final imageProvider = imageProviderFrom(imageUrl);
+    final fallback = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.14),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          initialFrom(name),
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.w900,
+            fontSize: size * 0.34,
+          ),
+        ),
+      ),
+    );
+
+    final avatar = imageProvider == null
+        ? fallback
+        : ClipOval(
+            child: Image(
+              image: imageProvider,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => fallback,
+            ),
+          );
+
+    if (!showRing) return avatar;
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0xFF0F8F5F), width: 2),
+      ),
+      child: avatar,
+    );
+  }
+
+  String formatLastTime(dynamic raw) {
+    final value = raw?.toString();
+    if (value == null || value.isEmpty) return "";
+    final parsed = DateTime.tryParse(value.replaceFirst(" ", "T"));
+    if (parsed == null) {
+      return value.length >= 16 ? value.substring(11, 16) : value;
+    }
+    final now = DateTime.now();
+    if (parsed.year == now.year &&
+        parsed.month == now.month &&
+        parsed.day == now.day) {
+      return "${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}";
+    }
+    return "${parsed.day}/${parsed.month}";
+  }
 
   Future<void> loadChats() async {
     try {
@@ -139,10 +242,12 @@ Future<void> openSearchDialog() async {
                       child: Row(
                         children: [
                           CircleAvatar(
-                            backgroundColor: theme.primaryColor,
-                            child: Text(
-                              foundUser!["name"][0].toUpperCase(),
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            backgroundColor: Colors.transparent,
+                            radius: 22,
+                            child: chatAvatar(
+                              size: 44,
+                              name: foundUser!["name"],
+                              imageUrl: profileImageFrom(foundUser!),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -264,9 +369,14 @@ Future<void> openSearchDialog() async {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: theme.brightness == Brightness.light
+          ? Colors.white
+          : const Color(0xFF071A16),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: theme.brightness == Brightness.light
+            ? Colors.white
+            : const Color(0xFF071A16),
         title: Text(
           "Mensajes",
           style: TextStyle(
@@ -323,12 +433,16 @@ Future<void> openSearchDialog() async {
                       "Busca un usuario mediante su correo electrónico para iniciar un chat.",
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
                       itemCount: users.length,
-                      separatorBuilder: (context, index) => const Divider(height: 20, thickness: 0.5),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 4),
                       itemBuilder: (context, i) {
                         final user = users[i];
                         final hasMessage = user["last_message"] != null;
+                        final imageUrl = profileImageFrom(user);
+                        final description =
+                            user["description"]?.toString().trim();
 
                         return InkWell(
                           onTap: () async {
@@ -347,22 +461,19 @@ Future<void> openSearchDialog() async {
                             );
                             loadChats();
                           },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+                          borderRadius: BorderRadius.circular(18),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 10,
+                            ),
                             child: Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: theme.primaryColor.withOpacity(0.15),
-                                  child: Text(
-                                    user["name"][0].toUpperCase(),
-                                    style: TextStyle(
-                                      color: theme.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                                chatAvatar(
+                                  size: 58,
+                                  name: user["name"],
+                                  imageUrl: imageUrl,
+                                  showRing: imageUrl != null,
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
@@ -382,24 +493,57 @@ Future<void> openSearchDialog() async {
                                       Text(
                                         user["last_message"] ?? "Sin mensajes aún",
                                         style: TextStyle(
-                                          color: hasMessage ? Colors.grey.shade600 : Colors.grey.shade400,
+                                          color: hasMessage
+                                              ? (theme.brightness ==
+                                                      Brightness.light
+                                                  ? const Color(0xFF65676B)
+                                                  : Colors.white60)
+                                              : Colors.grey.shade400,
                                           fontSize: 14,
                                           fontStyle: hasMessage ? FontStyle.normal : FontStyle.italic,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
+                                      if (description != null &&
+                                          description.isNotEmpty) ...[
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          description,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade500,
+                                            fontSize: 12,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 if (user["last_time"] != null)
-                                  Text(
-                                    user["last_time"].toString().substring(11, 16),
-                                    style: TextStyle(
-                                      color: Colors.grey.shade400,
-                                      fontSize: 12,
-                                    ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        formatLastTime(user["last_time"]),
+                                        style: TextStyle(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        width: 9,
+                                        height: 9,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF0F8F5F),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                               ],
                             ),
@@ -437,10 +581,12 @@ Future<void> openSearchDialog() async {
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: theme.primaryColor.withOpacity(0.1),
-                                child: Text(
-                                  (request["sender_name"] ?? "U")[0].toUpperCase(),
-                                  style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold),
+                                backgroundColor: Colors.transparent,
+                                radius: 22,
+                                child: chatAvatar(
+                                  size: 44,
+                                  name: request["sender_name"],
+                                  imageUrl: profileImageFrom(request),
                                 ),
                               ),
                               const SizedBox(width: 12),

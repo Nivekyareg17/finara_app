@@ -809,7 +809,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     bottom: -2,
                     right: -2,
                     child: GestureDetector(
-                      onTap: _pickImage,
+                      onTap: _showProfilePhotoOptions,
                       child: AnimatedContainer(
                         // Pequena animacion al tocar
                         duration: const Duration(milliseconds: 200),
@@ -990,7 +990,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 //PERFIL
                 Row(
                   children: [
-                    _profileAvatar(radius: 30, iconSize: 30),
+                    InkWell(
+                      onTap: _showProfilePhotoOptions,
+                      borderRadius: BorderRadius.circular(999),
+                      child: _profileAvatar(radius: 30, iconSize: 30),
+                    ),
                     const SizedBox(width: 15),
                     Expanded(
                       child: Column(
@@ -1701,34 +1705,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final isNarrow = width < 380;
+        final totalIngresos = getTotalIngresos();
+        final totalGastos = getTotalGastos();
+        final totalGeneral = getTotalGeneral();
         final chartSize =
-            (width * (isNarrow ? 0.62 : 0.5)).clamp(160.0, 220.0).toDouble();
-        final radius = (chartSize * 0.30).clamp(48.0, 66.0).toDouble();
-        final centerRadius = (chartSize * 0.25).clamp(38.0, 55.0).toDouble();
+          (width * (isNarrow ? 0.62 : 0.5)).clamp(160.0, 220.0).toDouble();
+        final radius = (chartSize * 0.31).clamp(46.0, 66.0).toDouble();
+        final centerRadius = (chartSize * 0.24).clamp(36.0, 55.0).toDouble();
+        final hasData = totalGeneral > 0;
 
         return Container(
           width: double.infinity,
-          padding: EdgeInsets.all(isNarrow ? 16 : 20),
+          padding: EdgeInsets.fromLTRB(18, isNarrow ? 16 : 18, 18, 16),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            color: isDark ? const Color(0xFF10231E) : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: isDark
-                ? []
-                : [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                    )
-                  ],
+            border: Border.all(
+              color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "Resumen financiero",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.donut_large_rounded,
+                      color: Color(0xFF10B981),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      "Resumen financiero",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    selectedChartType == "ingreso" ? "Ingresos" : "Balance",
+                    style: TextStyle(
+                      color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               SizedBox(
                 height: chartSize,
                 child: Stack(
@@ -1736,35 +1770,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     PieChart(
                       PieChartData(
+                        startDegreeOffset: -90,
                         centerSpaceRadius: centerRadius,
-                        sectionsSpace: 4,
+                        sectionsSpace: 3,
                         centerSpaceColor:
-                            isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                            isDark ? const Color(0xFF10231E) : Colors.white,
                         sections: [
                           PieChartSectionData(
-                            value: getTotalIngresos(),
-                            color: Colors.green,
+                            value: hasData ? totalIngresos : 1,
+                            color: hasData
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFE2E8F0),
                             radius: radius,
-                            title: getTotalGeneral() == 0
+                            title: totalGeneral == 0
                                 ? "0%"
-                                : "${((getTotalIngresos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                                : "${((totalIngresos / totalGeneral) * 100).toStringAsFixed(0)}%",
                             titleStyle: TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: isNarrow ? 12 : 15,
+                              fontWeight: FontWeight.w900,
+                              fontSize: isNarrow ? 11 : 13,
                             ),
                           ),
                           PieChartSectionData(
-                            value: getTotalGastos(),
-                            color: Colors.redAccent,
+                            value: hasData ? totalGastos : 1,
+                            color: hasData
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFFCBD5E1),
                             radius: radius,
-                            title: getTotalGeneral() == 0
+                            title: totalGeneral == 0
                                 ? "0%"
-                                : "${((getTotalGastos() / getTotalGeneral()) * 100).toStringAsFixed(1)}%",
+                                : "${((totalGastos / totalGeneral) * 100).toStringAsFixed(0)}%",
                             titleStyle: TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: isNarrow ? 12 : 15,
+                              fontWeight: FontWeight.w900,
+                              fontSize: isNarrow ? 11 : 13,
                             ),
                           ),
                         ],
@@ -1780,7 +1819,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 4),
                         ConstrainedBox(
                           constraints: BoxConstraints(
-                            maxWidth: centerRadius * 1.9,
+                            maxWidth: centerRadius * 2.05,
                           ),
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
@@ -1799,19 +1838,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 14,
-                runSpacing: 10,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _chartLegend(
-                    Colors.green,
-                    "Ingresos: ${formatCurrency(getTotalIngresos())}",
+                    const Color(0xFF10B981),
+                    "Ingresos",
+                    formatCurrency(totalIngresos),
+                    isDark,
                   ),
                   _chartLegend(
-                    Colors.redAccent,
-                    "Gastos: ${formatCurrency(getTotalGastos())}",
+                    const Color(0xFFEF4444),
+                    "Gastos",
+                    formatCurrency(totalGastos),
+                    isDark,
                   ),
                 ],
               ),
@@ -1884,21 +1927,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _chartLegend(Color color, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
+  Widget _chartLegend(Color color, String label, String value, bool isDark) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 136),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.16 : 0.10),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(99),
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-      ],
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 88,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2007,29 +2086,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  String _formatCompactAmount(double value) {
+    return NumberFormat.compactCurrency(
+      locale: "es_CO",
+      symbol: "\$",
+      decimalDigits: 0,
+    ).format(value);
+  }
+
   Widget _buildResponsiveBarChart(bool isDark) {
     return LayoutBuilder(
       builder: (context, constraints) {
+<<<<<<< HEAD
         final data =
             getMovimientosPorCategoria(selectedChartType).entries.toList();
+=======
+        final data = getMovimientosPorCategoria(selectedChartType)
+            .entries
+            .toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+        final maxValue = data.isEmpty
+            ? 0.0
+            : data
+                .map((item) => item.value)
+                .reduce((a, b) => a > b ? a : b);
+        final maxY = maxValue <= 0 ? 1.0 : maxValue * 1.35;
+>>>>>>> d8a9a51 (Committing local updates before pull)
         final chartWidth = data.isEmpty
             ? constraints.maxWidth
-            : (data.length * 74.0)
-                .clamp(constraints.maxWidth, 900.0)
+            : (data.length * 82.0)
+                .clamp(constraints.maxWidth, 980.0)
                 .toDouble();
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(8, 22, 14, 12),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            color: isDark ? const Color(0xFF10231E) : Colors.white,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+            ),
           ),
           child: SizedBox(
-            height: constraints.maxWidth < 380 ? 280 : 320,
+            height: constraints.maxWidth < 380 ? 286 : 320,
             child: data.isEmpty
                 ? const Center(child: Text("No hay datos para graficar"))
                 : SingleChildScrollView(
+<<<<<<< HEAD
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
                       width: chartWidth,
@@ -2050,6 +2154,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
                                   ),
+=======
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: chartWidth,
+                          child: BarChart(
+                            BarChartData(
+                              maxY: maxY,
+                              borderData: FlBorderData(show: false),
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                horizontalInterval: maxY / 4,
+                                getDrawingHorizontalLine: (_) => FlLine(
+                                  color: isDark
+                                      ? Colors.white10
+                                      : const Color(0xFFE5E7EB),
+                                  strokeWidth: 1,
+                                ),
+                              ),
+                              barTouchData: BarTouchData(
+                                enabled: true,
+                                touchTooltipData: BarTouchTooltipData(
+                                  tooltipRoundedRadius: 14,
+                                  getTooltipItem:
+                                      (group, groupIndex, rod, rodIndex) {
+                                    final item = data[group.x];
+                                    return BarTooltipItem(
+                                      "${item.key}\n${formatCurrency(item.value)}",
+                                      const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              alignment: BarChartAlignment.spaceAround,
+                              titlesData: FlTitlesData(
+                                topTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 76,
+                                    interval: maxY / 4,
+                                    getTitlesWidget: (value, meta) {
+                                      if (value <= 0 || value >= maxY * 0.96) {
+                                        return const SizedBox();
+                                      }
+                                      return SizedBox(
+                                        width: 70,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
+                                          child: Text(
+                                            _formatCompactAmount(value),
+                                            textAlign: TextAlign.right,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.visible,
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? Colors.white54
+                                                  : const Color(0xFF64748B),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 44,
+                                    getTitlesWidget: (value, meta) {
+                                      final index = value.toInt();
+                                      if (index < 0 || index >= data.length) {
+                                        return const SizedBox();
+                                      }
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: SizedBox(
+                                          width: 64,
+                                          child: Text(
+                                            data[index].key,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                rightTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                              barGroups: data.asMap().entries.map((entry) {
+                                final item = entry.value;
+                                return BarChartGroupData(
+                                  x: entry.key,
+                                  barRods: [
+                                    BarChartRodData(
+                                      toY: item.value,
+                                      color: getCategoryColor(item.key),
+                                      width: 24,
+                                      borderRadius: BorderRadius.circular(10),
+                                      backDrawRodData: BackgroundBarChartRodData(
+                                        show: true,
+                                        toY: maxY,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.06)
+                                            : const Color(0xFFF1F5F9),
+                                      ),
+                                    )
+                                  ],
+>>>>>>> d8a9a51 (Committing local updates before pull)
                                 );
                               },
                             ),
@@ -2232,8 +2462,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
+<<<<<<< HEAD
 
             final double amountValue = _parseMoney(amount.text);
+=======
+            final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+            final double amountValue = _parseMoney(amount.text);
+            final amountLength = amount.text.length;
+            final amountFontSize = amountLength > 18
+                ? 24.0
+                : amountLength > 14
+                    ? 28.0
+                    : amountLength > 10
+                        ? 34.0
+                        : 44.0;
+>>>>>>> d8a9a51 (Committing local updates before pull)
 
             final filteredCategories =
                 localCategories.where((c) => c.type == type).toList();
@@ -2251,7 +2494,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
 
             return Container(
-              height: MediaQuery.of(context).size.height * 0.85,
+              height: MediaQuery.of(context).size.height *
+                  (keyboardHeight > 0 ? 0.92 : 0.85),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                 borderRadius:
@@ -2272,8 +2516,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 25, vertical: 20),
+                      padding: EdgeInsets.only(
+                        left: 25,
+                        right: 25,
+                        top: 20,
+                        bottom: keyboardHeight + 28,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -2335,19 +2583,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               decimal: true,
                             ),
                             textAlign: TextAlign.center,
+                            maxLines: 1,
+                            scrollPadding:
+                                EdgeInsets.only(bottom: keyboardHeight + 120),
+                            onChanged: (_) => setStateDialog(() {}),
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               CurrencyInputFormatter(),
                             ],
-                            style: const TextStyle(
-                              fontSize: 45,
+                            style: TextStyle(
+                              fontSize: amountFontSize,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF064E3B),
+                              color: const Color(0xFF064E3B),
                             ),
                             // DESPUÉS
                             decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.attach_money,
-                                  size: 35, color: Color(0xFF064E3B)),
+                              prefixText: "\$ ",
+                              prefixStyle: TextStyle(
+                                fontSize: amountFontSize,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF064E3B),
+                              ),
                               hintText: "0.00",
                               border: InputBorder.none,
                               errorText: (showValidationErrors &&
@@ -2838,6 +3094,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: desc,
+                            maxLines: 3,
+                            minLines: 1,
+                            textInputAction: TextInputAction.done,
+                            scrollPadding:
+                                EdgeInsets.only(bottom: keyboardHeight + 160),
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.w600,
@@ -3741,6 +4002,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showProfilePhotoOptions() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF10231E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (sheetContext) {
+        final hasPhoto = _profileImageProvider() != null;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 46,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _profileAvatar(radius: 42, iconSize: 42, bordered: true),
+                const SizedBox(height: 12),
+                Text(
+                  name.isEmpty ? "Foto de perfil" : name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  enabled: hasPhoto,
+                  leading: const Icon(Icons.visibility_rounded),
+                  title: const Text("Ver foto"),
+                  onTap: !hasPhoto
+                      ? null
+                      : () {
+                          Navigator.pop(sheetContext);
+                          _showProfilePhotoPreview();
+                        },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_rounded),
+                  title: const Text("Cambiar foto"),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _pickImage();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showProfilePhotoPreview() {
+    final imageProvider = _profileImageProvider();
+    if (imageProvider == null) return;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        insetPadding: const EdgeInsets.all(24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: Image(
+                  image: imageProvider,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton.filled(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
