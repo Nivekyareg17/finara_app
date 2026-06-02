@@ -98,7 +98,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
 
     link = (
-        f"https://finaraapp.online/verify?token={token}"
+        f"https://finaraapp.online/auth/verify?token={token}"
     )
 
     print("VERIFY TOKEN:", token)
@@ -196,7 +196,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
 
     link = (
-        f"https://finaraapp.online/reset?token={token}"
+        f"https://finaraapp.online/auth/reset?token={token}"
     )
 
     send_email(data.email, link)
