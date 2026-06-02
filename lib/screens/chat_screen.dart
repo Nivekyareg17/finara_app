@@ -5,17 +5,20 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import 'public_profile_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final int userId;
   final String userName;
   final String? userImageUrl;
+  final String? userDescription;
 
   const ChatScreen({
     super.key,
     required this.userId,
     required this.userName,
     this.userImageUrl,
+    this.userDescription,
   });
 
   @override
@@ -57,6 +60,25 @@ class _ChatScreenState extends State<ChatScreen> {
     if (rawUrl.startsWith("http")) return NetworkImage(rawUrl);
     return NetworkImage(
       "${ApiService.baseUrl}${rawUrl.startsWith("/") ? "" : "/"}$rawUrl",
+    );
+  }
+
+  String get contactInitial {
+    final name = widget.userName.trim();
+    return name.isEmpty ? "U" : name[0].toUpperCase();
+  }
+
+  void openContactProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PublicProfileScreen(
+          userId: widget.userId,
+          fallbackName: widget.userName,
+          fallbackImageUrl: widget.userImageUrl,
+          fallbackDescription: widget.userDescription,
+        ),
+      ),
     );
   }
 
@@ -298,21 +320,130 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget buildBlockBanner() {
     if (!isBlockedByMe && !isBlockedByOther) return const SizedBox.shrink();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final title =
+        isBlockedByMe ? "Contacto bloqueado" : "Chat no disponible";
+    final subtitle = isBlockedByMe
+        ? "No puedes enviar ni recibir mensajes de este usuario mientras este bloqueado."
+        : "Este usuario no esta disponible para recibir mensajes en este momento.";
+    final icon = isBlockedByMe ? Icons.block_rounded : Icons.lock_rounded;
+
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.redAccent.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.28)),
+        color: isDark ? const Color(0xFF2A1518) : const Color(0xFFFFF1F2),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.redAccent.withOpacity(isDark ? 0.36 : 0.22),
+        ),
       ),
-      child: Text(
-        isBlockedByMe
-            ? "Bloqueaste este contacto. No pueden enviarse mensajes."
-            : "Este contacto no esta disponible para mensajes.",
-        style:
-            const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w700),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withOpacity(0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.redAccent, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF7F1D1D),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : const Color(0xFF991B1B),
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+                if (isBlockedByMe) ...[
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    onPressed: isLoadingBlock ? null : toggleBlock,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.green.shade700,
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 34),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: const Icon(Icons.lock_open_rounded, size: 18),
+                    label: const Text(
+                      "Desbloquear contacto",
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildBlockedComposer() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey.shade900 : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.do_not_disturb_on_rounded,
+                  color: Colors.grey,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isBlockedByMe
+                      ? "Desbloquea a este contacto para volver a escribirle."
+                      : "No puedes enviar mensajes en este chat.",
+                  style: TextStyle(
+                    color: isDark ? Colors.white60 : Colors.black54,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -332,47 +463,58 @@ class _ChatScreenState extends State<ChatScreen> {
         titleSpacing: 0,
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 19,
-              backgroundColor: Colors.green.shade600,
-              backgroundImage: contactImageProvider,
-              child: contactImageProvider == null
-                  ? Text(
-                      widget.userName[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    )
-                  : null,
+            InkWell(
+              onTap: openContactProfile,
+              borderRadius: BorderRadius.circular(999),
+              child: CircleAvatar(
+                radius: 19,
+                backgroundColor: Colors.green.shade600,
+                backgroundImage: contactImageProvider,
+                child: contactImageProvider == null
+                    ? Text(
+                        contactInitial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      )
+                    : null,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.userName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+              child: InkWell(
+                onTap: openContactProfile,
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.userName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        isBlockedByMe
+                            ? "Contacto bloqueado"
+                            : isBlockedByOther
+                                ? "No disponible"
+                                : "En linea",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isBlockedByMe || isBlockedByOther
+                              ? Colors.redAccent
+                              : Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    isBlockedByMe
-                        ? "Contacto bloqueado"
-                        : isBlockedByOther
-                            ? "No disponible"
-                            : "En linea",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isBlockedByMe || isBlockedByOther
-                          ? Colors.redAccent
-                          : Colors.grey,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],
@@ -536,17 +678,18 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
             ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Row(
-                children: [
-                  PopupMenuButton<String>(
-                    enabled: canSend,
-                    icon: Icon(
-                      Icons.add_circle_outline_rounded,
-                      color: canSend ? Colors.green : Colors.grey,
-                    ),
+          if (canSend)
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                child: Row(
+                  children: [
+                    PopupMenuButton<String>(
+                      enabled: canSend,
+                      icon: Icon(
+                        Icons.add_circle_outline_rounded,
+                        color: canSend ? Colors.green : Colors.grey,
+                      ),
                     onSelected: (value) {
                       final templates = {
                         "thanks": "Gracias, quedo atento.",
@@ -625,11 +768,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       child: const Icon(Icons.send_rounded, color: Colors.white),
                     ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
+            )
+          else
+            buildBlockedComposer(),
         ],
       ),
     );
