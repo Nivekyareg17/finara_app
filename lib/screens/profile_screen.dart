@@ -1,6 +1,5 @@
 ﻿import 'package:finara_app_v1/models/category_model.dart';
 import 'package:finara_app_v1/providers/auth_provider.dart';
-import 'package:finara_app_v1/screens/calculators/calculators_screen.dart';
 import 'package:finara_app_v1/widgets/custom_bottom_nav.dart';
 import 'package:finara_app_v1/widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +21,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:finara_app_v1/models/meta_ahorro.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import '../services/exchange_rate_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -3841,12 +3839,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
-                                color: isDark ? const Color(0xFF10231E) : Colors.white,
+                                color: isDark
+                                    ? const Color(0xFF10231E)
+                                    : Colors.white,
                               ),
                               padding: const EdgeInsets.all(8),
                               child: imageProvider is MemoryImage
                                   ? Image(image: imageProvider)
-                                  : Image(image: imageProvider as ImageProvider),
+                                  : Image(
+                                      image: imageProvider as ImageProvider),
                             ),
                           ),
                         ),
