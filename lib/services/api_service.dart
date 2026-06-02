@@ -57,6 +57,25 @@ class ApiService {
     return null;
   }
 
+  static Future<Map<String, dynamic>?> getPublicUserProfile(
+    String token,
+    int userId,
+  ) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/users/$userId/public-profile"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is Map<String, dynamic> ? data : null;
+    }
+
+    print("PUBLIC PROFILE STATUS: ${response.statusCode}");
+    print("PUBLIC PROFILE BODY: ${response.body}");
+    return null;
+  }
+
   static Future<Map<String, dynamic>?> updateProfileInfo(
     String token, {
     required String username,

@@ -132,6 +132,31 @@ def get_users_public(
     ]
 
 
+@router.get("/{user_id}/public-profile")
+def get_public_user_profile(
+    user_id: int,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    verify_token(token)
+
+    user = db.query(User).filter(
+        User.id == user_id,
+        User.is_deleted == False
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    return {
+        "id": user.id,
+        "name": user.name,
+        "username": user.username,
+        "description": user.description,
+        "profile_image_url": user.profile_image_url,
+    }
+
+
 @router.post("/create-admin")
 def create_admin(
     user: schemas.UserCreate,

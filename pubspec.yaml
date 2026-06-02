@@ -15,6 +15,7 @@ dependencies:
   
 
   http: ^1.2.1
+  http_parser: ^4.0.2
   provider: ^6.1.2
 
   app_links: ^6.3.2
@@ -55,8 +56,8 @@ dependency_overrides:
   flutter_inappwebview: ^6.0.0
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
-  image_path: "assets/icon/Logo_finara.png"
+  image_path: "assets/images/logo.png"
   adaptive_icon_background: "#064131"
-  adaptive_icon_foreground: "assets/images/Logo_finara.png"
+  adaptive_icon_foreground: "assets/images/logo.png"

@@ -1,11 +1,11 @@
 {
-    "name": "finara_app_v1",
-    "short_name": "finara_app_v1",
+    "name": "Finara",
+    "short_name": "Finara",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#064131",
+    "theme_color": "#064131",
+    "description": "Finara App",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

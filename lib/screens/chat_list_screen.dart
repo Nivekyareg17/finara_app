@@ -341,6 +341,7 @@ Future<void> openSearchDialog() async {
                                   userImageUrl: user["profile_image_url"] ??
                                       user["profileImageUrl"] ??
                                       user["avatar"],
+                                  userDescription: user["description"],
                                 ),
                               ),
                             );

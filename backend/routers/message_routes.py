@@ -355,6 +355,9 @@ def get_chats(
                 "id": user.id,
                 "name": user.name,
                 "email": user.email,
+                "profile_image_url": user.profile_image_url,
+                "username": user.username,
+                "description": user.description,
                 "last_message":
                     last_message.content
                     if last_message
