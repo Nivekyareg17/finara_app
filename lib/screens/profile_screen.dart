@@ -274,7 +274,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _saveTransactionCurrency(int transactionId, String currency) async {
+  Future<void> _saveTransactionCurrency(
+      int transactionId, String currency) async {
     final prefs = await SharedPreferences.getInstance();
     final currencies = await _loadTransactionCurrencyPrefs();
     currencies[transactionId.toString()] = currency.toUpperCase();
@@ -389,7 +390,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         title: Text(entry.key,
-                            style: const TextStyle(fontWeight: FontWeight.w900)),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w900)),
                         subtitle: Text(entry.value),
                         trailing: selected
                             ? const Icon(Icons.check_circle_rounded,
@@ -410,8 +412,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         "Otra moneda",
                         style: TextStyle(fontWeight: FontWeight.w900),
                       ),
-                      subtitle:
-                          const Text("Escribe un codigo ISO, ej: DOP, UYU, CNY"),
+                      subtitle: const Text(
+                          "Escribe un codigo ISO, ej: DOP, UYU, CNY"),
                       onTap: () async {
                         final custom = await _askCustomCurrency();
                         if (custom != null && context.mounted) {
@@ -507,8 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     print(data);
 
     try {
-      final loadedTransactions =
-          data.map((e) {
+      final loadedTransactions = data.map((e) {
         final transaction = TransactionModel.fromMap(e);
         final savedCurrency = currencyPrefs[transaction.id.toString()];
         if (savedCurrency != null) {
@@ -608,15 +609,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   double getTotalIngresos() {
-    return transactions
-        .where((t) => t.type == "ingreso")
-        .fold(0.0, (sum, t) => sum + _convertToBase(t.amount, _transactionCurrency(t)));
+    return transactions.where((t) => t.type == "ingreso").fold(0.0,
+        (sum, t) => sum + _convertToBase(t.amount, _transactionCurrency(t)));
   }
 
   double getTotalGastos() {
-    return transactions
-        .where((t) => t.type == "gasto")
-        .fold(0.0, (sum, t) => sum + _convertToBase(t.amount, _transactionCurrency(t)));
+    return transactions.where((t) => t.type == "gasto").fold(0.0,
+        (sum, t) => sum + _convertToBase(t.amount, _transactionCurrency(t)));
   }
 
   double getTotalGeneral() {
@@ -677,8 +676,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (t.type == "gasto") {
         String categoria = getCategoryName(int.tryParse(t.categoryId) ?? 0);
 
-        data[categoria] =
-            (data[categoria] ?? 0) + _convertToBase(t.amount, _transactionCurrency(t));
+        data[categoria] = (data[categoria] ?? 0) +
+            _convertToBase(t.amount, _transactionCurrency(t));
       }
     }
 
@@ -697,8 +696,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               0,
         );
 
-        data[categoria] =
-            (data[categoria] ?? 0) + _convertToBase(t.amount, _transactionCurrency(t));
+        data[categoria] = (data[categoria] ?? 0) +
+            _convertToBase(t.amount, _transactionCurrency(t));
       }
     }
 
@@ -726,6 +725,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final metas = context.watch<AuthProvider>().metas;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color primaryColor = Color(0xFF064E3B);
@@ -927,6 +927,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _showSupportSheet();
                     },
                   ),
+
+                  if (auth.isAdmin)
+                    _buildDrawerItem(
+                      icon: Icons.swap_horiz,
+                      title: auth.isAdminView
+                          ? "Cambiar a vista cliente"
+                          : "Volver a vista admin",
+                      subtitle: auth.isAdminView
+                          ? "Modo Administrador activo"
+                          : "Modo Cliente activo",
+                      color: Colors.purple,
+                      onTap: () {
+                        final navigator = Navigator.of(context);
+
+                        context.read<AuthProvider>().toggleView();
+                        navigator.pushNamedAndRemoveUntil(
+                          "/home",
+                          (route) => false,
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -1183,8 +1204,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 begin: Alignment.topCenter,
                                                 end: Alignment.bottomCenter,
                                                 colors: [
-                                                  Colors.black.withOpacity(0.05),
-                                                  Colors.black.withOpacity(0.48),
+                                                  Colors.black
+                                                      .withOpacity(0.05),
+                                                  Colors.black
+                                                      .withOpacity(0.48),
                                                 ],
                                               ),
                                             ),
@@ -1257,8 +1280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 backgroundColor: isDark
                                                     ? Colors.white10
                                                     : const Color(0xFFE2E8F0),
-                                                color:
-                                                    const Color(0xFF10B981),
+                                                color: const Color(0xFF10B981),
                                               ),
                                             ),
                                             const SizedBox(height: 12),
@@ -1311,13 +1333,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 _goalAction(
                                                   Icons.add_rounded,
                                                   const Color(0xFF10B981),
-                                                  () => _agregarMontoMeta(index),
+                                                  () =>
+                                                      _agregarMontoMeta(index),
                                                 ),
                                                 _goalAction(
                                                   Icons.edit_rounded,
                                                   const Color(0xFF2563EB),
-                                                  () =>
-                                                      _editarMetaResponsive(index),
+                                                  () => _editarMetaResponsive(
+                                                      index),
                                                 ),
                                                 _goalAction(
                                                   Icons.delete_outline_rounded,
@@ -1577,16 +1600,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? const Color(0xFF172554)
                               : const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(18),
-                          border:
-                              Border.all(color: const Color(0xFF3B82F6)),
+                          border: Border.all(color: const Color(0xFF3B82F6)),
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF3B82F6)
-                                    .withOpacity(0.14),
+                                color:
+                                    const Color(0xFF3B82F6).withOpacity(0.14),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Icon(
@@ -1682,8 +1704,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final chartSize =
             (width * (isNarrow ? 0.62 : 0.5)).clamp(160.0, 220.0).toDouble();
         final radius = (chartSize * 0.30).clamp(48.0, 66.0).toDouble();
-        final centerRadius =
-            (chartSize * 0.25).clamp(38.0, 55.0).toDouble();
+        final centerRadius = (chartSize * 0.25).clamp(38.0, 55.0).toDouble();
 
         return Container(
           width: double.infinity,
@@ -1989,7 +2010,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildResponsiveBarChart(bool isDark) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final data = getMovimientosPorCategoria(selectedChartType).entries.toList();
+        final data =
+            getMovimientosPorCategoria(selectedChartType).entries.toList();
         final chartWidth = data.isEmpty
             ? constraints.maxWidth
             : (data.length * 74.0)
@@ -2008,91 +2030,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: data.isEmpty
                 ? const Center(child: Text("No hay datos para graficar"))
                 : SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: chartWidth,
-                          child: BarChart(
-                            BarChartData(
-                              borderData: FlBorderData(show: false),
-                              barTouchData: BarTouchData(
-                                enabled: true,
-                                touchTooltipData: BarTouchTooltipData(
-                                  tooltipRoundedRadius: 14,
-                                  getTooltipItem:
-                                      (group, groupIndex, rod, rodIndex) {
-                                    final item = data[group.x];
-                                    return BarTooltipItem(
-                                      "${item.key}\n${formatCurrency(item.value)}",
-                                      const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              alignment: BarChartAlignment.spaceAround,
-                              titlesData: FlTitlesData(
-                                topTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                                leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 44,
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: chartWidth,
+                      child: BarChart(
+                        BarChartData(
+                          borderData: FlBorderData(show: false),
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              tooltipRoundedRadius: 14,
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
+                                final item = data[group.x];
+                                return BarTooltipItem(
+                                  "${item.key}\n${formatCurrency(item.value)}",
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
                                   ),
-                                ),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 44,
-                                    getTitlesWidget: (value, meta) {
-                                      final index = value.toInt();
-                                      if (index < 0 || index >= data.length) {
-                                        return const SizedBox();
-                                      }
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 8),
-                                        child: SizedBox(
-                                          width: 64,
-                                          child: Text(
-                                            data[index].key,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                rightTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                              ),
-                              barGroups: data.asMap().entries.map((entry) {
-                                final item = entry.value;
-                                return BarChartGroupData(
-                                  x: entry.key,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: item.value,
-                                      color: getCategoryColor(item.key),
-                                      width: 22,
-                                      borderRadius: BorderRadius.circular(8),
-                                    )
-                                  ],
                                 );
-                              }).toList(),
+                              },
                             ),
                           ),
+                          alignment: BarChartAlignment.spaceAround,
+                          titlesData: FlTitlesData(
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 44,
+                              ),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 44,
+                                getTitlesWidget: (value, meta) {
+                                  final index = value.toInt();
+                                  if (index < 0 || index >= data.length) {
+                                    return const SizedBox();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: SizedBox(
+                                      width: 64,
+                                      child: Text(
+                                        data[index].key,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                          ),
+                          barGroups: data.asMap().entries.map((entry) {
+                            final item = entry.value;
+                            return BarChartGroupData(
+                              x: entry.key,
+                              barRods: [
+                                BarChartRodData(
+                                  toY: item.value,
+                                  color: getCategoryColor(item.key),
+                                  width: 22,
+                                  borderRadius: BorderRadius.circular(8),
+                                )
+                              ],
+                            );
+                          }).toList(),
                         ),
                       ),
+                    ),
+                  ),
           ),
         );
       },
@@ -2102,7 +2124,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMovementFilters(bool isDark) {
     final items = [
       ("todos", "Todos", Icons.list_rounded, const Color(0xFF10B981)),
-      ("ingreso", "Ingresos", Icons.trending_up_rounded, const Color(0xFF059669)),
+      (
+        "ingreso",
+        "Ingresos",
+        Icons.trending_up_rounded,
+        const Color(0xFF059669)
+      ),
       ("gasto", "Gastos", Icons.trending_down_rounded, const Color(0xFFEF4444)),
     ];
 
@@ -2188,9 +2215,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     String type = edit?.type ?? "gasto";
     int? selectedCategoryId = int.tryParse(edit?.categoryId ?? "");
-    String selectedMovementCurrency = (edit?.currency.trim().isNotEmpty ?? false)
-        ? edit!.currency.toUpperCase()
-        : _categoryCurrencyById(selectedCategoryId);
+    String selectedMovementCurrency =
+        (edit?.currency.trim().isNotEmpty ?? false)
+            ? edit!.currency.toUpperCase()
+            : _categoryCurrencyById(selectedCategoryId);
     bool allowFutureMovement = edit?.isFutureMovement ?? false;
 
     showModalBottomSheet(
@@ -2205,7 +2233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context, setStateDialog) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
 
-              final double amountValue = _parseMoney(amount.text);
+            final double amountValue = _parseMoney(amount.text);
 
             final filteredCategories =
                 localCategories.where((c) => c.type == type).toList();
@@ -2323,7 +2351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               hintText: "0.00",
                               border: InputBorder.none,
                               errorText: (showValidationErrors &&
-                                    amount.text.trim().isNotEmpty &&
+                                      amount.text.trim().isNotEmpty &&
                                       amountValue == 0)
                                   ? "Ingresa un monto válido"
                                   : null,
@@ -2361,8 +2389,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         nueva!.toLowerCase())) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text(
-                                          "Esa categoria ya existe"),
+                                      content: Text("Esa categoria ya existe"),
                                     ),
                                   );
                                   return;
@@ -2492,8 +2519,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
-                                            content: Text(
-                                                "Esa categoría ya existe"),
+                                            content:
+                                                Text("Esa categoría ya existe"),
                                           ),
                                         );
                                         return;
@@ -2537,8 +2564,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     bool? confirmar = await showDialog<bool>(
                                       context: context,
                                       builder: (ctx) => AlertDialog(
-                                        title: const Text(
-                                            "¿Eliminar categoría?"),
+                                        title:
+                                            const Text("¿Eliminar categoría?"),
                                         content: const Text(
                                             "Esta acción no se puede deshacer."),
                                         actions: [
@@ -2888,7 +2915,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       setStateDialog(
                                           () => showValidationErrors = true);
 
-                                        double montoFinal = _parseMoney(amount.text);
+                                      double montoFinal =
+                                          _parseMoney(amount.text);
                                       DateTime fechaFinal =
                                           DateFormat("MM/dd/yyyy")
                                               .parse(dateController.text);
@@ -3091,7 +3119,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text("Se eliminará '${t.description}'"),
                   const SizedBox(height: 8),
-                  Text("Monto: ${formatCurrency(t.amount, _transactionCurrency(t))}",
+                  Text(
+                      "Monto: ${formatCurrency(t.amount, _transactionCurrency(t))}",
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.redAccent)),
@@ -4014,15 +4043,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (nombreError)
                     _metaFieldError("Escribe el nombre de la meta"),
                   const SizedBox(height: 14),
-                  _metaField(montoMeta, "Monto objetivo",
-                      Icons.attach_money_rounded, montoError, isDark,
+                  _metaField(
+                      montoMeta,
+                      "Monto objetivo",
+                      Icons.attach_money_rounded,
+                      montoError,
+                      isDark,
                       setSheetState,
                       money: true),
                   if (montoError)
                     _metaFieldError("Ingresa un monto objetivo valido"),
                   const SizedBox(height: 14),
-                  _metaField(ahorroMensual, "Ahorro mensual",
-                      Icons.calendar_month_rounded, ahorroError, isDark,
+                  _metaField(
+                      ahorroMensual,
+                      "Ahorro mensual",
+                      Icons.calendar_month_rounded,
+                      ahorroError,
+                      isDark,
                       setSheetState,
                       money: true),
                   if (ahorroError)
@@ -4116,8 +4153,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return TextField(
       controller: controller,
       keyboardType: money ? TextInputType.number : TextInputType.text,
-      inputFormatters:
-          money ? [FilteringTextInputFormatter.digitsOnly, CurrencyInputFormatter()] : null,
+      inputFormatters: money
+          ? [FilteringTextInputFormatter.digitsOnly, CurrencyInputFormatter()]
+          : null,
       onChanged: (_) => setSheetState(() {}),
       decoration: InputDecoration(
         labelText: label,
@@ -4545,366 +4583,346 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   bottom: MediaQuery.of(context).viewInsets.bottom + 20,
                 ),
                 child: SingleChildScrollView(
-  child: Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .primary
-              .withOpacity(0.12),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          Icons.savings_rounded,
-          size: 34,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-
-      const SizedBox(height: 18),
-
-      Text(
-        "Editar Meta",
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: isDark ? Colors.white : Colors.black87,
-        ),
-      ),
-
-      const SizedBox(height: 8),
-
-      Text(
-        "Actualiza la información de tu meta",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 14,
-          color: isDark
-              ? Colors.white70
-              : Colors.black54,
-        ),
-      ),
-
-      const SizedBox(height: 28),
-
-      // ================= NOMBRE =================
-      TextField(
-        controller: nombre,
-        onChanged: (_) => setStateDialog(() {}),
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black87,
-        ),
-        decoration: InputDecoration(
-          labelText: "Nombre",
-          prefixIcon: Icon(
-            Icons.flag_rounded,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          labelStyle: TextStyle(
-            color: isDark
-                ? Colors.white70
-                : Colors.black54,
-          ),
-          hintText: "Ej: Viaje a Japón",
-          hintStyle: TextStyle(
-            color: isDark
-                ? Colors.white38
-                : Colors.black38,
-          ),
-          filled: true,
-          fillColor: isDark
-              ? const Color(0xFF2A2A2A)
-              : const Color(0xFFF5F5F5),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 18,
-            horizontal: 16,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(
-              color: nombreError
-                  ? Colors.redAccent
-                  : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(
-              color: nombreError
-                  ? Colors.redAccent
-                  : Theme.of(context).colorScheme.primary,
-              width: 2,
-            ),
-          ),
-        ),
-      ),
-
-      if (nombreError)
-        const Padding(
-          padding: EdgeInsets.only(top: 8, left: 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Este campo es obligatorio",
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-
-      const SizedBox(height: 18),
-
-      // ================= MONTO =================
-      TextField(
-        controller: montoMeta,
-        onChanged: (_) => setStateDialog(() {}),
-        keyboardType: TextInputType.number,
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black87,
-        ),
-        decoration: InputDecoration(
-          labelText: "Monto objetivo",
-          prefixIcon: Icon(
-            Icons.attach_money_rounded,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          labelStyle: TextStyle(
-            color: isDark
-                ? Colors.white70
-                : Colors.black54,
-          ),
-          hintText: "Ej: 5000000",
-          hintStyle: TextStyle(
-            color: isDark
-                ? Colors.white38
-                : Colors.black38,
-          ),
-          filled: true,
-          fillColor: isDark
-              ? const Color(0xFF2A2A2A)
-              : const Color(0xFFF5F5F5),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 18,
-            horizontal: 16,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(
-              color: montoError
-                  ? Colors.redAccent
-                  : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(
-              color: montoError
-                  ? Colors.redAccent
-                  : Theme.of(context).colorScheme.primary,
-              width: 2,
-            ),
-          ),
-        ),
-      ),
-
-      if (montoError)
-        const Padding(
-          padding: EdgeInsets.only(top: 8, left: 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Este campo es obligatorio",
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-
-      const SizedBox(height: 18),
-
-      // ================= AHORRO =================
-      TextField(
-        controller: ahorroMensual,
-        onChanged: (_) => setStateDialog(() {}),
-        keyboardType: TextInputType.number,
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black87,
-        ),
-        decoration: InputDecoration(
-          labelText: "Ahorro mensual",
-          prefixIcon: Icon(
-            Icons.trending_up_rounded,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          labelStyle: TextStyle(
-            color: isDark
-                ? Colors.white70
-                : Colors.black54,
-          ),
-          hintText: "Ej: 300000",
-          hintStyle: TextStyle(
-            color: isDark
-                ? Colors.white38
-                : Colors.black38,
-          ),
-          filled: true,
-          fillColor: isDark
-              ? const Color(0xFF2A2A2A)
-              : const Color(0xFFF5F5F5),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 18,
-            horizontal: 16,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(
-              color: ahorroError
-                  ? Colors.redAccent
-                  : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(
-              color: ahorroError
-                  ? Colors.redAccent
-                  : Theme.of(context).colorScheme.primary,
-              width: 2,
-            ),
-          ),
-        ),
-      ),
-
-      if (ahorroError)
-        const Padding(
-          padding: EdgeInsets.only(top: 8, left: 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Este campo es obligatorio",
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-
-      const SizedBox(height: 30),
-
-      Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                side: BorderSide(
-                  color: isDark
-                      ? Colors.white24
-                      : Colors.black12,
-                ),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                "Cancelar",
-                style: TextStyle(
-                  color: isDark
-                      ? Colors.white70
-                      : Colors.black87,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor:
-                    Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              onPressed: () {
-                setStateDialog(
-                    () => showValidationErrors = true);
-
-                if (nombre.text.trim().isEmpty ||
-                    montoMeta.text.trim().isEmpty ||
-                    ahorroMensual.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Completa los campos obligatorios",
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.savings_rounded,
+                          size: 34,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
-                    ),
-                  );
-                  return;
-                }
 
-                context.read<AuthProvider>().editarMeta(
-                      index,
-                      MetaAhorro(
-                        nombre: nombre.text,
-                        montoMeta:
-                            double.parse(montoMeta.text),
-                        ahorroMensual:
-                            double.parse(ahorroMensual.text),
-                        montoActual: meta.montoActual,
-                        aportes: meta.aportes,
+                      const SizedBox(height: 18),
+
+                      Text(
+                        "Editar Meta",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
-                    );
 
-                Navigator.pop(context);
-              },
-              child: const Text(
-                "Guardar",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ],
-  ),
+                      const SizedBox(height: 8),
 
+                      Text(
+                        "Actualiza la información de tu meta",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // ================= NOMBRE =================
+                      TextField(
+                        controller: nombre,
+                        onChanged: (_) => setStateDialog(() {}),
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: "Nombre",
+                          prefixIcon: Icon(
+                            Icons.flag_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          labelStyle: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                          hintText: "Ej: Viaje a Japón",
+                          hintStyle: TextStyle(
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                          filled: true,
+                          fillColor: isDark
+                              ? const Color(0xFF2A2A2A)
+                              : const Color(0xFFF5F5F5),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 18,
+                            horizontal: 16,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: nombreError
+                                  ? Colors.redAccent
+                                  : Colors.transparent,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: nombreError
+                                  ? Colors.redAccent
+                                  : Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      if (nombreError)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8, left: 4),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Este campo es obligatorio",
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 18),
+
+                      // ================= MONTO =================
+                      TextField(
+                        controller: montoMeta,
+                        onChanged: (_) => setStateDialog(() {}),
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: "Monto objetivo",
+                          prefixIcon: Icon(
+                            Icons.attach_money_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          labelStyle: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                          hintText: "Ej: 5000000",
+                          hintStyle: TextStyle(
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                          filled: true,
+                          fillColor: isDark
+                              ? const Color(0xFF2A2A2A)
+                              : const Color(0xFFF5F5F5),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 18,
+                            horizontal: 16,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: montoError
+                                  ? Colors.redAccent
+                                  : Colors.transparent,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: montoError
+                                  ? Colors.redAccent
+                                  : Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      if (montoError)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8, left: 4),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Este campo es obligatorio",
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 18),
+
+                      // ================= AHORRO =================
+                      TextField(
+                        controller: ahorroMensual,
+                        onChanged: (_) => setStateDialog(() {}),
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: "Ahorro mensual",
+                          prefixIcon: Icon(
+                            Icons.trending_up_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          labelStyle: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                          hintText: "Ej: 300000",
+                          hintStyle: TextStyle(
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                          filled: true,
+                          fillColor: isDark
+                              ? const Color(0xFF2A2A2A)
+                              : const Color(0xFFF5F5F5),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 18,
+                            horizontal: 16,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: ahorroError
+                                  ? Colors.redAccent
+                                  : Colors.transparent,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: ahorroError
+                                  ? Colors.redAccent
+                                  : Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      if (ahorroError)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8, left: 4),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Este campo es obligatorio",
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 30),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                side: BorderSide(
+                                  color:
+                                      isDark ? Colors.white24 : Colors.black12,
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                "Cancelar",
+                                style: TextStyle(
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black87,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onPressed: () {
+                                setStateDialog(
+                                    () => showValidationErrors = true);
+
+                                if (nombre.text.trim().isEmpty ||
+                                    montoMeta.text.trim().isEmpty ||
+                                    ahorroMensual.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Completa los campos obligatorios",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                context.read<AuthProvider>().editarMeta(
+                                      index,
+                                      MetaAhorro(
+                                        nombre: nombre.text,
+                                        montoMeta: double.parse(montoMeta.text),
+                                        ahorroMensual:
+                                            double.parse(ahorroMensual.text),
+                                        montoActual: meta.montoActual,
+                                        aportes: meta.aportes,
+                                      ),
+                                    );
+
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                "Guardar",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -5051,7 +5069,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     labelText: "Monto",
                     prefixIcon: const Icon(Icons.attach_money_rounded),
                     filled: true,
-                    fillColor: isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+                    fillColor:
+                        isDark ? Colors.black12 : const Color(0xFFF8FAFC),
                     border: _metaBorder(invalid),
                     enabledBorder: _metaBorder(invalid),
                     focusedBorder: _metaBorder(invalid),
@@ -5074,7 +5093,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         return;
                       }
 
-                      context.read<AuthProvider>().agregarDineroMeta(index, monto);
+                      context
+                          .read<AuthProvider>()
+                          .agregarDineroMeta(index, monto);
                       Navigator.pop(context);
                       _showTopNotice(
                         "Monto agregado a la meta",
@@ -5107,180 +5128,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final controller = TextEditingController();
 
     showDialog(
-  context: context,
-  builder: (_) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+      context: context,
+      builder: (_) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Dialog(
-      backgroundColor:
-          isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.account_balance_wallet_rounded,
-                size: 32,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            Text(
-              "Agregar dinero",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              "Ingresa el monto que deseas añadir",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark
-                    ? Colors.white70
-                    : Colors.black54,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 18,
-              ),
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.attach_money_rounded,
-                  color:
-                      Theme.of(context).colorScheme.primary,
-                ),
-                hintText: "Ej: 50000",
-                hintStyle: TextStyle(
-                  color: isDark
-                      ? Colors.white38
-                      : Colors.black38,
-                ),
-                filled: true,
-                fillColor: isDark
-                    ? const Color(0xFF2A2A2A)
-                    : const Color(0xFFF5F5F5),
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 18,
-                  horizontal: 16,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide(
-                    color:
-                        Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            Row(
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(
-                        color: isDark
-                            ? Colors.white24
-                            : Colors.black12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(16),
-                      ),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.account_balance_wallet_rounded,
+                    size: 32,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  "Agregar dinero",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Ingresa el monto que deseas añadir",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 18,
+                  ),
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.attach_money_rounded,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      "Cancelar",
-                      style: TextStyle(
-                        color: isDark
-                            ? Colors.white70
-                            : Colors.black87,
+                    hintText: "Ej: 50000",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                    filled: true,
+                    fillColor: isDark
+                        ? const Color(0xFF2A2A2A)
+                        : const Color(0xFFF5F5F5),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                      horizontal: 16,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
                       ),
                     ),
                   ),
                 ),
-
-                const SizedBox(width: 14),
-
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(16),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(
+                            color: isDark ? Colors.white24 : Colors.black12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          "Cancelar",
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
                       ),
                     ),
-                    onPressed: () {
-                      final monto =
-                          double.tryParse(controller.text) ?? 0;
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: () {
+                          final monto = double.tryParse(controller.text) ?? 0;
 
-                      context
-                          .read<AuthProvider>()
-                          .agregarDineroMeta(index, monto);
+                          context
+                              .read<AuthProvider>()
+                              .agregarDineroMeta(index, monto);
 
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      "Guardar",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          "Guardar",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
-  },
-);
   }
 }
