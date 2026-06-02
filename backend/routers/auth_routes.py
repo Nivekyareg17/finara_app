@@ -16,7 +16,7 @@ from datetime import datetime
 from auth import create_access_token, require_admin
 from pydantic import BaseModel
 from fastapi import UploadFile, File
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 import schemas
 import threading
 
@@ -270,10 +270,23 @@ def verify_redirect(
     token: str
 ):
 
-    return RedirectResponse(
-        url=f"finara://app/verify-email?token={token}",
-        status_code=302
-    )
+    return HTMLResponse(f"""
+    <html>
+    <body>
+
+    <script>
+        window.location.href =
+        "finara://app/verify-email?token={token}";
+
+        setTimeout(function() {{
+            document.body.innerHTML =
+            "<h2>Si la app no abrió, vuelve a Finara manualmente.</h2>";
+        }}, 2500);
+    </script>
+
+    </body>
+    </html>
+    """)
 
 
 @router.get("/reset")
@@ -281,10 +294,19 @@ def reset_redirect(
     token: str
 ):
 
-    return RedirectResponse(
-        url=f"finara://app/reset-password?token={token}",
-        status_code=302
-    )
+    return HTMLResponse(f"""
+    <html>
+    <body>
+
+    <script>
+        window.location.href =
+        "finara://app/reset-password?token={token}";
+
+    </script>
+
+    </body>
+    </html>
+    """)
 
 
 @router.post("/upload-profile-picture")

@@ -73,6 +73,9 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleLink(Uri uri) {
+
+    print("DEEP LINK RECIBIDO: $uri");
+    
     final token = uri.queryParameters["token"];
 
     if (token == null) return;

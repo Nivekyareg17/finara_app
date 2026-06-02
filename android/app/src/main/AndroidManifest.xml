@@ -27,7 +27,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <intent-filter>
+            <intent-filter android:autoVerify="false">
 
                 <action android:name="android.intent.action.VIEW"/>
 
@@ -35,8 +35,7 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
 
                 <data
-                    android:scheme="finara"
-                    android:host="app"/>
+                    android:scheme="finara"/>
 
             </intent-filter>
 
