@@ -391,7 +391,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
       _isNoteReadOnly = false;
     }
 
-    bool isSaving = false; // Estado local para bloquear el botón
+    bool isSaving = false; 
 
     showModalBottomSheet(
       context: context,
@@ -969,15 +969,24 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                               bottomLeft: Radius.circular(isUser ? 16 : 4),
                               bottomRight: Radius.circular(isUser ? 4 : 16)),
                           border: Border.all(
-                              color: isUser ? _green.withOpacity(0.2) : _border,
+                            
+                              color: isUser ? _green.withAlpha(51) : _border,
                               width: 1)),
-                      child: Text(msg.text, // <-- Este NO lo cambiamos a TranslatedText para proteger los mensajes del chat
-                          style: TextStyle(
-                              color: _textPrim, fontSize: 14, height: 1.5)))),
+                      child: MarkdownBody(
+                        data: msg.text,
+                        selectable: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: TextStyle(color: _textPrim, fontSize: 14, height: 1.5),
+                          strong: TextStyle(color: _textPrim, fontSize: 14, fontWeight: FontWeight.bold),
+                          h1: TextStyle(color: _textPrim, fontSize: 22, fontWeight: FontWeight.bold),
+                          h2: TextStyle(color: _textPrim, fontSize: 20, fontWeight: FontWeight.bold),
+                          h3: TextStyle(color: _textPrim, fontSize: 18, fontWeight: FontWeight.bold),
+                          listBullet: TextStyle(color: _textPrim, fontSize: 14),
+                        ),
+                      ))),
               if (isUser) const SizedBox(width: 8),
-            ]));
-  }
-
+            ])); 
+}
   // ── TYPING INDICATOR ──────────────────────────────
   Widget _buildTypingIndicator() {
     return Padding(
