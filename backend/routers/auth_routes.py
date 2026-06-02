@@ -195,7 +195,9 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.refresh(reset)
 
 
-    link = f"finara://reset-password?token={token}"
+    link = (
+        f"https://finaraapp.online/reset?token={token}"
+    )
 
     send_email(data.email, link)
 
