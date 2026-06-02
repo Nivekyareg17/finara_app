@@ -16,6 +16,7 @@ from datetime import datetime
 from auth import create_access_token, require_admin
 from pydantic import BaseModel
 from fastapi import UploadFile, File
+from fastapi.responses import RedirectResponse
 import schemas
 import threading
 
@@ -97,7 +98,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
 
     link = (
-        f"finara://verify-email?token={token}"
+        f"https://finaraapp.online/verify?token={token}"
     )
 
     print("VERIFY TOKEN:", token)
@@ -260,6 +261,16 @@ def verify_email(
         "msg":
         "Correo verificado correctamente"
     }
+
+
+@router.get("/verify")
+def verify_redirect(
+    token: str
+):
+
+    return RedirectResponse(
+        url=f"finara://verify-email?token={token}"
+    )
 
 
 @router.post("/upload-profile-picture")
