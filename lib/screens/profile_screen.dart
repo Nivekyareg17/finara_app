@@ -336,7 +336,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (raw == null || raw.isEmpty) return {};
     final decoded = jsonDecode(raw);
     if (decoded is! Map) return {};
-    return decoded.map((key, value) => MapEntry(key.toString(), value.toString()));
+    return decoded
+        .map((key, value) => MapEntry(key.toString(), value.toString()));
   }
 
   Future<void> _saveCategoryIcon(String categoryId, String iconKey) async {
@@ -1018,8 +1019,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _showProfileInfoSheet();
                     },
                   ),
-
-                 
                 ],
               ),
             ),
@@ -1473,8 +1472,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     final bool isFuture = t.isFutureMovement;
                     final categoryName =
                         getCategoryName(int.tryParse(t.categoryId) ?? 0);
-                    final category =
-                        _categoryById(int.tryParse(t.categoryId));
+                    final category = _categoryById(int.tryParse(t.categoryId));
                     final catData = _getCategoryData(
                       categoryName,
                       iconKey: category?.icon,
@@ -2094,13 +2092,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, constraints) {
         final data =
             getMovimientosPorCategoria(selectedChartType).entries.toList();
-        final maxValue = data.fold<double>(0, (prev, item) => math.max(prev, item.value));
+        final maxValue =
+            data.fold<double>(0, (prev, item) => math.max(prev, item.value));
         final chartWidth = data.isEmpty
             ? constraints.maxWidth
             : (data.length * 74.0)
                 .clamp(constraints.maxWidth, 900.0)
                 .toDouble();
-        final maxY = maxValue <= 0 ? 1.0 : (maxValue * 1.15).clamp(1.0, double.infinity);
+        final maxY =
+            maxValue <= 0 ? 1.0 : (maxValue * 1.15).clamp(1.0, double.infinity);
         final leftLabelFormatter = NumberFormat.compact(locale: 'es_CO');
         final leftSymbol = currencySymbols[baseCurrency] ?? baseCurrency;
 
@@ -2120,9 +2120,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: SizedBox(
                       width: chartWidth,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 14, right: 4, left: 4),
+                        padding:
+                            const EdgeInsets.only(top: 14, right: 4, left: 4),
                         child: BarChart(
-                          swapAnimationDuration: const Duration(milliseconds: 750),
+                          swapAnimationDuration:
+                              const Duration(milliseconds: 750),
                           swapAnimationCurve: Curves.easeOutCubic,
                           BarChartData(
                             maxY: maxY,
@@ -2167,14 +2169,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   reservedSize: 60,
                                   interval: maxY / 4,
                                   getTitlesWidget: (value, meta) {
-                                    final label = leftLabelFormatter.format(value);
+                                    final label =
+                                        leftLabelFormatter.format(value);
                                     return Padding(
                                       padding: const EdgeInsets.only(right: 6),
                                       child: Text(
                                         '$leftSymbol$label',
                                         textAlign: TextAlign.right,
                                         style: TextStyle(
-                                          color: isDark ? Colors.white70 : Colors.grey[700],
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.grey[700],
                                           fontSize: 10,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -2429,817 +2434,828 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           25,
                           MediaQuery.of(context).viewInsets.bottom + 32,
                         ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // TÃTULO
-                          Center(
-                            child: Text(
-                              edit == null
-                                  ? "Nuevo Movimiento"
-                                  : "Editar Movimiento",
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ), // Center
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          // SELECTOR GASTO / INGRESO
-                          Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.black26 : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(15),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // TÃTULO
+                            Center(
+                              child: Text(
+                                edit == null
+                                    ? "Nuevo Movimiento"
+                                    : "Editar Movimiento",
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ), // Center
                             ),
-                            child: Row(
-                              children: [
-                                _buildTypeButton(
-                                    "gasto",
-                                    type,
-                                    (v) => setStateDialog(() {
-                                          type = v;
-                                          selectedCategoryId = null;
-                                        }),
-                                    isDark),
-                                _buildTypeButton(
-                                    "ingreso",
-                                    type,
-                                    (v) => setStateDialog(() {
-                                          type = v;
-                                          selectedCategoryId = null;
-                                        }),
-                                    isDark),
+
+                            const SizedBox(height: 25),
+
+                            // SELECTOR GASTO / INGRESO
+                            Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color:
+                                    isDark ? Colors.black26 : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                children: [
+                                  _buildTypeButton(
+                                      "gasto",
+                                      type,
+                                      (v) => setStateDialog(() {
+                                            type = v;
+                                            selectedCategoryId = null;
+                                          }),
+                                      isDark),
+                                  _buildTypeButton(
+                                      "ingreso",
+                                      type,
+                                      (v) => setStateDialog(() {
+                                            type = v;
+                                            selectedCategoryId = null;
+                                          }),
+                                      isDark),
+                                ],
+                              ), // Row
+                            ),
+
+                            const SizedBox(height: 35),
+
+                            // CAMPO MONTO
+
+                            const Center(
+                              child: TranslatedText(
+                                "Ingresar monto",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                            TextField(
+                              controller: amount,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              textAlign: TextAlign.center,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                CurrencyInputFormatter(),
                               ],
-                            ), // Row
-                          ),
-
-                          const SizedBox(height: 35),
-
-                          // CAMPO MONTO
-
-                          const Center(
-                            child: TranslatedText(
-                              "Ingresar monto",
-                              style: TextStyle(color: Colors.grey),
+                              style: const TextStyle(
+                                fontSize: 45,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF064E3B),
+                              ),
+                              // DESPUÉS
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.attach_money,
+                                    size: 35, color: Color(0xFF064E3B)),
+                                hintText: "0.00",
+                                border: InputBorder.none,
+                                errorText: (showValidationErrors &&
+                                        amount.text.trim().isNotEmpty &&
+                                        amountValue == 0)
+                                    ? "Ingresa un monto válido"
+                                    : null,
+                              ),
                             ),
-                          ),
-                          TextField(
-                            controller: amount,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            textAlign: TextAlign.center,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CurrencyInputFormatter(),
-                            ],
-                            style: const TextStyle(
-                              fontSize: 45,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF064E3B),
-                            ),
-                            // DESPUÉS
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.attach_money,
-                                  size: 35, color: Color(0xFF064E3B)),
-                              hintText: "0.00",
-                              border: InputBorder.none,
-                              errorText: (showValidationErrors &&
-                                      amount.text.trim().isNotEmpty &&
-                                      amountValue == 0)
-                                  ? "Ingresa un monto válido"
-                                  : null,
-                            ),
-                          ),
 
-                          const SizedBox(height: 25),
+                            const SizedBox(height: 25),
 
-                          // SELECTOR CATEGORA
-                          const TranslatedText("Categoria",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey)),
-                          const SizedBox(height: 10),
+                            // SELECTOR CATEGORA
+                            const TranslatedText("Categoria",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey)),
+                            const SizedBox(height: 10),
 
-                          // 1. Btn para crear nueva
-                          TextButton(
-                            onPressed: () async {
-                              final nuevaCategoria =
-                                  await _mostrarDialogoCategoriaBonita();
-                              String? nueva = nuevaCategoria?["name"];
-                              final nuevoIcono =
-                                  nuevaCategoria?["icon"] ?? "category";
+                            // 1. Btn para crear nueva
+                            TextButton(
+                              onPressed: () async {
+                                final nuevaCategoria =
+                                    await _mostrarDialogoCategoriaBonita();
+                                String? nueva = nuevaCategoria?["name"];
+                                final nuevoIcono =
+                                    nuevaCategoria?["icon"] ?? "category";
 
-                              if (nueva != null) {
-                                nueva = nueva.trim();
-                              }
-
-                              if (nueva != null && nueva.isNotEmpty) {
-                                final nuevaMoneda =
-                                    await _showCurrencyPicker(baseCurrency);
-                                if (nuevaMoneda == null) return;
-
-                                // Validación local: usamos ignoreCase para mayor seguridad
-                                if (localCategories.any((c) =>
-                                    c.type == type &&
-                                    c.name.trim().toLowerCase() ==
-                                        nueva!.toLowerCase())) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Esa categoria ya existe"),
-                                    ),
-                                  );
-                                  return;
+                                if (nueva != null) {
+                                  nueva = nueva.trim();
                                 }
 
-                                final auth = context.read<AuthProvider>();
-                                bool success = await ApiService.createCategory(
-                                  auth.token!,
-                                  nueva,
-                                  type,
-                                  nuevaMoneda,
-                                  icon: nuevoIcono,
-                                );
+                                if (nueva != null && nueva.isNotEmpty) {
+                                  final nuevaMoneda =
+                                      await _showCurrencyPicker(baseCurrency);
+                                  if (nuevaMoneda == null) return;
 
-                                if (!success) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          "No se pudo crear la categoría. Intenta de nuevo."),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                await loadCategories(); // Recarga la lista global 'categories'
-
-                                setStateDialog(() {
-                                  // ACTUALIZACIÓN CRÍTICA:
-                                  // 1. Sincronizamos la lista local con la global recién cargada
-                                  localCategories = List.from(categories);
-
-                                  // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
-                                  final filtered = localCategories
-                                      .where((c) => c.type == type)
-                                      .toList();
-
-                                  if (filtered.isNotEmpty) {
-                                    // 3. Intentamos encontrar la que acabamos de crear por nombre
-                                    // (Es más seguro que .last si la lista venga ordenada del servidor)
-                                    final creada = filtered.firstWhere(
-                                      (c) =>
-                                          c.name.trim().toLowerCase() ==
-                                          nueva!.toLowerCase(),
-                                      orElse: () => filtered.last,
+                                  // Validación local: usamos ignoreCase para mayor seguridad
+                                  if (localCategories.any((c) =>
+                                      c.type == type &&
+                                      c.name.trim().toLowerCase() ==
+                                          nueva!.toLowerCase())) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text("Esa categoria ya existe"),
+                                      ),
                                     );
+                                    return;
+                                  }
+
+                                  final auth = context.read<AuthProvider>();
+                                  bool success =
+                                      await ApiService.createCategory(
+                                    auth.token!,
+                                    nueva,
+                                    type,
+                                    nuevaMoneda,
+                                    icon: nuevoIcono,
+                                  );
+
+                                  if (!success) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            "No se pudo crear la categoría. Intenta de nuevo."),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  await loadCategories(); // Recarga la lista global 'categories'
+
+                                  setStateDialog(() {
+                                    // ACTUALIZACIÓN CRÍTICA:
+                                    // 1. Sincronizamos la lista local con la global recién cargada
+                                    localCategories = List.from(categories);
+
+                                    // 2. Filtramos inmediatamente para que el Dropdown vea el cambio
+                                    final filtered = localCategories
+                                        .where((c) => c.type == type)
+                                        .toList();
+
+                                    if (filtered.isNotEmpty) {
+                                      // 3. Intentamos encontrar la que acabamos de crear por nombre
+                                      // (Es más seguro que .last si la lista venga ordenada del servidor)
+                                      final creada = filtered.firstWhere(
+                                        (c) =>
+                                            c.name.trim().toLowerCase() ==
+                                            nueva!.toLowerCase(),
+                                        orElse: () => filtered.last,
+                                      );
                                       _saveCategoryCurrency(
                                           creada.id, nuevaMoneda);
                                       // Save the selected icon locally so it appears immediately in transactions
                                       _saveCategoryIcon(creada.id, nuevoIcono);
-                                    selectedCategoryId = int.parse(creada.id);
-                                  }
-                                });
+                                      selectedCategoryId = int.parse(creada.id);
+                                    }
+                                  });
 
-                                _showTopNotice(
-                                  "Categoría creada correctamente",
-                                  isError: false,
-                                  icon: Icons.check_circle_rounded,
-                                );
-                              }
-                            },
-                            child: const Text("Agregar categoria",
-                                style: TextStyle(color: Colors.green)),
-                          ),
+                                  _showTopNotice(
+                                    "Categoría creada correctamente",
+                                    isError: false,
+                                    icon: Icons.check_circle_rounded,
+                                  );
+                                }
+                              },
+                              child: const Text("Agregar categoria",
+                                  style: TextStyle(color: Colors.green)),
+                            ),
 
 // 2. Fila con Dropdown + Editar + Eliminar
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? Colors.black12
-                                        : Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(15),
-                                    border:
-                                        Border.all(color: Colors.grey[200]!),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 15),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Colors.black12
+                                          : Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(15),
+                                      border:
+                                          Border.all(color: Colors.grey[200]!),
+                                    ),
+                                    child: DropdownButton<int>(
+                                      value: selectedCategoryId,
+                                      isExpanded: true,
+                                      underline: const SizedBox(),
+                                      icon:
+                                          const Icon(Icons.keyboard_arrow_down),
+                                      // IMPORTANTE: AsegÃºrate de que filteredCategories se re-calcule
+                                      // antes de este punto en el build del diÃ¡logo.
+                                      items: localCategories
+                                          .where((c) =>
+                                              c.type ==
+                                              type) // Filtramos aquÃ­ directamente para evitar desfases
+                                          .map((cat) {
+                                        return DropdownMenuItem<int>(
+                                          value: int.parse(cat.id),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                _categoryIconOption(cat.icon)[
+                                                    "icon"] as IconData,
+                                                color: _categoryIconOption(
+                                                    cat.icon)["color"] as Color,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(child: Text(cat.name)),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (v) {
+                                        setStateDialog(() {
+                                          selectedCategoryId = v;
+                                          if (edit == null && v != null) {
+                                            selectedMovementCurrency =
+                                                _categoryCurrencyById(v);
+                                          }
+                                        });
+                                      },
+                                    ),
                                   ),
-                                  child: DropdownButton<int>(
-                                    value: selectedCategoryId,
-                                    isExpanded: true,
-                                    underline: const SizedBox(),
-                                    icon: const Icon(Icons.keyboard_arrow_down),
-                                    // IMPORTANTE: AsegÃºrate de que filteredCategories se re-calcule
-                                    // antes de este punto en el build del diÃ¡logo.
-                                    items: localCategories
-                                        .where((c) =>
-                                            c.type ==
-                                            type) // Filtramos aquÃ­ directamente para evitar desfases
-                                        .map((cat) {
-                                      return DropdownMenuItem<int>(
-                                        value: int.parse(cat.id),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              _categoryIconOption(
-                                                      cat.icon)["icon"]
-                                                  as IconData,
-                                              color: _categoryIconOption(
-                                                      cat.icon)["color"]
-                                                  as Color,
-                                              size: 18,
+                                ),
+                                if (selectedCategoryId != null) ...[
+                                  // BOTÃ“N EDITAR
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined,
+                                        color: Colors.blueAccent),
+                                    onPressed: () async {
+                                      // Buscamos en localCategories directamente
+                                      final catActual =
+                                          localCategories.firstWhere(
+                                        (c) =>
+                                            int.parse(c.id) ==
+                                            selectedCategoryId,
+                                      );
+
+                                      final categoriaEditada =
+                                          await _mostrarDialogoCategoriaBonita(
+                                        valorInicial: catActual.name,
+                                        iconInicial: catActual.icon,
+                                      );
+                                      final nuevoNombre =
+                                          categoriaEditada?["name"];
+                                      final nuevoIcono =
+                                          categoriaEditada?["icon"] ??
+                                              catActual.icon;
+
+                                      if (nuevoNombre != null &&
+                                          nuevoNombre.isNotEmpty) {
+                                        if (localCategories.any((c) =>
+                                            c.id != catActual.id &&
+                                            c.type == type &&
+                                            c.name.toLowerCase() ==
+                                                nuevoNombre.toLowerCase())) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  "Esa categoría ya existe"),
                                             ),
-                                            const SizedBox(width: 8),
-                                            Expanded(child: Text(cat.name)),
+                                          );
+                                          return;
+                                        }
+
+                                        final auth =
+                                            context.read<AuthProvider>();
+                                        bool success =
+                                            await ApiService.updateCategory(
+                                          auth.token!,
+                                          selectedCategoryId!,
+                                          nuevoNombre,
+                                          type,
+                                          catActual.currency,
+                                          icon: nuevoIcono,
+                                        );
+                                        if (success) {
+                                          await loadCategories();
+                                          setStateDialog(() {
+                                            localCategories =
+                                                List.from(categories);
+                                          });
+                                          _showTopNotice(
+                                            "Categoría actualizada correctamente",
+                                            isError: false,
+                                            icon: Icons.check_circle_rounded,
+                                          );
+                                        } else {
+                                          _showTopNotice(
+                                            "Error al actualizar la categoría",
+                                            isError: true,
+                                            icon: Icons.error_outline_rounded,
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                  // BOTÃ“N ELIMINAR
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline,
+                                        color: Colors.redAccent),
+                                    onPressed: () async {
+                                      bool? confirmar = await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text(
+                                              "¿Eliminar categoría?"),
+                                          content: const Text(
+                                              "Esta acción no se puede deshacer."),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, false),
+                                              child: const Text("Cancelar"),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, true),
+                                              child: const Text("Eliminar",
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                            ),
                                           ],
                                         ),
                                       );
-                                    }).toList(),
-                                    onChanged: (v) {
-                                      setStateDialog(() {
-                                        selectedCategoryId = v;
-                                        if (edit == null && v != null) {
-                                          selectedMovementCurrency =
-                                              _categoryCurrencyById(v);
+
+                                      if (confirmar == true) {
+                                        final auth =
+                                            context.read<AuthProvider>();
+                                        bool success =
+                                            await ApiService.deleteCategory(
+                                          auth.token!,
+                                          selectedCategoryId!,
+                                        );
+                                        if (success) {
+                                          await loadCategories();
+                                          setStateDialog(() {
+                                            localCategories =
+                                                List.from(categories);
+                                            selectedCategoryId =
+                                                null; // Reset de selección
+                                          });
+                                          _showTopNotice(
+                                            "Categoría eliminada correctamente",
+                                            isError: false,
+                                            icon: Icons.check_circle_rounded,
+                                          );
+                                        } else {
+                                          _showTopNotice(
+                                            "Error al eliminar la categoría",
+                                            isError: true,
+                                            icon: Icons.error_outline_rounded,
+                                          );
                                         }
-                                      });
+                                      }
                                     },
                                   ),
-                                ),
-                              ),
-                              if (selectedCategoryId != null) ...[
-                                // BOTÃ“N EDITAR
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined,
-                                      color: Colors.blueAccent),
-                                  onPressed: () async {
-                                    // Buscamos en localCategories directamente
-                                    final catActual =
-                                        localCategories.firstWhere(
-                                      (c) =>
-                                          int.parse(c.id) == selectedCategoryId,
-                                    );
-
-                                    final categoriaEditada =
-                                        await _mostrarDialogoCategoriaBonita(
-                                      valorInicial: catActual.name,
-                                      iconInicial: catActual.icon,
-                                    );
-                                    final nuevoNombre =
-                                        categoriaEditada?["name"];
-                                    final nuevoIcono =
-                                        categoriaEditada?["icon"] ??
-                                            catActual.icon;
-
-                                    if (nuevoNombre != null &&
-                                        nuevoNombre.isNotEmpty) {
-                                      if (localCategories.any((c) =>
-                                          c.id != catActual.id &&
-                                          c.type == type &&
-                                          c.name.toLowerCase() ==
-                                              nuevoNombre.toLowerCase())) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content:
-                                                Text("Esa categoría ya existe"),
-                                          ),
-                                        );
-                                        return;
-                                      }
-
-                                      final auth = context.read<AuthProvider>();
-                                      bool success =
-                                          await ApiService.updateCategory(
-                                        auth.token!,
-                                        selectedCategoryId!,
-                                        nuevoNombre,
-                                        type,
-                                        catActual.currency,
-                                        icon: nuevoIcono,
-                                      );
-                                      if (success) {
-                                        await loadCategories();
-                                        setStateDialog(() {
-                                          localCategories =
-                                              List.from(categories);
-                                        });
-                                        _showTopNotice(
-                                          "Categoría actualizada correctamente",
-                                          isError: false,
-                                          icon: Icons.check_circle_rounded,
-                                        );
-                                      } else {
-                                        _showTopNotice(
-                                          "Error al actualizar la categoría",
-                                          isError: true,
-                                          icon: Icons.error_outline_rounded,
-                                        );
-                                      }
-                                    }
-                                  },
-                                ),
-                                // BOTÃ“N ELIMINAR
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline,
-                                      color: Colors.redAccent),
-                                  onPressed: () async {
-                                    bool? confirmar = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title:
-                                            const Text("¿Eliminar categoría?"),
-                                        content: const Text(
-                                            "Esta acción no se puede deshacer."),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(ctx, false),
-                                            child: const Text("Cancelar"),
-                                          ),
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(ctx, true),
-                                            child: const Text("Eliminar",
-                                                style: TextStyle(
-                                                    color: Colors.red)),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-
-                                    if (confirmar == true) {
-                                      final auth = context.read<AuthProvider>();
-                                      bool success =
-                                          await ApiService.deleteCategory(
-                                        auth.token!,
-                                        selectedCategoryId!,
-                                      );
-                                      if (success) {
-                                        await loadCategories();
-                                        setStateDialog(() {
-                                          localCategories =
-                                              List.from(categories);
-                                          selectedCategoryId =
-                                              null; // Reset de selección
-                                        });
-                                        _showTopNotice(
-                                          "Categoría eliminada correctamente",
-                                          isError: false,
-                                          icon: Icons.check_circle_rounded,
-                                        );
-                                      } else {
-                                        _showTopNotice(
-                                          "Error al eliminar la categoría",
-                                          isError: true,
-                                          icon: Icons.error_outline_rounded,
-                                        );
-                                      }
-                                    }
-                                  },
-                                ),
+                                ],
                               ],
-                            ],
-                          ),
+                            ),
 
-                          const SizedBox(height: 25),
+                            const SizedBox(height: 25),
 
-                          const TranslatedText("Moneda del movimiento",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey)),
-                          const SizedBox(height: 10),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(15),
-                            onTap: () async {
-                              final selected = await _showCurrencyPicker(
-                                selectedMovementCurrency,
-                              );
-                              if (selected == null) return;
-                              setStateDialog(() {
-                                selectedMovementCurrency = selected;
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color:
-                                    isDark ? Colors.black12 : Colors.grey[50],
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: Colors.grey[200]!),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.currency_exchange_rounded,
-                                      color: Colors.green, size: 20),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      _currencyLabel(selectedMovementCurrency),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
+                            const TranslatedText("Moneda del movimiento",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey)),
+                            const SizedBox(height: 10),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(15),
+                              onTap: () async {
+                                final selected = await _showCurrencyPicker(
+                                  selectedMovementCurrency,
+                                );
+                                if (selected == null) return;
+                                setStateDialog(() {
+                                  selectedMovementCurrency = selected;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isDark ? Colors.black12 : Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.grey[200]!),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.currency_exchange_rounded,
+                                        color: Colors.green, size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _currencyLabel(
+                                            selectedMovementCurrency),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const Icon(Icons.keyboard_arrow_down_rounded),
-                                ],
+                                    const Icon(
+                                        Icons.keyboard_arrow_down_rounded),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 25),
+                            const SizedBox(height: 25),
 
-                          //AQUÃ REGRESA LA FECHA
-                          InkWell(
-                            borderRadius: BorderRadius.circular(22),
-                            onTap: () {
-                              setStateDialog(() {
-                                allowFutureMovement = !allowFutureMovement;
-                                final parsed = DateFormat("MM/dd/yyyy")
-                                    .tryParse(dateController.text);
-                                final todayOnly = DateTime(
-                                    today.year, today.month, today.day);
-                                if (!allowFutureMovement &&
-                                    parsed != null &&
-                                    parsed.isAfter(todayOnly)) {
-                                  dateController.text =
-                                      DateFormat("MM/dd/yyyy").format(today);
-                                }
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 220),
-                              curve: Curves.easeOutCubic,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: allowFutureMovement
-                                      ? [
-                                          const Color(0xFF2563EB),
-                                          const Color(0xFF10B981),
-                                        ]
-                                      : [
-                                          isDark
-                                              ? const Color(0xFF17231F)
-                                              : const Color(0xFFF8FAFC),
-                                          isDark
-                                              ? const Color(0xFF10231E)
-                                              : const Color(0xFFEFF6FF),
-                                        ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                            //AQUÃ REGRESA LA FECHA
+                            InkWell(
+                              borderRadius: BorderRadius.circular(22),
+                              onTap: () {
+                                setStateDialog(() {
+                                  allowFutureMovement = !allowFutureMovement;
+                                  final parsed = DateFormat("MM/dd/yyyy")
+                                      .tryParse(dateController.text);
+                                  final todayOnly = DateTime(
+                                      today.year, today.month, today.day);
+                                  if (!allowFutureMovement &&
+                                      parsed != null &&
+                                      parsed.isAfter(todayOnly)) {
+                                    dateController.text =
+                                        DateFormat("MM/dd/yyyy").format(today);
+                                  }
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: allowFutureMovement
+                                        ? [
+                                            const Color(0xFF2563EB),
+                                            const Color(0xFF10B981),
+                                          ]
+                                        : [
+                                            isDark
+                                                ? const Color(0xFF17231F)
+                                                : const Color(0xFFF8FAFC),
+                                            isDark
+                                                ? const Color(0xFF10231E)
+                                                : const Color(0xFFEFF6FF),
+                                          ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(22),
+                                  border: Border.all(
+                                    color: allowFutureMovement
+                                        ? Colors.transparent
+                                        : const Color(0xFFBFDBFE),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(
-                                  color: allowFutureMovement
-                                      ? Colors.transparent
-                                      : const Color(0xFFBFDBFE),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: allowFutureMovement
-                                          ? Colors.white.withOpacity(0.18)
-                                          : const Color(0xFFDBEAFE),
-                                      borderRadius: BorderRadius.circular(18),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: allowFutureMovement
+                                            ? Colors.white.withOpacity(0.18)
+                                            : const Color(0xFFDBEAFE),
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                      child: Icon(
+                                        type == "ingreso"
+                                            ? Icons.trending_up_rounded
+                                            : Icons.event_available_rounded,
+                                        color: allowFutureMovement
+                                            ? Colors.white
+                                            : const Color(0xFF2563EB),
+                                      ),
                                     ),
-                                    child: Icon(
-                                      type == "ingreso"
-                                          ? Icons.trending_up_rounded
-                                          : Icons.event_available_rounded,
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            type == "ingreso"
+                                                ? "Ingresos futuros"
+                                                : "Gastos futuros",
+                                            style: TextStyle(
+                                              color: allowFutureMovement
+                                                  ? Colors.white
+                                                  : null,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            allowFutureMovement
+                                                ? "Fechas futuras habilitadas"
+                                                : "Toca para permitir fechas futuras",
+                                            style: TextStyle(
+                                              color: allowFutureMovement
+                                                  ? Colors.white70
+                                                  : Colors.black54,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      allowFutureMovement
+                                          ? Icons.check_circle_rounded
+                                          : Icons
+                                              .radio_button_unchecked_rounded,
                                       color: allowFutureMovement
                                           ? Colors.white
                                           : const Color(0xFF2563EB),
                                     ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          type == "ingreso"
-                                              ? "Ingresos futuros"
-                                              : "Gastos futuros",
-                                          style: TextStyle(
-                                            color: allowFutureMovement
-                                                ? Colors.white
-                                                : null,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          allowFutureMovement
-                                              ? "Fechas futuras habilitadas"
-                                              : "Toca para permitir fechas futuras",
-                                          style: TextStyle(
-                                            color: allowFutureMovement
-                                                ? Colors.white70
-                                                : Colors.black54,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(
-                                    allowFutureMovement
-                                        ? Icons.check_circle_rounded
-                                        : Icons.radio_button_unchecked_rounded,
-                                    color: allowFutureMovement
-                                        ? Colors.white
-                                        : const Color(0xFF2563EB),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 18),
-                          const TranslatedText("Fecha",
+                            const SizedBox(height: 18),
+                            const TranslatedText("Fecha",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey)),
+                            const SizedBox(height: 10),
+                            InkWell(
+                              onTap: () async {
+                                final parsedDate = DateFormat("MM/dd/yyyy")
+                                    .tryParse(dateController.text);
+                                final maxDate = allowFutureMovement
+                                    ? DateTime(2101)
+                                    : DateTime(
+                                        today.year,
+                                        today.month,
+                                        today.day,
+                                      );
+                                final safeInitialDate = (parsedDate != null &&
+                                        !parsedDate.isAfter(maxDate))
+                                    ? parsedDate
+                                    : maxDate;
+                                DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: safeInitialDate,
+                                  firstDate: DateTime(2000),
+                                  lastDate: maxDate,
+                                );
+                                if (picked != null) {
+                                  setStateDialog(() => dateController.text =
+                                      DateFormat("MM/dd/yyyy").format(picked));
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isDark ? Colors.black12 : Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.grey[200]!),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.calendar_today,
+                                        color: Colors.green, size: 20),
+                                    const SizedBox(width: 12),
+                                    Text("${dateController.text}"),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 25),
+
+                            //Notas
+                            const TranslatedText("Notas",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey)),
+                            const SizedBox(height: 10),
+                            TextField(
+                              key: notesFieldKey,
+                              controller: desc,
+                              focusNode: notesFocusNode,
+                              onTap: scrollToNotesField,
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey)),
-                          const SizedBox(height: 10),
-                          InkWell(
-                            onTap: () async {
-                              final parsedDate = DateFormat("MM/dd/yyyy")
-                                  .tryParse(dateController.text);
-                              final maxDate = allowFutureMovement
-                                  ? DateTime(2101)
-                                  : DateTime(
-                                      today.year,
-                                      today.month,
-                                      today.day,
-                                    );
-                              final safeInitialDate = (parsedDate != null &&
-                                      !parsedDate.isAfter(maxDate))
-                                  ? parsedDate
-                                  : maxDate;
-                              DateTime? picked = await showDatePicker(
-                                context: context,
-                                initialDate: safeInitialDate,
-                                firstDate: DateTime(2000),
-                                lastDate: maxDate,
-                              );
-                              if (picked != null) {
-                                setStateDialog(() => dateController.text =
-                                    DateFormat("MM/dd/yyyy").format(picked));
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color:
-                                    isDark ? Colors.black12 : Colors.grey[50],
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: Colors.grey[200]!),
+                                color: isDark ? Colors.white : Colors.black87,
+                                fontWeight: FontWeight.w600,
                               ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.calendar_today,
-                                      color: Colors.green, size: 20),
-                                  const SizedBox(width: 12),
-                                  Text("${dateController.text}"),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          //Notas
-                          const TranslatedText("Notas",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey)),
-                          const SizedBox(height: 10),
-                          TextField(
-                            key: notesFieldKey,
-                            controller: desc,
-                            focusNode: notesFocusNode,
-                            onTap: scrollToNotesField,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            cursorColor: Colors.green,
-                            // DESPUÉS
-                            decoration: InputDecoration(
-                              hintText: "Escribe una nota...",
-                              hintStyle: TextStyle(
-                                color:
-                                    isDark ? Colors.white38 : Colors.grey[500],
-                              ),
-                              filled: true,
-                              fillColor: isDark
-                                  ? const Color(0xFF0B1F1B)
-                                  : Colors.grey[50],
-                              errorText: (showValidationErrors &&
-                                      desc.text.trim().isEmpty)
-                                  ? "La descripción es obligatoria"
-                                  : null,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide(
-                                  color: (showValidationErrors &&
-                                          desc.text.trim().isEmpty)
-                                      ? Colors.redAccent
-                                      : isDark
-                                          ? Colors.white.withOpacity(0.12)
-                                          : Colors.grey[200]!,
+                              cursorColor: Colors.green,
+                              // DESPUÉS
+                              decoration: InputDecoration(
+                                hintText: "Escribe una nota...",
+                                hintStyle: TextStyle(
+                                  color: isDark
+                                      ? Colors.white38
+                                      : Colors.grey[500],
                                 ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide(
-                                  color: (showValidationErrors &&
-                                          desc.text.trim().isEmpty)
-                                      ? Colors.redAccent
-                                      : isDark
-                                          ? Colors.white.withOpacity(0.12)
-                                          : Colors.grey[200]!,
+                                filled: true,
+                                fillColor: isDark
+                                    ? const Color(0xFF0B1F1B)
+                                    : Colors.grey[50],
+                                errorText: (showValidationErrors &&
+                                        desc.text.trim().isEmpty)
+                                    ? "La descripción es obligatoria"
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                  borderSide: BorderSide(
+                                    color: (showValidationErrors &&
+                                            desc.text.trim().isEmpty)
+                                        ? Colors.redAccent
+                                        : isDark
+                                            ? Colors.white.withOpacity(0.12)
+                                            : Colors.grey[200]!,
+                                  ),
                                 ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide(
-                                  color: (showValidationErrors &&
-                                          desc.text.trim().isEmpty)
-                                      ? Colors.redAccent
-                                      : Colors.green,
-                                  width: 1.6,
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                  borderSide: BorderSide(
+                                    color: (showValidationErrors &&
+                                            desc.text.trim().isEmpty)
+                                        ? Colors.redAccent
+                                        : isDark
+                                            ? Colors.white.withOpacity(0.12)
+                                            : Colors.grey[200]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                  borderSide: BorderSide(
+                                    color: (showValidationErrors &&
+                                            desc.text.trim().isEmpty)
+                                        ? Colors.redAccent
+                                        : Colors.green,
+                                    width: 1.6,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 35),
-                          // BOTÃ“N GUARDAR
+                            const SizedBox(height: 35),
+                            // BOTÃ“N GUARDAR
 
-                          //(SizedBox despuÃ©s del TextField de Notas)
-                          const SizedBox(height: 30),
+                            //(SizedBox despuÃ©s del TextField de Notas)
+                            const SizedBox(height: 30),
 
-                          SizedBox(
-                            width: double.infinity,
-                            height: 55,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF00C853),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15)),
-                                elevation: 0,
-                              ),
-                              onPressed: isLoadingDialog
-                                  ? null
-                                  : () async {
-                                      // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
-                                      setStateDialog(
-                                          () => showValidationErrors = true);
+                            SizedBox(
+                              width: double.infinity,
+                              height: 55,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF00C853),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15)),
+                                  elevation: 0,
+                                ),
+                                onPressed: isLoadingDialog
+                                    ? null
+                                    : () async {
+                                        // 1. Validar que el monto no estÃ© vacÃ­o o sea 0
+                                        setStateDialog(
+                                            () => showValidationErrors = true);
 
-                                      double montoFinal =
-                                          _parseMoney(amount.text);
-                                      DateTime fechaFinal =
-                                          DateFormat("MM/dd/yyyy")
-                                              .parse(dateController.text);
+                                        double montoFinal =
+                                            _parseMoney(amount.text);
+                                        DateTime fechaFinal =
+                                            DateFormat("MM/dd/yyyy")
+                                                .parse(dateController.text);
 
-                                      // Validar todo junto
-                                      if (selectedCategoryId == null ||
-                                          montoFinal <= 0 ||
-                                          desc.text.trim().isEmpty) {
-                                        _showTopNotice(
-                                          "Completa monto, categoria y descripcion",
-                                          icon: Icons.error_outline_rounded,
-                                        );
-                                        return;
-                                      }
-
-                                      int categoryId = selectedCategoryId!;
-
-                                      if (montoFinal <= 0) {
-                                        _showTopNotice(
-                                          "Por favor ingresa un monto valido",
-                                          icon: Icons.error_outline_rounded,
-                                        );
-                                        return;
-                                      }
-
-                                      if (desc.text.trim().isEmpty) {
-                                        _showTopNotice(
-                                          "Por favor ingresa una descripcion",
-                                          icon: Icons.error_outline_rounded,
-                                        );
-                                        return;
-                                      }
-
-                                      setStateDialog(
-                                          () => isLoadingDialog = true);
-
-                                      final auth = context.read<AuthProvider>();
-
-                                      bool success;
-                                      if (edit == null) {
-                                        // ES NUEVO
-                                        success =
-                                            await ApiService.createTransaction(
-                                          auth.token!,
-                                          type,
-                                          montoFinal,
-                                          desc.text,
-                                          categoryId,
-                                          fechaFinal,
-                                          selectedMovementCurrency,
-                                        );
-                                        if (type == "ingreso") {
-                                          context
-                                              .read<AuthProvider>()
-                                              .actualizarMetasConIngreso(
-                                                  montoFinal);
+                                        // Validar todo junto
+                                        if (selectedCategoryId == null ||
+                                            montoFinal <= 0 ||
+                                            desc.text.trim().isEmpty) {
+                                          _showTopNotice(
+                                            "Completa monto, categoria y descripcion",
+                                            icon: Icons.error_outline_rounded,
+                                          );
+                                          return;
                                         }
-                                      } else {
-                                        // ES EDICIÃ“N
-                                        success =
-                                            await ApiService.updateTransaction(
-                                          auth.token!,
-                                          edit.id!,
-                                          type,
-                                          montoFinal,
-                                          desc.text,
-                                          categoryId,
-                                          fechaFinal,
-                                          selectedMovementCurrency,
-                                        );
-                                      }
 
-                                      if (success) {
-                                        if (!mounted) return;
-                                        Navigator.pop(
-                                            context); // Cierra el formulario
-                                        await loadTransactions(); // Recarga la lista principal
-                                        final savedTransactionId = edit?.id ??
-                                            _findSavedTransactionId(
-                                              type: type,
-                                              amount: montoFinal,
-                                              description: desc.text,
-                                              categoryId: categoryId,
-                                              date: fechaFinal,
-                                            );
-                                        if (savedTransactionId != null) {
-                                          await _saveTransactionCurrency(
-                                            savedTransactionId,
+                                        int categoryId = selectedCategoryId!;
+
+                                        if (montoFinal <= 0) {
+                                          _showTopNotice(
+                                            "Por favor ingresa un monto valido",
+                                            icon: Icons.error_outline_rounded,
+                                          );
+                                          return;
+                                        }
+
+                                        if (desc.text.trim().isEmpty) {
+                                          _showTopNotice(
+                                            "Por favor ingresa una descripcion",
+                                            icon: Icons.error_outline_rounded,
+                                          );
+                                          return;
+                                        }
+
+                                        setStateDialog(
+                                            () => isLoadingDialog = true);
+
+                                        final auth =
+                                            context.read<AuthProvider>();
+
+                                        bool success;
+                                        if (edit == null) {
+                                          // ES NUEVO
+                                          success = await ApiService
+                                              .createTransaction(
+                                            auth.token!,
+                                            type,
+                                            montoFinal,
+                                            desc.text,
+                                            categoryId,
+                                            fechaFinal,
                                             selectedMovementCurrency,
                                           );
-                                          setState(() {
-                                            for (final transaction
-                                                in transactions) {
-                                              if (transaction.id ==
-                                                  savedTransactionId) {
-                                                transaction.currency =
-                                                    selectedMovementCurrency;
-                                              }
-                                            }
-                                          });
+                                          if (type == "ingreso") {
+                                            context
+                                                .read<AuthProvider>()
+                                                .actualizarMetasConIngreso(
+                                                    montoFinal);
+                                          }
+                                        } else {
+                                          // ES EDICIÃ“N
+                                          success = await ApiService
+                                              .updateTransaction(
+                                            auth.token!,
+                                            edit.id!,
+                                            type,
+                                            montoFinal,
+                                            desc.text,
+                                            categoryId,
+                                            fechaFinal,
+                                            selectedMovementCurrency,
+                                          );
                                         }
-                                        _showTopNotice(
-                                          edit == null
-                                              ? "Movimiento creado correctamente"
-                                              : "Movimiento actualizado correctamente",
-                                          isError: false,
-                                          icon: Icons.check_circle_rounded,
-                                        );
-                                      } else {
-                                        setStateDialog(
-                                            () => isLoadingDialog = false);
-                                        _showTopNotice(
-                                          "Error al guardar en el servidor",
-                                          icon: Icons.error_outline_rounded,
-                                        );
-                                      }
-                                    },
-                              child: isLoadingDialog
-                                  ? const CircularProgressIndicator(
-                                      color: Colors.white)
-                                  : TranslatedText(
-                                      edit == null
-                                          ? "Guardar Movimiento"
-                                          : "Actualizar Movimiento",
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+
+                                        if (success) {
+                                          if (!mounted) return;
+                                          Navigator.pop(
+                                              context); // Cierra el formulario
+                                          await loadTransactions(); // Recarga la lista principal
+                                          final savedTransactionId = edit?.id ??
+                                              _findSavedTransactionId(
+                                                type: type,
+                                                amount: montoFinal,
+                                                description: desc.text,
+                                                categoryId: categoryId,
+                                                date: fechaFinal,
+                                              );
+                                          if (savedTransactionId != null) {
+                                            await _saveTransactionCurrency(
+                                              savedTransactionId,
+                                              selectedMovementCurrency,
+                                            );
+                                            setState(() {
+                                              for (final transaction
+                                                  in transactions) {
+                                                if (transaction.id ==
+                                                    savedTransactionId) {
+                                                  transaction.currency =
+                                                      selectedMovementCurrency;
+                                                }
+                                              }
+                                            });
+                                          }
+                                          _showTopNotice(
+                                            edit == null
+                                                ? "Movimiento creado correctamente"
+                                                : "Movimiento actualizado correctamente",
+                                            isError: false,
+                                            icon: Icons.check_circle_rounded,
+                                          );
+                                        } else {
+                                          setStateDialog(
+                                              () => isLoadingDialog = false);
+                                          _showTopNotice(
+                                            "Error al guardar en el servidor",
+                                            icon: Icons.error_outline_rounded,
+                                          );
+                                        }
+                                      },
+                                child: isLoadingDialog
+                                    ? const CircularProgressIndicator(
+                                        color: Colors.white)
+                                    : TranslatedText(
+                                        edit == null
+                                            ? "Guardar Movimiento"
+                                            : "Actualizar Movimiento",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
+                              ),
                             ),
-                          ),
-                          // DropdownButton
-                        ], // Cierre de children
+                            // DropdownButton
+                          ], // Cierre de children
                         ),
                       ),
                     ),
@@ -3444,195 +3460,195 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            _categoryIconOption(selectedIcon)["icon"],
+                            color: _categoryIconOption(selectedIcon)["color"],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            valorInicial == null
+                                ? "Nueva categoria"
+                                : "Editar categoria",
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Organiza tus movimientos con nombres claros e iconos faciles de reconocer.",
+                      style: TextStyle(
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (_) => setStateDialog(() {}),
+                      decoration: InputDecoration(
+                        labelText: "Nombre de categoria",
+                        hintText: "Ej: Transporte, Comida, Nomina",
+                        prefixIcon: const Icon(
+                          Icons.label_outline_rounded,
+                          color: Color(0xFF10B981),
+                        ),
+                        filled: true,
+                        fillColor:
+                            isDark ? Colors.black12 : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: hasError
+                                ? Colors.redAccent
+                                : const Color(0xFFE2E8F0),
+                          ),
                         ),
-                        child: Icon(
-                          _categoryIconOption(selectedIcon)["icon"],
-                          color: _categoryIconOption(selectedIcon)["color"],
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: hasError
+                                ? Colors.redAccent
+                                : const Color(0xFFE2E8F0),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          valorInicial == null
-                              ? "Nueva categoria"
-                              : "Editar categoria",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: hasError
+                                ? Colors.redAccent
+                                : const Color(0xFF10B981),
+                            width: 1.6,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Organiza tus movimientos con nombres claros e iconos faciles de reconocer.",
-                    style: TextStyle(
-                      color: isDark ? Colors.white60 : Colors.black54,
-                      height: 1.3,
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.sentences,
-                    onChanged: (_) => setStateDialog(() {}),
-                    decoration: InputDecoration(
-                      labelText: "Nombre de categoria",
-                      hintText: "Ej: Transporte, Comida, Nomina",
-                      prefixIcon: const Icon(
-                        Icons.label_outline_rounded,
-                        color: Color(0xFF10B981),
-                      ),
-                      filled: true,
-                      fillColor:
-                          isDark ? Colors.black12 : const Color(0xFFF8FAFC),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: hasError
-                              ? Colors.redAccent
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: hasError
-                              ? Colors.redAccent
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: hasError
-                              ? Colors.redAccent
-                              : const Color(0xFF10B981),
-                          width: 1.6,
-                        ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Icono",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.grey,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Icono",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _categoryIconOptions.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 5,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 1,
-                    ),
-                    itemBuilder: (context, index) {
-                      final option = _categoryIconOptions[index];
-                      final isSelected = selectedIcon == option["key"];
-                      final color = option["color"] as Color;
+                    const SizedBox(height: 10),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _categoryIconOptions.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 5,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 1,
+                      ),
+                      itemBuilder: (context, index) {
+                        final option = _categoryIconOptions[index];
+                        final isSelected = selectedIcon == option["key"];
+                        final color = option["color"] as Color;
 
-                      return Tooltip(
-                        message: option["label"].toString(),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: () => setStateDialog(
-                            () => selectedIcon = option["key"].toString(),
-                          ),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? color.withOpacity(0.16)
-                                  : isDark
-                                      ? Colors.black12
-                                      : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
+                        return Tooltip(
+                          message: option["label"].toString(),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => setStateDialog(
+                              () => selectedIcon = option["key"].toString(),
+                            ),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              decoration: BoxDecoration(
                                 color: isSelected
-                                    ? color
-                                    : const Color(0xFFE2E8F0),
-                                width: isSelected ? 1.6 : 1,
+                                    ? color.withOpacity(0.16)
+                                    : isDark
+                                        ? Colors.black12
+                                        : const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? color
+                                      : const Color(0xFFE2E8F0),
+                                  width: isSelected ? 1.6 : 1,
+                                ),
+                              ),
+                              child: Icon(
+                                option["icon"] as IconData,
+                                color: color,
                               ),
                             ),
-                            child: Icon(
-                              option["icon"] as IconData,
-                              color: color,
-                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  if (hasError) ...[
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Este campo es obligatorio.",
-                      style: TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
+                        );
+                      },
                     ),
-                  ],
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          child: const Text("Cancelar"),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setStateDialog(() => showError = true);
-                            if (controller.text.trim().isEmpty) return;
-                            Navigator.pop(context, {
-                              "name": controller.text.trim(),
-                              "icon": selectedIcon,
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            minimumSize: const Size.fromHeight(50),
-                            backgroundColor: const Color(0xFF10B981),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          child: const Text(
-                            "Guardar",
-                            style: TextStyle(fontWeight: FontWeight.w900),
-                          ),
+                    if (hasError) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Este campo es obligatorio.",
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: const Text("Cancelar"),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setStateDialog(() => showError = true);
+                              if (controller.text.trim().isEmpty) return;
+                              Navigator.pop(context, {
+                                "name": controller.text.trim(),
+                                "icon": selectedIcon,
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              minimumSize: const Size.fromHeight(50),
+                              backgroundColor: const Color(0xFF10B981),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: const Text(
+                              "Guardar",
+                              style: TextStyle(fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
