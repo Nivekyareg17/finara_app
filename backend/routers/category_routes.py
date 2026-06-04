@@ -36,10 +36,20 @@ def get_user_from_token(token: str, db: Session) -> User:
 
 
 DEFAULT_CATEGORIES = (
-    {"name": "Salario", "type": "ingreso", "currency": "COP"},
-    {"name": "Otros ingresos", "type": "ingreso", "currency": "COP"},
-    {"name": "Comida", "type": "gasto", "currency": "COP"},
-    {"name": "Transporte", "type": "gasto", "currency": "COP"},
+    {"name": "Salario", "type": "ingreso", "currency": "COP", "icon": "work"},
+    {
+        "name": "Otros ingresos",
+        "type": "ingreso",
+        "currency": "COP",
+        "icon": "add_circle",
+    },
+    {"name": "Comida", "type": "gasto", "currency": "COP", "icon": "restaurant"},
+    {
+        "name": "Transporte",
+        "type": "gasto",
+        "currency": "COP",
+        "icon": "directions_bus",
+    },
 )
 
 
@@ -60,6 +70,7 @@ def ensure_default_categories(user: User, db: Session) -> None:
             name=category["name"],
             type=category["type"],
             currency=category["currency"],
+            icon=category["icon"],
             user_id=user.id,
         ))
         created = True
@@ -105,6 +116,7 @@ def create_category(
         name=category.name.strip(),
         type=category.type,
         currency=category.currency.strip().upper(),
+        icon=category.icon,
         user_id=user.id,
     )
 
@@ -149,6 +161,7 @@ def update_category(
     db_category.name = category_data.name.strip()
     db_category.type = category_data.type
     db_category.currency = category_data.currency.strip().upper()
+    db_category.icon = category_data.icon
 
     db.commit()
     db.refresh(db_category)

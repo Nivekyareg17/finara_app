@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
@@ -36,12 +37,13 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isBlockedByMe = false;
   bool isBlockedByOther = false;
   bool isLoadingBlock = true;
+  int _clearedThroughMessageId = 0;
   Timer? periodicRefresh;
 
   @override
   void initState() {
     super.initState();
-    loadMessages();
+    loadClearedChatState();
     loadBlockStatus();
     periodicRefresh = Timer.periodic(const Duration(seconds: 8), (_) {
       if (!isBlockedByMe && !isBlockedByOther) loadMessages();
@@ -54,6 +56,41 @@ class _ChatScreenState extends State<ChatScreen> {
     controller.dispose();
     scrollController.dispose();
     super.dispose();
+  }
+
+  String get clearedChatPrefsKey => "chat_cleared_through_${widget.userId}";
+
+  Future<void> loadClearedChatState() async {
+    final prefs = await SharedPreferences.getInstance();
+    _clearedThroughMessageId = prefs.getInt(clearedChatPrefsKey) ?? 0;
+    await loadMessages();
+  }
+
+  int _messageId(dynamic message) {
+    final raw = message is Map ? message["id"] : null;
+    if (raw is int) return raw;
+    return int.tryParse(raw?.toString() ?? "") ?? 0;
+  }
+
+  Future<void> clearChatView() async {
+    final maxVisibleMessageId = messages.fold<int>(
+      _clearedThroughMessageId,
+      (maxId, message) {
+        final id = _messageId(message);
+        return id > maxId ? id : maxId;
+      },
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(clearedChatPrefsKey, maxVisibleMessageId);
+
+    if (!mounted) return;
+    setState(() {
+      _clearedThroughMessageId = maxVisibleMessageId;
+      messages = [];
+      controller.clear();
+      isTyping = false;
+    });
   }
 
   ImageProvider? get contactImageProvider {
@@ -166,8 +203,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final data = await ApiService.getMessages(token, widget.userId);
     if (!mounted) return;
 
+    final visibleMessages = data.where((message) {
+      return _messageId(message) > _clearedThroughMessageId;
+    }).toList();
+
     setState(() {
-      messages = data.reversed.toList();
+      messages = visibleMessages.reversed.toList();
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -438,10 +479,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.cleaning_services_rounded),
-                  title: const Text("Limpiar vista"),
-                  onTap: () {
+                  title: const Text("Limpiar chat"),
+                  onTap: () async {
                     Navigator.pop(sheetContext);
-                    setState(() => messages = []);
+                    await clearChatView();
                   },
                 ),
                 ListTile(

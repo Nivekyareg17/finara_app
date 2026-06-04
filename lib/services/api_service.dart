@@ -259,7 +259,12 @@ class ApiService {
 
   // 2. CREAR CATEGORÍA (POST)
   static Future<bool> createCategory(
-      String token, String name, String type, String currency) async {
+    String token,
+    String name,
+    String type,
+    String currency, {
+    String icon = "category",
+  }) async {
     try {
       final url = Uri.parse("$baseUrl/categories/");
 
@@ -274,6 +279,7 @@ class ApiService {
           "name": name.trim(),
           "type": type,
           "currency": currency.toUpperCase(),
+          "icon": icon,
         }),
       );
 
@@ -294,7 +300,13 @@ class ApiService {
 
 // --- ACTUALIZAR CATEGORÍA (PUT) ---
   static Future<bool> updateCategory(
-      String token, int id, String name, String type, String currency) async {
+    String token,
+    int id,
+    String name,
+    String type,
+    String currency, {
+    String icon = "category",
+  }) async {
     try {
       // Aseguramos que la URL sea limpia: base + /categories/ + id
       final baseUrlClean = baseUrl.endsWith('/')
@@ -314,6 +326,7 @@ class ApiService {
           "name": name,
           "type": type,
           "currency": currency.toUpperCase(),
+          "icon": icon,
         }),
       );
 

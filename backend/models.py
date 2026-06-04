@@ -11,6 +11,7 @@ class Category(Base):
     name = Column(String, nullable=False)
     type = Column(String)
     currency = Column(String, default="COP")
+    icon = Column(String, default="category")
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User")

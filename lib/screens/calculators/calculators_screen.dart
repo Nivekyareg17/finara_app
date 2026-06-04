@@ -463,6 +463,18 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
     return value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
   }
 
+  bool _isOperator(String value) => ["+", "-", "x", "/", "="].contains(value);
+
+  Color _buttonBackgroundColor(String value) {
+    if (value == "C") return const Color(0xFFEF4444);
+    if (value == "DEL") return const Color(0xFFF59E0B);
+    return _isOperator(value) ? const Color(0xFF10B981) : const Color(0xFF10231E);
+  }
+
+  Color _buttonForegroundColor(String value) {
+    return value == "C" ? Colors.white : Colors.white;
+  }
+
   bool _showHistory = false;
 
   void _clearHistory() {
@@ -573,22 +585,41 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    _expression,
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 20,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                    child: Text(
+                      _expression.isEmpty ? ' ' : _expression,
+                      key: ValueKey(_expression),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 20,
+                      ),
                     ),
                   ),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      _display,
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 58,
-                        fontWeight: FontWeight.w900,
+                  const SizedBox(height: 10),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: child,
+                    ),
+                    child: FittedBox(
+                      key: ValueKey(_display),
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _display,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 58,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ),
@@ -610,22 +641,25 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
 
                   return ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isAccent
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFF10231E),
-                      foregroundColor: Colors.white,
+                      backgroundColor: _buttonBackgroundColor(key),
+                      foregroundColor: _buttonForegroundColor(key),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
                       elevation: 0,
-                    ),
-                    onPressed: () => _press(key),
-                    child: Text(
-                      key,
-                      style: TextStyle(
+                      padding: const EdgeInsets.all(0),
+                      textStyle: TextStyle(
                         fontSize: key == "DEL" ? 15 : 24,
                         fontWeight: FontWeight.bold,
                       ),
+                    ).copyWith(
+                      overlayColor: MaterialStateProperty.all(
+                        Colors.white.withOpacity(0.12),
+                      ),
+                    ),
+                    onPressed: () => _press(key),
+                    child: Center(
+                      child: Text(key),
                     ),
                   );
                 },

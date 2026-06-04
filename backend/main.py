@@ -80,6 +80,7 @@ def apply_schema_updates():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         "ALTER TABLE categories ADD COLUMN IF NOT EXISTS currency VARCHAR DEFAULT 'COP'",
+        "ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon VARCHAR DEFAULT 'category'",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS currency VARCHAR DEFAULT 'COP'",
     ]
 

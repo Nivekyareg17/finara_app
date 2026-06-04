@@ -3,12 +3,14 @@ class CategoryModel {
   final String name;
   final String type;
   final String currency;
+  final String icon;
 
   CategoryModel({
     required this.id,
     required this.name,
     required this.type,
     this.currency = "COP",
+    this.icon = "category",
   });
 
   factory CategoryModel.fromMap(Map<String, dynamic> map) {
@@ -20,6 +22,7 @@ class CategoryModel {
           (map['currency'] ?? map['currency_code'] ?? map['moneda'] ?? "COP")
               .toString()
               .toUpperCase(),
+      icon: (map['icon'] ?? "category").toString(),
     );
   }
 
@@ -28,12 +31,14 @@ class CategoryModel {
     String? name,
     String? type,
     String? currency,
+    String? icon,
   }) {
     return CategoryModel(
       id: id ?? this.id,
       name: name ?? this.name,
       type: type ?? this.type,
       currency: currency ?? this.currency,
+      icon: icon ?? this.icon,
     );
   }
 
@@ -43,6 +48,7 @@ class CategoryModel {
       "name": name,
       "type": type,
       "currency": currency,
+      "icon": icon,
     };
   }
 }

@@ -16,6 +16,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -59,7 +60,82 @@ class CurrencyInputFormatter extends TextInputFormatter {
   }
 }
 
-Map<String, dynamic> _getCategoryData(String description) {
+const List<Map<String, dynamic>> _categoryIconOptions = [
+  {
+    "key": "category",
+    "label": "General",
+    "icon": Icons.category_rounded,
+    "color": Colors.grey,
+  },
+  {
+    "key": "restaurant",
+    "label": "Comida",
+    "icon": Icons.restaurant_rounded,
+    "color": Colors.orange,
+  },
+  {
+    "key": "shopping_basket",
+    "label": "Mercado",
+    "icon": Icons.shopping_basket_rounded,
+    "color": Colors.deepOrange,
+  },
+  {
+    "key": "directions_bus",
+    "label": "Transporte",
+    "icon": Icons.directions_bus_rounded,
+    "color": Colors.blue,
+  },
+  {
+    "key": "home",
+    "label": "Hogar",
+    "icon": Icons.home_rounded,
+    "color": Colors.teal,
+  },
+  {
+    "key": "work",
+    "label": "Trabajo",
+    "icon": Icons.work_rounded,
+    "color": Colors.indigo,
+  },
+  {
+    "key": "savings",
+    "label": "Ahorro",
+    "icon": Icons.savings_rounded,
+    "color": Colors.pink,
+  },
+  {
+    "key": "school",
+    "label": "Estudio",
+    "icon": Icons.school_rounded,
+    "color": Colors.purple,
+  },
+  {
+    "key": "health",
+    "label": "Salud",
+    "icon": Icons.medical_services_rounded,
+    "color": Colors.redAccent,
+  },
+  {
+    "key": "add_circle",
+    "label": "Extra",
+    "icon": Icons.add_circle_outline_rounded,
+    "color": Colors.green,
+  },
+];
+
+Map<String, dynamic> _categoryIconOption(String? iconKey) {
+  return _categoryIconOptions.firstWhere(
+    (option) => option["key"] == iconKey,
+    orElse: () => _categoryIconOptions.first,
+  );
+}
+
+Map<String, dynamic> _getCategoryData(String description, {String? iconKey}) {
+  if (iconKey != null && iconKey.trim().isNotEmpty) {
+    final option = _categoryIconOption(iconKey);
+    return {'icon': option["icon"], 'color': option["color"]};
+  }
+
   // Comparamos la descripcion para asignar icono y color
   String desc = description.toLowerCase();
   if (desc.contains("mercado")) {
@@ -289,6 +365,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .toUpperCase();
     } catch (_) {
       return baseCurrency;
+    }
+  }
+
+  CategoryModel? _categoryById(int? categoryId) {
+    if (categoryId == null) return null;
+    try {
+      return categories.firstWhere(
+        (category) => int.parse(category.id) == categoryId,
+      );
+    } catch (_) {
+      return null;
     }
   }
 
@@ -1368,7 +1455,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     final bool isFuture = t.isFutureMovement;
                     final categoryName =
                         getCategoryName(int.tryParse(t.categoryId) ?? 0);
-                    final catData = _getCategoryData(categoryName);
+                    final category =
+                        _categoryById(int.tryParse(t.categoryId));
+                    final catData = _getCategoryData(
+                      categoryName,
+                      iconKey: category?.icon,
+                    );
                     return Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
@@ -1560,6 +1652,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       final isIngreso = t.type == "ingreso";
                       final categoryName =
                           getCategoryName(int.tryParse(t.categoryId) ?? 0);
+                      final category =
+                          _categoryById(int.tryParse(t.categoryId));
+                      final catData = _getCategoryData(
+                        categoryName,
+                        iconKey: category?.icon,
+                      );
                       return Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
@@ -1574,15 +1672,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color:
-                                    const Color(0xFF3B82F6).withOpacity(0.14),
+                                color: catData['color'].withOpacity(0.14),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Icon(
-                                isIngreso
-                                    ? Icons.trending_up_rounded
-                                    : Icons.event_available_rounded,
-                                color: const Color(0xFF2563EB),
+                                catData['icon'],
+                                color: catData['color'],
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -1702,6 +1797,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   alignment: Alignment.center,
                   children: [
                     PieChart(
+                      swapAnimationDuration: const Duration(milliseconds: 750),
+                      swapAnimationCurve: Curves.easeOutCubic,
                       PieChartData(
                         centerSpaceRadius: centerRadius,
                         sectionsSpace: 4,
@@ -1979,11 +2076,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, constraints) {
         final data =
             getMovimientosPorCategoria(selectedChartType).entries.toList();
+        final maxValue = data.fold<double>(0, (prev, item) => math.max(prev, item.value));
         final chartWidth = data.isEmpty
             ? constraints.maxWidth
             : (data.length * 74.0)
                 .clamp(constraints.maxWidth, 900.0)
                 .toDouble();
+        final maxY = maxValue <= 0 ? 1.0 : (maxValue * 1.15).clamp(1.0, double.infinity);
+        final leftLabelFormatter = NumberFormat.compact(locale: 'es_CO');
+        final leftSymbol = currencySymbols[baseCurrency] ?? baseCurrency;
 
         return Container(
           width: double.infinity,
@@ -1993,91 +2094,126 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: SizedBox(
-            height: constraints.maxWidth < 380 ? 280 : 320,
+            height: constraints.maxWidth < 380 ? 300 : 340,
             child: data.isEmpty
                 ? const Center(child: Text("No hay datos para graficar"))
                 : SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
                       width: chartWidth,
-                      child: BarChart(
-                        BarChartData(
-                          borderData: FlBorderData(show: false),
-                          barTouchData: BarTouchData(
-                            enabled: true,
-                            touchTooltipData: BarTouchTooltipData(
-                              tooltipRoundedRadius: 14,
-                              getTooltipItem:
-                                  (group, groupIndex, rod, rodIndex) {
-                                final item = data[group.x];
-                                return BarTooltipItem(
-                                  "${item.key}\n${formatCurrency(item.value)}",
-                                  const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          alignment: BarChartAlignment.spaceAround,
-                          titlesData: FlTitlesData(
-                            topTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 44,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 14, right: 4, left: 4),
+                        child: BarChart(
+                          swapAnimationDuration: const Duration(milliseconds: 750),
+                          swapAnimationCurve: Curves.easeOutCubic,
+                          BarChartData(
+                            maxY: maxY,
+                            gridData: FlGridData(
+                              show: true,
+                              drawVerticalLine: false,
+                              horizontalInterval: maxY / 4,
+                              getDrawingHorizontalLine: (value) => FlLine(
+                                color: isDark
+                                    ? Colors.white12
+                                    : Colors.grey.withOpacity(0.18),
+                                strokeWidth: 1,
                               ),
                             ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 44,
-                                getTitlesWidget: (value, meta) {
-                                  final index = value.toInt();
-                                  if (index < 0 || index >= data.length) {
-                                    return const SizedBox();
-                                  }
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: SizedBox(
-                                      width: 64,
-                                      child: Text(
-                                        data[index].key,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
+                            borderData: FlBorderData(show: false),
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchTooltipData: BarTouchTooltipData(
+                                tooltipRoundedRadius: 14,
+                                getTooltipItem:
+                                    (group, groupIndex, rod, rodIndex) {
+                                  final item = data[group.x];
+                                  return BarTooltipItem(
+                                    "${item.key}\n${formatCurrency(item.value)}",
+                                    const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
                                     ),
                                   );
                                 },
                               ),
                             ),
-                            rightTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
+                            alignment: BarChartAlignment.spaceAround,
+                            titlesData: FlTitlesData(
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 60,
+                                  interval: maxY / 4,
+                                  getTitlesWidget: (value, meta) {
+                                    final label = leftLabelFormatter.format(value);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 6),
+                                      child: Text(
+                                        '$leftSymbol$label',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white70 : Colors.grey[700],
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 44,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index < 0 || index >= data.length) {
+                                      return const SizedBox();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: SizedBox(
+                                        width: 64,
+                                        child: Text(
+                                          data[index].key,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
                             ),
+                            barGroups: data.asMap().entries.map((entry) {
+                              final item = entry.value;
+                              return BarChartGroupData(
+                                x: entry.key,
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: item.value,
+                                    color: getCategoryColor(item.key),
+                                    width: 22,
+                                    borderRadius: BorderRadius.circular(8),
+                                  )
+                                ],
+                              );
+                            }).toList(),
                           ),
-                          barGroups: data.asMap().entries.map((entry) {
-                            final item = entry.value;
-                            return BarChartGroupData(
-                              x: entry.key,
-                              barRods: [
-                                BarChartRodData(
-                                  toY: item.value,
-                                  color: getCategoryColor(item.key),
-                                  width: 22,
-                                  borderRadius: BorderRadius.circular(8),
-                                )
-                              ],
-                            );
-                          }).toList(),
                         ),
                       ),
                     ),
@@ -2177,6 +2313,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : DateFormat("MM/dd/yyyy").format(today));
 
     final desc = TextEditingController(text: edit?.description);
+    final movementFormScrollController = ScrollController();
+    final notesFieldKey = GlobalKey();
+    final notesFocusNode = FocusNode();
     final amount = TextEditingController(
       text: edit != null ? _formatInputAmount(edit.amount) : "",
     );
@@ -2188,7 +2327,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : _categoryCurrencyById(selectedCategoryId);
     bool allowFutureMovement = edit?.isFutureMovement ?? false;
 
-    showModalBottomSheet(
+    void scrollToNotesField() {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        final notesContext = notesFieldKey.currentContext;
+        if (notesContext == null) return;
+
+        Scrollable.ensureVisible(
+          notesContext,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutCubic,
+          alignment: 0.75,
+        );
+      });
+    }
+
+    notesFocusNode.addListener(() {
+      if (notesFocusNode.hasFocus) {
+        scrollToNotesField();
+      }
+    });
+
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -2217,30 +2376,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             }
 
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.85,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(30)),
+            return AnimatedPadding(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
-              child: Column(
-                children: [
-                  //BARRA SUPERIOR (Indicador de arrastre)
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 50,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.85,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(30)),
+                ),
+                child: Column(
+                  children: [
+                    //BARRA SUPERIOR (Indicador de arrastre)
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
 
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 25, vertical: 20),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: movementFormScrollController,
+                        padding: EdgeInsets.fromLTRB(
+                          25,
+                          20,
+                          25,
+                          MediaQuery.of(context).viewInsets.bottom + 32,
+                        ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -2337,8 +2507,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // 1. Btn para crear nueva
                           TextButton(
                             onPressed: () async {
-                              String? nueva =
+                              final nuevaCategoria =
                                   await _mostrarDialogoCategoriaBonita();
+                              String? nueva = nuevaCategoria?["name"];
+                              final nuevoIcono =
+                                  nuevaCategoria?["icon"] ?? "category";
 
                               if (nueva != null) {
                                 nueva = nueva.trim();
@@ -2364,7 +2537,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                 final auth = context.read<AuthProvider>();
                                 bool success = await ApiService.createCategory(
-                                    auth.token!, nueva, type, nuevaMoneda);
+                                  auth.token!,
+                                  nueva,
+                                  type,
+                                  nuevaMoneda,
+                                  icon: nuevoIcono,
+                                );
 
                                 if (!success) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -2443,7 +2621,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         .map((cat) {
                                       return DropdownMenuItem<int>(
                                         value: int.parse(cat.id),
-                                        child: Text(cat.name),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              _categoryIconOption(
+                                                      cat.icon)["icon"]
+                                                  as IconData,
+                                              color: _categoryIconOption(
+                                                      cat.icon)["color"]
+                                                  as Color,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(child: Text(cat.name)),
+                                          ],
+                                        ),
                                       );
                                     }).toList(),
                                     onChanged: (v) {
@@ -2471,10 +2663,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           int.parse(c.id) == selectedCategoryId,
                                     );
 
-                                    String? nuevoNombre =
+                                    final categoriaEditada =
                                         await _mostrarDialogoCategoriaBonita(
                                       valorInicial: catActual.name,
+                                      iconInicial: catActual.icon,
                                     );
+                                    final nuevoNombre =
+                                        categoriaEditada?["name"];
+                                    final nuevoIcono =
+                                        categoriaEditada?["icon"] ??
+                                            catActual.icon;
 
                                     if (nuevoNombre != null &&
                                         nuevoNombre.isNotEmpty) {
@@ -2501,6 +2699,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         nuevoNombre,
                                         type,
                                         catActual.currency,
+                                        icon: nuevoIcono,
                                       );
                                       if (success) {
                                         await loadCategories();
@@ -2804,7 +3003,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   color: Colors.grey)),
                           const SizedBox(height: 10),
                           TextField(
+                            key: notesFieldKey,
                             controller: desc,
+                            focusNode: notesFocusNode,
+                            onTap: scrollToNotesField,
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.w600,
@@ -3018,16 +3220,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           // DropdownButton
                         ], // Cierre de children
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
         );
       },
-    );
+    ).whenComplete(() {
+      movementFormScrollController.dispose();
+      notesFocusNode.dispose();
+    });
   }
 
 // Helper para los botones de tipo
@@ -3184,11 +3390,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<String?> _mostrarDialogoCategoriaBonita({String? valorInicial}) async {
+  Future<Map<String, String>?> _mostrarDialogoCategoriaBonita({
+    String? valorInicial,
+    String iconInicial = "category",
+  }) async {
     final controller = TextEditingController(text: valorInicial ?? '');
+    String selectedIcon = iconInicial;
     bool showError = false;
 
-    return showDialog<String>(
+    return showDialog<Map<String, String>>(
       context: context,
       useRootNavigator: true,
       builder: (_) => StatefulBuilder(
@@ -3201,15 +3411,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
             child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.82,
+              ),
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF10231E) : Colors.white,
                 borderRadius: BorderRadius.circular(26),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   Row(
                     children: [
                       Container(
@@ -3218,9 +3432,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: const Color(0xFF10B981).withOpacity(0.12),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(
-                          Icons.category_rounded,
-                          color: Color(0xFF10B981),
+                        child: Icon(
+                          _categoryIconOption(selectedIcon)["icon"],
+                          color: _categoryIconOption(selectedIcon)["color"],
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -3239,7 +3453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Organiza tus movimientos con nombres claros y faciles de reconocer.",
+                    "Organiza tus movimientos con nombres claros e iconos faciles de reconocer.",
                     style: TextStyle(
                       color: isDark ? Colors.white60 : Colors.black54,
                       height: 1.3,
@@ -3288,6 +3502,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Icono",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _categoryIconOptions.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 1,
+                    ),
+                    itemBuilder: (context, index) {
+                      final option = _categoryIconOptions[index];
+                      final isSelected = selectedIcon == option["key"];
+                      final color = option["color"] as Color;
+
+                      return Tooltip(
+                        message: option["label"].toString(),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => setStateDialog(
+                            () => selectedIcon = option["key"].toString(),
+                          ),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? color.withOpacity(0.16)
+                                  : isDark
+                                      ? Colors.black12
+                                      : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected
+                                    ? color
+                                    : const Color(0xFFE2E8F0),
+                                width: isSelected ? 1.6 : 1,
+                              ),
+                            ),
+                            child: Icon(
+                              option["icon"] as IconData,
+                              color: color,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   if (hasError) ...[
                     const SizedBox(height: 8),
                     const Text(
@@ -3320,7 +3591,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onPressed: () {
                             setStateDialog(() => showError = true);
                             if (controller.text.trim().isEmpty) return;
-                            Navigator.pop(context, controller.text.trim());
+                            Navigator.pop(context, {
+                              "name": controller.text.trim(),
+                              "icon": selectedIcon,
+                            });
                           },
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
@@ -3339,7 +3613,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

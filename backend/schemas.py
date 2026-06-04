@@ -62,6 +62,7 @@ class CategoryCreate(BaseModel):
     name: str
     type: Literal["gasto", "ingreso"]
     currency: str = "COP"
+    icon: str = "category"
 
 # --- TRANSACCIONES (ACTUALIZADO) ---
 class TransactionCreate(BaseModel):
