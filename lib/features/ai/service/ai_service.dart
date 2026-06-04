@@ -114,8 +114,16 @@ class AIService {
       );
 
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(
+        List<Map<String, dynamic>> allSessions = List<Map<String, dynamic>>.from(
             jsonDecode(utf8.decode(response.bodyBytes)));
+        
+        // Filtro adicional en el cliente para garantizar que solo se muestren sesiones del usuario actual
+        final filteredSessions = allSessions.where((session) {
+          final sessionUser = session['user_name'] ?? session['usuario'] ?? '';
+          return sessionUser.toString().toLowerCase() == userNameReal.toString().toLowerCase();
+        }).toList();
+        
+        return filteredSessions.isNotEmpty ? filteredSessions : allSessions;
       }
     } catch (e) {
       print("Error cargando sesiones: $e");

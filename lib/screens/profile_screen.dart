@@ -914,16 +914,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
 
-                  _buildDrawerItem(
-                    icon: Icons.support_agent_rounded,
-                    title: "Soporte",
-                    subtitle: "Ayuda y contacto",
-                    color: const Color(0xFF2563EB),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showSupportSheet();
-                    },
-                  ),
+                 
                 ],
               ),
             ),
