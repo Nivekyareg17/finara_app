@@ -71,7 +71,13 @@ class _NetSalaryScreenState extends State<NetSalaryScreen> {
       _salarioBruto = _parse(_brutoController.text);
 
       if (_salarioBruto == 0) {
-        _salud = 0; _pension = 0; _arl = 0; _fsp = 0; _retefuente = 0; _auxCalculado = 0; _salarioNeto = 0;
+        _salud = 0;
+        _pension = 0;
+        _arl = 0;
+        _fsp = 0;
+        _retefuente = 0;
+        _auxCalculado = 0;
+        _salarioNeto = 0;
         return;
       }
 
@@ -83,10 +89,9 @@ class _NetSalaryScreenState extends State<NetSalaryScreen> {
         _pension = ibc * 0.04;
         _arl = 0;
 
-        _auxCalculado =
-            (_salarioBruto <= (_smlv * 2) && _recibeAuxilio)
-                ? _auxTransporteLey
-                : 0;
+        _auxCalculado = (_salarioBruto <= (_smlv * 2) && _recibeAuxilio)
+            ? _auxTransporteLey
+            : 0;
       } else {
         ibc = (_salarioBruto * 0.40).clamp(_smlv, _smlv * 25);
         _salud = ibc * 0.125;
@@ -95,16 +100,13 @@ class _NetSalaryScreenState extends State<NetSalaryScreen> {
         _auxCalculado = 0;
       }
 
-      _fsp = (ibc >= 4 * _smlv)
-          ? (ibc * (ibc >= 20 * _smlv ? 0.02 : 0.01))
-          : 0;
+      _fsp = (ibc >= 4 * _smlv) ? (ibc * (ibc >= 20 * _smlv ? 0.02 : 0.01)) : 0;
 
       _retefuente = _esLaboral
           ? (_salarioBruto > (_uvt * 95) ? (_salarioBruto * 0.05) : 0)
           : (_salarioBruto * 0.11);
 
-      _salarioNeto =
-          _salarioBruto -
+      _salarioNeto = _salarioBruto -
           _salud -
           _pension -
           _arl -
@@ -136,7 +138,8 @@ class _NetSalaryScreenState extends State<NetSalaryScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Salario Neto 2026", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Salario Neto 2026",
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: primaryGreen,
         elevation: 0,
@@ -148,41 +151,48 @@ class _NetSalaryScreenState extends State<NetSalaryScreen> {
           children: [
             _buildContractSelector(),
             const SizedBox(height: 20),
-
             if (_esLaboral)
               SwitchListTile(
-                title: const Text("¿Recibe Auxilio de Transporte?\n(Solo para <= 2 SMLV)", style: TextStyle(fontSize: 14)),
-                value: _recibeAuxilio,
+                title: const Text(
+                    "¿Recibe Auxilio de Transporte?\n(Solo para <= 2 SMLV)",
+                    style: TextStyle(fontSize: 14)),
+                // Si el salario supera los 2 SMLV, el interruptor se apaga visualmente (false)
+                value: (_salarioBruto <= (_smlv * 2)) ? _recibeAuxilio : false,
                 activeColor: primaryGreen,
-                onChanged: (v) {
-                  setState(() => _recibeAuxilio = v);
-                  _calcularNeto();
-                },
+                // Si supera los 2 SMLV, pasamos 'null' para deshabilitar por completo el botón
+                onChanged: (_salarioBruto <= (_smlv * 2))
+                    ? (v) {
+                        setState(() => _recibeAuxilio = v);
+                        _calcularNeto();
+                      }
+                    : null,
               ),
-
             _input(),
-
             const SizedBox(height: 30),
-
             if (_salarioBruto > 0)
               Column(
                 children: [
-                  _buildDetalleRow("Salud", "- \$${_money(_salud)}", dangerColor),
-                  _buildDetalleRow("Pensión", "- \$${_money(_pension)}", dangerColor),
+                  _buildDetalleRow(
+                      "Salud", "- \$${_money(_salud)}", dangerColor),
+                  _buildDetalleRow(
+                      "Pensión", "- \$${_money(_pension)}", dangerColor),
                   if (_auxCalculado > 0)
-                    _buildDetalleRow("Auxilio Transporte", "+ \$${_money(_auxCalculado)}", primaryGreen),
+                    _buildDetalleRow("Auxilio Transporte",
+                        "+ \$${_money(_auxCalculado)}", primaryGreen),
                 ],
               ),
-
             const SizedBox(height: 30),
-
             Container(
               padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(25)),
+              decoration: BoxDecoration(
+                  color: primaryGreen, borderRadius: BorderRadius.circular(25)),
               child: Center(
                 child: Text(
                   "NETO: \$${_money(_salarioNeto)}",
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white),
+                  style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white),
                 ),
               ),
             ),
@@ -235,7 +245,8 @@ class _NetSalaryScreenState extends State<NetSalaryScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          Text(value,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold)),
         ],
       ),
     );
