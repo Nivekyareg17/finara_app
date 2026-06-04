@@ -37,6 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isBlockedByMe = false;
   bool isBlockedByOther = false;
   bool isLoadingBlock = true;
+  bool isSendingMessage = false;
   int _clearedThroughMessageId = 0;
   Timer? periodicRefresh;
 
@@ -59,6 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String get clearedChatPrefsKey => "chat_cleared_through_${widget.userId}";
+  String get clearedChatAtPrefsKey => "chat_cleared_at_${widget.userId}";
 
   Future<void> loadClearedChatState() async {
     final prefs = await SharedPreferences.getInstance();
@@ -83,6 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(clearedChatPrefsKey, maxVisibleMessageId);
+    await prefs.setString(clearedChatAtPrefsKey, DateTime.now().toIso8601String());
 
     if (!mounted) return;
     setState(() {
@@ -276,19 +279,26 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> sendMessage() async {
     final text = controller.text.trim();
-    if (text.isEmpty || isBlockedByMe || isBlockedByOther) return;
+    if (text.isEmpty || isBlockedByMe || isBlockedByOther || isSendingMessage) {
+      return;
+    }
 
     final token = context.read<AuthProvider>().token;
     if (token == null) return;
 
+    setState(() => isSendingMessage = true);
     final success = await ApiService.sendMessage(token, widget.userId, text);
     if (!mounted) return;
 
     if (success) {
       controller.clear();
-      setState(() => isTyping = false);
+      setState(() {
+        isTyping = false;
+        isSendingMessage = false;
+      });
       await loadMessages();
     } else {
+      setState(() => isSendingMessage = false);
       await loadBlockStatus();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -874,15 +884,29 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       const SizedBox(width: 8),
                       InkWell(
-                        onTap: canSend && !isLoadingBlock ? sendMessage : null,
+                        onTap: canSend && !isLoadingBlock && !isSendingMessage
+                            ? sendMessage
+                            : null,
                         borderRadius: BorderRadius.circular(999),
                         child: Container(
                           padding: const EdgeInsets.all(11),
                           decoration: BoxDecoration(
-                            color: canSend ? const Color(0xFF0F8F5F) : Colors.grey,
+                            color: canSend && !isSendingMessage
+                                ? const Color(0xFF0F8F5F)
+                                : Colors.grey,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.send_rounded, color: Colors.white),
+                          child: isSendingMessage
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded,
+                                  color: Colors.white),
                         ),
                       ),
                     ],

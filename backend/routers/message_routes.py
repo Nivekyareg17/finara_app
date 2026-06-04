@@ -363,10 +363,14 @@ def get_chats(
                 "profile_image_url": user.profile_image_url,
                 "username": user.username,
                 "description": user.description,
+                "last_message_id":
+                    last_message.id
+                    if last_message
+                    else None,
                 "last_message":
                     last_message.content
                     if last_message
-                    else "Sin mensajes",
+                    else None,
                 "last_time":
                     last_message.timestamp.isoformat()
                     if last_message

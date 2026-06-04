@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
@@ -22,6 +23,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   List requests = [];
   bool isLoadingChats = true;
   bool isLoadingRequests = true;
+  Map<int, int> clearedThroughByUser = {};
+  Map<int, DateTime> clearedAtByUser = {};
 
   late TabController tabController;
 
@@ -129,14 +132,60 @@ class _ChatListScreenState extends State<ChatListScreen>
     try {
       final auth = context.read<AuthProvider>();
       final data = await ApiService.getChats(auth.token!);
+      final prefs = await SharedPreferences.getInstance();
+      final clearedThrough = <int, int>{};
+      final clearedAt = <int, DateTime>{};
+
+      for (final user in data) {
+        if (user is! Map) continue;
+        final id = int.tryParse(user["id"]?.toString() ?? "");
+        if (id == null) continue;
+        clearedThrough[id] = prefs.getInt("chat_cleared_through_$id") ?? 0;
+        final rawClearedAt = prefs.getString("chat_cleared_at_$id");
+        final parsedClearedAt = rawClearedAt == null
+            ? null
+            : DateTime.tryParse(rawClearedAt);
+        if (parsedClearedAt != null) clearedAt[id] = parsedClearedAt;
+      }
+
       if (!mounted) return;
       setState(() {
         users = data;
+        clearedThroughByUser = clearedThrough;
+        clearedAtByUser = clearedAt;
         isLoadingChats = false;
       });
     } catch (e) {
       if (mounted) setState(() => isLoadingChats = false);
     }
+  }
+
+  int messageIdFrom(dynamic raw) {
+    if (raw is int) return raw;
+    return int.tryParse(raw?.toString() ?? "") ?? 0;
+  }
+
+  bool shouldShowLastMessage(Map user) {
+    final userId = int.tryParse(user["id"]?.toString() ?? "");
+    final lastMessage = user["last_message"]?.toString().trim();
+    if (userId == null || lastMessage == null || lastMessage.isEmpty) {
+      return false;
+    }
+    if (lastMessage.toLowerCase() == "sin mensajes") return false;
+
+    final lastId = messageIdFrom(user["last_message_id"]);
+    final clearedThrough = clearedThroughByUser[userId] ?? 0;
+    if (lastId > 0 && lastId <= clearedThrough) return false;
+
+    final lastTime = DateTime.tryParse(
+      user["last_time"]?.toString().replaceFirst(" ", "T") ?? "",
+    );
+    final clearedAt = clearedAtByUser[userId];
+    if (lastTime != null && clearedAt != null && !lastTime.isAfter(clearedAt)) {
+      return false;
+    }
+
+    return true;
   }
 
   Future<void> loadRequests() async {
@@ -439,10 +488,8 @@ Future<void> openSearchDialog() async {
                           const SizedBox(height: 4),
                       itemBuilder: (context, i) {
                         final user = users[i];
-                        final hasMessage = user["last_message"] != null;
+                        final hasMessage = shouldShowLastMessage(user);
                         final imageUrl = profileImageFrom(user);
-                        final description =
-                            user["description"]?.toString().trim();
 
                         return InkWell(
                           onTap: () async {
@@ -489,9 +536,10 @@ Future<void> openSearchDialog() async {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 4),
+                                      if (hasMessage) ...[
+                                        const SizedBox(height: 4),
                                       Text(
-                                        user["last_message"] ?? "Sin mensajes aún",
+                                        user["last_message"].toString(),
                                         style: TextStyle(
                                           color: hasMessage
                                               ? (theme.brightness ==
@@ -505,24 +553,12 @@ Future<void> openSearchDialog() async {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      if (description != null &&
-                                          description.isNotEmpty) ...[
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          description,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 12,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
                                       ],
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                if (user["last_time"] != null)
+                                if (hasMessage && user["last_time"] != null)
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [

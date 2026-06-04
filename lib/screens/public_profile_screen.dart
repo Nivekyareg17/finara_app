@@ -73,10 +73,15 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
     return value == null || value.isEmpty ? "" : "@$value";
   }
 
+  bool get hasDescription {
+    final value = user?["description"]?.toString().trim();
+    return value != null && value.isNotEmpty;
+  }
+
   String get description {
     final value = user?["description"]?.toString().trim();
     if (value == null || value.isEmpty) {
-      return "Este usuario aún no tiene descripción.";
+      return "Este usuario aun no tiene descripcion.";
     }
     return value;
   }
@@ -139,14 +144,19 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final maxWidth = MediaQuery.of(context).size.width > 680 ? 520.0 : double.infinity;
+    final maxWidth =
+        MediaQuery.of(context).size.width > 680 ? 560.0 : double.infinity;
+    final bg = isDark ? const Color(0xFF071A16) : const Color(0xFFF4F8F6);
+    final surface = isDark ? const Color(0xFF10231F) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final mutedColor = isDark ? Colors.white60 : const Color(0xFF64748B);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF071A16) : const Color(0xFFF6F8F7),
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text("Perfil"),
         elevation: 0,
-        backgroundColor: isDark ? const Color(0xFF071A16) : const Color(0xFFF6F8F7),
+        backgroundColor: bg,
       ),
       body: Center(
         child: ConstrainedBox(
@@ -154,53 +164,170 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
               : hasError
-                  ? const SizedBox.shrink()
+                  ? Center(
+                      child: Text(
+                        "No se pudo cargar el perfil.",
+                        style: TextStyle(color: mutedColor),
+                      ),
+                    )
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          _avatar(132),
-                          const SizedBox(height: 22),
-                          Text(
-                            displayName,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          if (username.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              username,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.green.shade700,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 26),
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(18),
+                            padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.grey.shade900 : Colors.white,
-                              borderRadius: BorderRadius.circular(18),
+                              gradient: LinearGradient(
+                                colors: isDark
+                                    ? [
+                                        const Color(0xFF12352E),
+                                        const Color(0xFF0B1F1B),
+                                      ]
+                                    : [
+                                        const Color(0xFFE9FFF6),
+                                        Colors.white,
+                                      ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(26),
                               border: Border.all(
-                                color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                                color: isDark
+                                    ? Colors.white10
+                                    : const Color(0xFFD7EFE6),
                               ),
+                              boxShadow: isDark
+                                  ? []
+                                  : [
+                                      BoxShadow(
+                                        color: const Color(0xFF0F8F5F)
+                                            .withOpacity(0.10),
+                                        blurRadius: 22,
+                                        offset: const Offset(0, 12),
+                                      ),
+                                    ],
                             ),
-                            child: Text(
-                              description,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 16,
-                                height: 1.45,
-                                color: isDark ? Colors.white70 : Colors.black87,
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(0xFF10B981)
+                                          .withOpacity(0.45),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: _avatar(124),
+                                ),
+                                const SizedBox(height: 18),
+                                Text(
+                                  displayName,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 27,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                if (username.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981)
+                                          .withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      username,
+                                      style: TextStyle(
+                                        color: Colors.green.shade700,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: surface,
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white10
+                                    : const Color(0xFFE2E8F0),
                               ),
+                              boxShadow: isDark
+                                  ? []
+                                  : [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.045),
+                                        blurRadius: 14,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 42,
+                                      height: 42,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981)
+                                            .withOpacity(0.14),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Icon(
+                                        hasDescription
+                                            ? Icons.notes_rounded
+                                            : Icons.info_outline_rounded,
+                                        color: const Color(0xFF10B981),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        hasDescription
+                                            ? "Descripcion"
+                                            : "Sin descripcion",
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  description,
+                                  style: TextStyle(
+                                    color:
+                                        hasDescription ? textColor : mutedColor,
+                                    fontSize: 16,
+                                    height: 1.55,
+                                    fontWeight: hasDescription
+                                        ? FontWeight.w500
+                                        : FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

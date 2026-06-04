@@ -468,7 +468,9 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
   Color _buttonBackgroundColor(String value) {
     if (value == "C") return const Color(0xFFEF4444);
     if (value == "DEL") return const Color(0xFFF59E0B);
-    return _isOperator(value) ? const Color(0xFF10B981) : const Color(0xFF10231E);
+    return _isOperator(value)
+        ? const Color(0xFF10B981)
+        : const Color(0xFF10231E);
   }
 
   Color _buttonForegroundColor(String value) {
@@ -544,7 +546,8 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
                       children: [
                         const Text(
                           "Historial",
-                          style: TextStyle(color: Color.fromARGB(213, 221, 221, 221)),
+                          style: TextStyle(
+                              color: Color.fromARGB(213, 221, 221, 221)),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete),

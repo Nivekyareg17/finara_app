@@ -330,6 +330,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<Map<String, String>> _loadCategoryIconPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString("category_icons");
+    if (raw == null || raw.isEmpty) return {};
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return {};
+    return decoded.map((key, value) => MapEntry(key.toString(), value.toString()));
+  }
+
+  Future<void> _saveCategoryIcon(String categoryId, String iconKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    final icons = await _loadCategoryIconPrefs();
+    icons[categoryId] = iconKey;
+    await prefs.setString("category_icons", jsonEncode(icons));
+  }
+
   Future<void> _saveCategoryCurrency(String categoryId, String currency) async {
     final prefs = await SharedPreferences.getInstance();
     final currencies = await _loadCategoryCurrencyPrefs();
@@ -654,6 +670,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.read<AuthProvider>();
     final data = await ApiService.getTransactionCategories(auth.token!);
     final currencyPrefs = await _loadCategoryCurrencyPrefs();
+    final iconPrefs = await _loadCategoryIconPrefs();
 
     if (!mounted) return;
 
@@ -662,6 +679,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final category = CategoryModel.fromMap(e);
         return category.copyWith(
           currency: currencyPrefs[category.id] ?? category.currency,
+          icon: iconPrefs[category.id] ?? category.icon,
         );
       }).toList();
     });
@@ -2575,8 +2593,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           nueva!.toLowerCase(),
                                       orElse: () => filtered.last,
                                     );
-                                    _saveCategoryCurrency(
-                                        creada.id, nuevaMoneda);
+                                      _saveCategoryCurrency(
+                                          creada.id, nuevaMoneda);
+                                      // Save the selected icon locally so it appears immediately in transactions
+                                      _saveCategoryIcon(creada.id, nuevoIcono);
                                     selectedCategoryId = int.parse(creada.id);
                                   }
                                 });
