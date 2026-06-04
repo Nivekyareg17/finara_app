@@ -39,6 +39,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isLoadingBlock = true;
   bool isSendingMessage = false;
   int _clearedThroughMessageId = 0;
+  DateTime? _clearedChatAt;
   Timer? periodicRefresh;
 
   @override
@@ -65,6 +66,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> loadClearedChatState() async {
     final prefs = await SharedPreferences.getInstance();
     _clearedThroughMessageId = prefs.getInt(clearedChatPrefsKey) ?? 0;
+    final rawClearedAt = prefs.getString(clearedChatAtPrefsKey);
+    _clearedChatAt = rawClearedAt == null
+        ? null
+        : DateTime.tryParse(rawClearedAt);
     await loadMessages();
   }
 
@@ -83,13 +88,26 @@ class _ChatScreenState extends State<ChatScreen> {
       },
     );
 
+    final maxVisibleTimestamp = messages.fold<DateTime?>(
+      null,
+      (current, message) {
+        final timestamp = parseMessageDate(message["timestamp"]);
+        if (timestamp == null) return current;
+        if (current == null) return timestamp;
+        return timestamp.isAfter(current) ? timestamp : current;
+      },
+    );
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(clearedChatPrefsKey, maxVisibleMessageId);
-    await prefs.setString(clearedChatAtPrefsKey, DateTime.now().toIso8601String());
+    final clearedAtValue = maxVisibleTimestamp?.toIso8601String() ??
+        DateTime.now().toUtc().toIso8601String();
+    await prefs.setString(clearedChatAtPrefsKey, clearedAtValue);
 
     if (!mounted) return;
     setState(() {
       _clearedThroughMessageId = maxVisibleMessageId;
+      _clearedChatAt = DateTime.tryParse(clearedAtValue);
       messages = [];
       controller.clear();
       isTyping = false;
@@ -207,7 +225,15 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!mounted) return;
 
     final visibleMessages = data.where((message) {
-      return _messageId(message) > _clearedThroughMessageId;
+      final messageId = _messageId(message);
+      if (messageId > _clearedThroughMessageId) {
+        return true;
+      }
+
+      if (_clearedChatAt == null) return false;
+      final messageTime = parseMessageDate(message["timestamp"]);
+      if (messageTime == null) return false;
+      return messageTime.isAfter(_clearedChatAt!);
     }).toList();
 
     setState(() {
