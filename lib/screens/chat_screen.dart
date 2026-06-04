@@ -67,9 +67,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final prefs = await SharedPreferences.getInstance();
     _clearedThroughMessageId = prefs.getInt(clearedChatPrefsKey) ?? 0;
     final rawClearedAt = prefs.getString(clearedChatAtPrefsKey);
-    _clearedChatAt = rawClearedAt == null
-        ? null
-        : DateTime.tryParse(rawClearedAt);
+    _clearedChatAt =
+        rawClearedAt == null ? null : DateTime.tryParse(rawClearedAt);
     await loadMessages();
   }
 
@@ -366,7 +365,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxBubbleWidth = (constraints.maxWidth * 0.74).clamp(180.0, 520.0);
+        final maxBubbleWidth =
+            (constraints.maxWidth * 0.74).clamp(180.0, 520.0);
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -410,8 +410,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                        isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                    crossAxisAlignment: isMe
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
                     children: [
                       Text(
                         msg["content"]?.toString() ?? "",
@@ -553,8 +554,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!isBlockedByMe && !isBlockedByOther) return const SizedBox.shrink();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final title =
-        isBlockedByMe ? "Contacto bloqueado" : "Chat no disponible";
+    final title = isBlockedByMe ? "Contacto bloqueado" : "Chat no disponible";
     final subtitle = isBlockedByMe
         ? "No puedes enviar ni recibir mensajes de este usuario mientras este bloqueado."
         : "Este usuario no esta disponible para recibir mensajes en este momento.";
@@ -686,12 +686,10 @@ class _ChatScreenState extends State<ChatScreen> {
     final canSend = !isBlockedByMe && !isBlockedByOther;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF071A16) : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF071A16) : Colors.white,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor:
-            isDark ? const Color(0xFF071A16) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF071A16) : Colors.white,
         titleSpacing: 0,
         title: Row(
           children: [
@@ -846,9 +844,11 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade900 : const Color(0xFFF0F2F5),
+                    color:
+                        isDark ? Colors.grey.shade900 : const Color(0xFFF0F2F5),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
                       color: isDark ? Colors.white10 : const Color(0xFFE4E6EB),
@@ -860,53 +860,54 @@ class _ChatScreenState extends State<ChatScreen> {
                         enabled: canSend,
                         icon: Icon(
                           Icons.add_circle_outline_rounded,
-                          color: canSend ? const Color(0xFF0F8F5F) : Colors.grey,
+                          color:
+                              canSend ? const Color(0xFF0F8F5F) : Colors.grey,
                         ),
-                    onSelected: (value) {
-                      final templates = {
-                        "thanks": "Gracias, quedo atento.",
-                        "later": "Te respondo con calma en un momento.",
-                        "amount": "¿Me confirmas el valor exacto?",
-                      };
-                      controller.text = templates[value] ?? "";
-                      controller.selection = TextSelection.fromPosition(
-                        TextPosition(offset: controller.text.length),
-                      );
-                      setState(() => isTyping = controller.text.isNotEmpty);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                        value: "thanks",
-                        child: Text("Plantilla: agradecimiento"),
+                        onSelected: (value) {
+                          final templates = {
+                            "thanks": "Gracias, quedo atento.",
+                            "later": "Te respondo con calma en un momento.",
+                            "amount": "¿Me confirmas el valor exacto?",
+                          };
+                          controller.text = templates[value] ?? "";
+                          controller.selection = TextSelection.fromPosition(
+                            TextPosition(offset: controller.text.length),
+                          );
+                          setState(() => isTyping = controller.text.isNotEmpty);
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: "thanks",
+                            child: Text("Plantilla: agradecimiento"),
+                          ),
+                          PopupMenuItem(
+                            value: "later",
+                            child: Text("Plantilla: responder luego"),
+                          ),
+                          PopupMenuItem(
+                            value: "amount",
+                            child: Text("Plantilla: confirmar valor"),
+                          ),
+                        ],
                       ),
-                      PopupMenuItem(
-                        value: "later",
-                        child: Text("Plantilla: responder luego"),
-                      ),
-                      PopupMenuItem(
-                        value: "amount",
-                        child: Text("Plantilla: confirmar valor"),
-                      ),
-                    ],
-                  ),
                       const SizedBox(width: 2),
                       Expanded(
                         child: TextField(
-                        controller: controller,
-                        enabled: canSend,
-                        onChanged: (text) {
-                          setState(() => isTyping = text.isNotEmpty);
-                        },
-                        minLines: 1,
-                        maxLines: 4,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
-                          hintText: canSend
-                              ? "Escribe un mensaje..."
-                              : "Chat bloqueado",
-                          border: InputBorder.none,
+                          controller: controller,
+                          enabled: canSend,
+                          onChanged: (text) {
+                            setState(() => isTyping = text.isNotEmpty);
+                          },
+                          minLines: 1,
+                          maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration(
+                            hintText: canSend
+                                ? "Escribe un mensaje..."
+                                : "Chat bloqueado",
+                            border: InputBorder.none,
+                          ),
                         ),
-                      ),
                       ),
                       const SizedBox(width: 8),
                       InkWell(
