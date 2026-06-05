@@ -36,10 +36,10 @@
 
 | Integrante | Rol |
 |---|---|
-| Kevin Guevara | Líder de proyecto / Desarrollador |
-| Felipe Arandia | Desarrollador Flutter |
-| Cristian Rojas | Desarrollador backend |
-| Alexander Cueto | Desarrollador / QA |
+| Kevin Guevara | Desarrollador backend |
+| Felipe Arandia | Desarrollador backend / DB |
+| Cristian Rojas | Desarrollador frontend |
+| Alexander Cueto | Desarrollador Flutter |
 
 > Proyecto académico — Programa de formación en desarrollo de software · 2026
 
