@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../../widgets/translate_widget.dart';
 class CalculatorScaffold extends StatelessWidget {
   const CalculatorScaffold({
     super.key,
@@ -27,7 +27,7 @@ class CalculatorScaffold extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? Colors.white : const Color(0xFF064E3B),
-        title: Text(
+        title: TranslatedText(
           title,
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
@@ -67,7 +67,7 @@ class CalculatorScaffold extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      TranslatedText(
                         title,
                         style: const TextStyle(
                           color: Colors.white,
@@ -76,7 +76,7 @@ class CalculatorScaffold extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
+                      TranslatedText(
                         subtitle,
                         style:
                             const TextStyle(color: Colors.white70, height: 1.3),
@@ -174,7 +174,7 @@ class CalculatorButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: Text(
+        child: TranslatedText(
           label,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
         ),
@@ -224,16 +224,16 @@ class ResultCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                TranslatedText(title, style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text(
+                TranslatedText(
                   value,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                Text(caption, style: const TextStyle(color: Colors.black54)),
+                TranslatedText(caption, style: const TextStyle(color: Colors.black54)),
               ],
             ),
           ),

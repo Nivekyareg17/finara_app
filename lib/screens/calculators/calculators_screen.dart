@@ -9,7 +9,7 @@ import 'creditCardScreen.dart';
 import 'discountScreen.dart';
 import 'netSalaryScreen.dart';
 import 'housingGoalScreen.dart';
-
+import '../../widgets/translate_widget.dart';
 class CalculatorsScreen extends StatelessWidget {
   const CalculatorsScreen({super.key});
 
@@ -26,7 +26,7 @@ class CalculatorsScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? Colors.white : const Color(0xFF064E3B),
-        title: const Text(
+        title: const TranslatedText(
           "Calculadoras",
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
@@ -56,7 +56,7 @@ class CalculatorsScreen extends StatelessWidget {
               children: [
                 Icon(Icons.calculate_rounded, color: Colors.white, size: 34),
                 SizedBox(height: 12),
-                Text(
+                TranslatedText(
                   "Herramientas financieras",
                   style: TextStyle(
                     color: Colors.white,
@@ -65,7 +65,7 @@ class CalculatorsScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 6),
-                Text(
+                TranslatedText(
                   "Calcula, compara y planea tus decisiones de dinero desde un solo lugar.",
                   style: TextStyle(color: Colors.white70, height: 1.3),
                 ),
@@ -301,7 +301,7 @@ class _CalculatorTileState extends State<_CalculatorTile> {
                                           : widget.color.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
-                                    child: Text(
+                                    child: TranslatedText(
                                       widget.metric,
                                       style: TextStyle(
                                         color: _active
@@ -315,7 +315,7 @@ class _CalculatorTileState extends State<_CalculatorTile> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              Text(
+                              TranslatedText(
                                 widget.title,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -327,7 +327,7 @@ class _CalculatorTileState extends State<_CalculatorTile> {
                                 ),
                               ),
                               const SizedBox(height: 5),
-                              Text(
+                              TranslatedText(
                                 widget.subtitle,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -514,7 +514,7 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
-        title: const Text("Calculadora rapida"),
+        title: const TranslatedText("Calculadora rapida"),
         actions: [
           IconButton(
             icon: Icon(_showHistory ? Icons.expand_less : Icons.history),
@@ -544,7 +544,7 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        const TranslatedText(
                           "Historial",
                           style: TextStyle(
                               color: Color.fromARGB(213, 221, 221, 221)),
@@ -563,7 +563,7 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
                       child: ListView(
                         reverse: true,
                         children: _history
-                            .map((e) => Text(
+                            .map((e) => TranslatedText(
                                   e,
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -594,7 +594,7 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
                       opacity: animation,
                       child: child,
                     ),
-                    child: Text(
+                    child: TranslatedText(
                       _expression.isEmpty ? ' ' : _expression,
                       key: ValueKey(_expression),
                       maxLines: 1,
@@ -615,7 +615,7 @@ class _SimpleCalculatorScreenState extends State<SimpleCalculatorScreen> {
                     child: FittedBox(
                       key: ValueKey(_display),
                       fit: BoxFit.scaleDown,
-                      child: Text(
+                      child: TranslatedText(
                         _display,
                         textAlign: TextAlign.right,
                         style: const TextStyle(
