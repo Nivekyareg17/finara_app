@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart'; // <-- Necesario para el bloqueo de negativos
 
 class CurrencyScreen extends StatefulWidget {
   const CurrencyScreen({super.key});
@@ -123,6 +124,11 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 controller: _montoController,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+                inputFormatters: [
+                  // <-- Solo permite números positivos y punto decimal
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
                 style: TextStyle(
                     fontSize: 28, fontWeight: FontWeight.bold, color: darkText),
                 decoration: InputDecoration(
