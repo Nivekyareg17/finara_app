@@ -44,9 +44,11 @@ class _SimpleInterestScreenState extends State<SimpleInterestScreen> {
           children: [
             TextField(
               controller: capitalController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: false),
               enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
               inputFormatters: [
+                // <-- ¡AQUÍ ESTÁ EL FILTRO FALTANTE! Bloquea letras y signos negativos
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
                   mantissaLength: 0,
