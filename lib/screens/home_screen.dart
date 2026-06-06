@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Encabezado
+            
                 Text(
                   lang.currentLanguage == 'zh' ? "AI 积分 (每日限制)" : "Tus Créditos IA (Límites diarios)",
                   style: TextStyle(
@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Divider(color: isDark ? Colors.white24 : Colors.grey[300]),
                 const SizedBox(height: 10),
 
-                // Consulta en tiempo real de TODOS los créditos
+                
                 FutureBuilder<Map<String, int>>(
                   future: AIService().obtenerCreditosDeUsuario(token, userNameReal),
                   builder: (context, snapshot) {
@@ -76,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
 
-                    // Datos por defecto (si falla la API o no hay datos, asume que están en 0)
+                
                     final creditos = snapshot.data ?? {};
                     final int cPensar = creditos['pensar'] ?? 0;
                     final int cBolsa = creditos['bolsa'] ?? 0;
@@ -130,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget auxiliar para crear las filas con su respectivo contador
+
   Widget _buildModelTile({required IconData icon, required String title, required String subtitle, required Color color, required int creditosRestantes, required bool isDark}) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -223,12 +223,12 @@ class _HomeScreenState extends State<HomeScreen> {
           body: ListView(
             padding: const EdgeInsets.symmetric(vertical: 20),
             children: [
-              // ESTADÍSTICAS
+         
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    // Ahora esta tarjeta ocupa todo el ancho porque quitamos la otra
+                    
                     Expanded(
                       child: StatCard(
                         title: "MENSAJES",

@@ -83,9 +83,9 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: false),
-      enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+      enableInteractiveSelection: false, 
       inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly, // <-- Bloquea negativos y decimales por defecto
+        FilteringTextInputFormatter.digitsOnly, 
       ],
       decoration: InputDecoration(
         labelText: label,
@@ -120,9 +120,9 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
                   child: TextField(
                     controller: _tasaController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+                    enableInteractiveSelection: false, 
                     inputFormatters: [
-                      // Solo permite números positivos y el punto decimal
+                      
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                     ],
                     decoration: const InputDecoration(
@@ -140,9 +140,9 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
             TextField(
               controller: _cashbackController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              enableInteractiveSelection: false, 
               inputFormatters: [
-                // Solo permite números positivos y el punto decimal
+                
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: const InputDecoration(
