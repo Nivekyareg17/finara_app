@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import '../../widgets/translate_widget.dart';
 
 class DiscountScreen extends StatefulWidget {
   const DiscountScreen({super.key});
@@ -56,7 +57,7 @@ class _DiscountScreenState extends State<DiscountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Calculadora de Descuentos")),
+      appBar: AppBar(title: const TranslatedText("Calculadora de Descuentos")), // <-- Traducido
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -72,7 +73,7 @@ class _DiscountScreenState extends State<DiscountScreen> {
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
                 decoration: const InputDecoration(
-                  labelText: "Precio Original",
+                  label: TranslatedText("Precio Original"), // <-- Cambiado labelText a label + TranslatedText
                   prefixIcon: Icon(Icons.sell),
                   border: OutlineInputBorder(),
                 ),
@@ -88,7 +89,7 @@ class _DiscountScreenState extends State<DiscountScreen> {
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
                 decoration: const InputDecoration(
-                  labelText: "Porcentaje de descuento (%)",
+                  label: TranslatedText("Porcentaje de descuento (%)"), // <-- Cambiado a label + TranslatedText
                   prefixIcon: Icon(Icons.percent),
                   border: OutlineInputBorder(),
                 ),
@@ -103,20 +104,20 @@ class _DiscountScreenState extends State<DiscountScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Text("Te ahorras",
+                    const TranslatedText("Te ahorras", // <-- Traducido
                         style: TextStyle(fontSize: 16, color: Colors.grey)),
                     Text(
-                      "\$${formatter.format(_ahorro)}",
+                      "\$${formatter.format(_ahorro)}", // El número se queda con Text normal
                       style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.pink),
                     ),
                     const Divider(height: 30),
-                    const Text("PRECIO FINAL",
+                    const TranslatedText("PRECIO FINAL", // <-- Traducido
                         style: TextStyle(fontSize: 16, color: Colors.grey)),
                     Text(
-                      "\$${formatter.format(_precioFinal)}",
+                      "\$${formatter.format(_precioFinal)}", // El número se queda con Text normal
                       style: const TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.w900,

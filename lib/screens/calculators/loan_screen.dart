@@ -1,11 +1,10 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // <-- Añadido para los formatters
-import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'dart:math';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import '../../widgets/translate_widget.dart';
 import 'calculator_widgets.dart';
-
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 class LoanScreen extends StatefulWidget {
   const LoanScreen({super.key});
 
@@ -40,8 +39,8 @@ class _LoanScreenState extends State<LoanScreen> {
   @override
   Widget build(BuildContext context) {
     return CalculatorScaffold(
-      title: "Prestamos",
-      subtitle: "Estima la cuota mensual antes de tomar un credito.",
+      title: const TranslatedText("Prestamos"),
+      subtitle: const TranslatedText("Estima la cuota mensual antes de tomar un credito."),
       icon: Icons.account_balance_rounded,
       accentColor: const Color(0xFF7C3AED),
       children: [
@@ -50,15 +49,16 @@ class _LoanScreenState extends State<LoanScreen> {
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
-              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
                   mantissaLength: 0,
                 ),
               ],
               decoration: calculatorInputDecoration(
-                label: "Monto del prestamo",
+                label: const TranslatedText("Monto del prestamo"),
                 hint: "Ej: 5.000.000",
                 icon: Icons.credit_card_rounded,
                 prefixText: "\$ ",
@@ -68,13 +68,12 @@ class _LoanScreenState extends State<LoanScreen> {
             TextField(
               controller: rateController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
-                // Solo permite números positivos y el punto decimal
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: calculatorInputDecoration(
-                label: "Tasa mensual (%)",
+                label: const TranslatedText("Tasa mensual (%)"),
                 hint: "Ej: 2 o 0.5%",
                 icon: Icons.percent_rounded,
               ),
@@ -83,35 +82,37 @@ class _LoanScreenState extends State<LoanScreen> {
             TextField(
               controller: monthsController,
               keyboardType: const TextInputType.numberWithOptions(decimal: false),
-              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
-                // Solo permite números enteros positivos
                 FilteringTextInputFormatter.digitsOnly,
               ],
               decoration: calculatorInputDecoration(
-                label: "Numero de cuotas",
+                label: const TranslatedText("Numero de cuotas"),
                 hint: "Ej: 24",
                 icon: Icons.event_repeat_rounded,
               ),
             ),
             const SizedBox(height: 18),
-            CalculatorButton(label: "Calcular cuota", onTap: calculate),
+            CalculatorButton(
+              label: const TranslatedText("Calcular cuota"), 
+              onTap: calculate
+            ),
           ],
         ),
         const SizedBox(height: 16),
         if (cuota != null)
           ResultCard(
-            title: "Pago mensual",
-            value: "\$ ${formatter.format(cuota)}",
-            caption: "Usa este valor para comparar opciones.",
+            title: const TranslatedText("Pago mensual"),
+            value: Text("\$ ${formatter.format(cuota)}"),
+            caption: TranslatedText("Usa este valor para comparar opciones. Total: \$${formatter.format(cuota! * (int.tryParse(monthsController.text) ?? 1))}"),
             icon: Icons.receipt_long_rounded,
             accentColor: const Color(0xFF7C3AED),
           )
         else
           const ResultCard(
-            title: "Consejo",
-            value: "Evalua la cuota",
-            caption: "Una buena cuota cabe en tu presupuesto mensual.",
+            title: TranslatedText("Consejo"),
+            value: TranslatedText("Evalua la cuota"),
+            caption: TranslatedText("Una buena cuota cabe en tu presupuesto mensual."),
             icon: Icons.tips_and_updates_rounded,
             accentColor: Color(0xFF7C3AED),
           ),

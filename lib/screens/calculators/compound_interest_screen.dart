@@ -1,5 +1,5 @@
 import 'dart:math';
-
+import '../../widgets/translate_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; 
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
@@ -37,8 +37,8 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
   @override
   Widget build(BuildContext context) {
     return CalculatorScaffold(
-      title: "Interes compuesto",
-      subtitle: "Proyecta crecimiento cuando las ganancias se reinvierten.",
+      title: TranslatedText("Interes compuesto"),
+      subtitle: TranslatedText("Proyecta crecimiento cuando las ganancias se reinvierten."),
       icon: Icons.show_chart_rounded,
       accentColor: const Color(0xFF2563EB),
       children: [
@@ -49,7 +49,6 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
               keyboardType: TextInputType.number,
               enableInteractiveSelection: false, 
               inputFormatters: [
-                
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
@@ -57,8 +56,8 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
                 ),
               ],
               decoration: calculatorInputDecoration(
-                label: "Capital inicial",
-                hint: "Ej: 1.000.000",
+                label: TranslatedText("Capital inicial"),
+                hint: ("Ej: 1.000.000"),
                 icon: Icons.payments_rounded,
                 prefixText: "\$ ",
               ),
@@ -69,12 +68,11 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               enableInteractiveSelection: false, 
               inputFormatters: [
-              
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: calculatorInputDecoration(
-                label: "Tasa anual (%)",
-                hint: "Ej: 12 o 5.5",
+                label: TranslatedText("Tasa anual (%)"),
+                hint: ("Ej: 12 o 5.5"),
                 icon: Icons.percent_rounded,
               ),
             ),
@@ -84,35 +82,37 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               enableInteractiveSelection: false,
               inputFormatters: [
-              
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: calculatorInputDecoration(
-                label: "Tiempo en años",
-                hint: "Ej: 5",
+                label: TranslatedText("Tiempo en años"),
+                hint: ("Ej: 5"),
                 icon: Icons.timelapse_rounded,
               ),
             ),
             const SizedBox(height: 18),
-            CalculatorButton(label: "Proyectar crecimiento", onTap: calculate),
+            CalculatorButton(
+              label: TranslatedText("Proyectar crecimiento"), 
+              onTap: calculate,
+            ),
           ],
         ),
         const SizedBox(height: 16),
         if (total != null)
           ResultCard(
-            title: "Total acumulado",
-            value: "\$ ${formatter.format(total)}",
-            caption: "Ganancia estimada: \$ ${formatter.format(interest)}",
+            title: const TranslatedText("Total acumulado"),
+            value: Text("\$ ${formatter.format(total)}"), // <--- ¡AQUÍ ESTABA EL ERROR! Lo envolvemos en Text()
+            caption: TranslatedText("Ganancia estimada: \$ ${formatter.format(interest)}"),
             icon: Icons.auto_graph_rounded,
             accentColor: const Color(0xFF2563EB),
           )
         else
-          const ResultCard(
-            title: "Crecimiento",
-            value: "Intereses sobre intereses",
-            caption: "Ideal para inversiones de mediano y largo plazo.",
+          ResultCard(
+            title: TranslatedText("Crecimiento"),
+            value: TranslatedText("Intereses sobre intereses"),
+            caption: TranslatedText("Ideal para inversiones de mediano y largo plazo."),
             icon: Icons.insights_rounded,
-            accentColor: Color(0xFF2563EB),
+            accentColor: const Color(0xFF2563EB),
           ),
       ],
     );

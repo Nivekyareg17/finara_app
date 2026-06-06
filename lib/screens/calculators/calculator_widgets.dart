@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/translate_widget.dart';
+
 class CalculatorScaffold extends StatelessWidget {
   const CalculatorScaffold({
     super.key,
@@ -10,8 +10,9 @@ class CalculatorScaffold extends StatelessWidget {
     required this.children,
   });
 
-  final String title;
-  final String subtitle;
+  // Cambiado de String a Widget para soportar TranslatedText
+  final Widget title;
+  final Widget subtitle;
   final IconData icon;
   final Color accentColor;
   final List<Widget> children;
@@ -27,9 +28,14 @@ class CalculatorScaffold extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? Colors.white : const Color(0xFF064E3B),
-        title: TranslatedText(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w900),
+        // Ya no envolvemos en TranslatedText aquí, asumimos que 'title' ya es un TranslatedText
+        title: DefaultTextStyle(
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 20, // Ajuste sugerido para el AppBar
+            color: isDark ? Colors.white : const Color(0xFF064E3B),
+          ),
+          child: title,
         ),
       ),
       body: ListView(
@@ -67,19 +73,23 @@ class CalculatorScaffold extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TranslatedText(
-                        title,
+                      // El title ya es un Widget, le damos el estilo envolviéndolo
+                      DefaultTextStyle(
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
                         ),
+                        child: title,
                       ),
                       const SizedBox(height: 6),
-                      TranslatedText(
-                        subtitle,
-                        style:
-                            const TextStyle(color: Colors.white70, height: 1.3),
+                      // El subtitle ya es un Widget, le damos el estilo envolviéndolo
+                      DefaultTextStyle(
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          height: 1.3,
+                        ),
+                        child: subtitle,
                       ),
                     ],
                   ),
@@ -126,16 +136,17 @@ class CalculatorPanel extends StatelessWidget {
 }
 
 InputDecoration calculatorInputDecoration({
-  required String label,
-  required String hint,
+  required Widget label, // <-- Cambiado de String a Widget
+  required String hint,  // Mantenemos String porque hintText nativo lo requiere
   IconData? icon,
   String? prefixText,
 }) {
   return InputDecoration(
-    labelText: label,
+    label: label, // <-- Cambiado labelText: por label:
     hintText: hint,
     prefixText: prefixText,
-    prefixIcon: icon == null ? null : Icon(icon, color: const Color(0xFF10B981)),
+    prefixIcon:
+        icon == null ? null : Icon(icon, color: const Color(0xFF10B981)),
     filled: true,
     fillColor: const Color(0xFFF8FAFC),
     border: OutlineInputBorder(
@@ -156,7 +167,8 @@ InputDecoration calculatorInputDecoration({
 class CalculatorButton extends StatelessWidget {
   const CalculatorButton({super.key, required this.label, required this.onTap});
 
-  final String label;
+  // Cambiado de String a Widget
+  final Widget label;
   final VoidCallback onTap;
 
   @override
@@ -174,9 +186,10 @@ class CalculatorButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: TranslatedText(
-          label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+        // Ya no envolvemos en TranslatedText, asumimos que 'label' ya lo es
+        child: DefaultTextStyle(
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white),
+          child: label,
         ),
       ),
     );
@@ -193,14 +206,17 @@ class ResultCard extends StatelessWidget {
     this.accentColor = const Color(0xFF10B981),
   });
 
-  final String title;
-  final String value;
-  final String caption;
+  // Cambiado de String a Widget
+  final Widget title;
+  final Widget value;
+  final Widget caption;
   final IconData icon;
   final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -224,16 +240,23 @@ class ResultCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TranslatedText(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                DefaultTextStyle(
+                  style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : Colors.black87),
+                  child: title,
+                ),
                 const SizedBox(height: 4),
-                TranslatedText(
-                  value,
-                  style: const TextStyle(
+                DefaultTextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
+                  child: value,
                 ),
-                TranslatedText(caption, style: const TextStyle(color: Colors.black54)),
+                DefaultTextStyle(
+                  style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                  child: caption,
+                ),
               ],
             ),
           ),

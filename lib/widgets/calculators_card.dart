@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// ¡Asegúrate de ajustar esta ruta según la ubicación real de tu archivo!
+import '../../widgets/translate_widget.dart'; 
 
 class CalculatorsCard extends StatelessWidget {
   final VoidCallback onTap;
@@ -51,7 +53,7 @@ class CalculatorsCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  Text(
+                  TranslatedText( // <-- Etiqueta aplicada al título
                     "Calculadoras Financieras",
                     style: TextStyle(
                       color: Colors.white,
@@ -60,7 +62,7 @@ class CalculatorsCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 4),
-                  Text(
+                  TranslatedText( // <-- Etiqueta aplicada al subtítulo
                     "Interés, préstamos y ahorro",
                     style: TextStyle(
                       color: Colors.white70,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import '../../widgets/translate_widget.dart'; // Asegúrate de que la ruta sea correcta
 
 class CreditCardScreen extends StatefulWidget {
   const CreditCardScreen({super.key});
@@ -88,7 +89,8 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
         FilteringTextInputFormatter.digitsOnly, 
       ],
       decoration: InputDecoration(
-        labelText: label,
+        // Cambiamos labelText por label para que acepte el Widget TranslatedText
+        label: TranslatedText(label),
         border: const OutlineInputBorder(),
       ),
       onChanged: (v) {
@@ -101,7 +103,7 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Tarjeta vs Cashback")),
+      appBar: AppBar(title: const TranslatedText("Tarjeta vs Cashback")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -122,11 +124,11 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     enableInteractiveSelection: false, 
                     inputFormatters: [
-                      
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                     ],
                     decoration: const InputDecoration(
-                      labelText: "Tasa Interés M.V (%)",
+                      // Usamos label en lugar de labelText
+                      label: TranslatedText("Tasa Interés M.V (%)"),
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (v) => _calcularDiferencia(),
@@ -142,11 +144,11 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               enableInteractiveSelection: false, 
               inputFormatters: [
-                
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: const InputDecoration(
-                labelText: "% de Cashback de tu tarjeta",
+                // Usamos label en lugar de labelText
+                label: TranslatedText("% de Cashback de tu tarjeta"),
                 border: OutlineInputBorder(),
               ),
               onChanged: (v) => _calcularDiferencia(),
@@ -168,13 +170,14 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
 
             const Divider(height: 30),
 
-            Text(
+            // Envolvemos el texto condicional en TranslatedText
+            TranslatedText(
               _diferencia > 0 ? "El banco gana:" : "Tú ganas:",
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
 
             Text(
-              "\$${_money(_diferencia.abs())}",
+              "\$${_money(_diferencia.abs())}", // Los números puros se mantienen con Text normal
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w900,
@@ -193,9 +196,10 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
+          // Aplicamos TranslatedText al label
+          TranslatedText(label, style: const TextStyle(fontSize: 16)),
           Text(
-            value,
+            value, // El valor numérico se queda en Text
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
           ),
         ],

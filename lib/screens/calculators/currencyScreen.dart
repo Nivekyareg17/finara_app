@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart'; // <-- Necesario para el bloqueo de negativos
+import 'package:flutter/services.dart'; 
+import '../../widgets/translate_widget.dart'; // <-- Importación del traductor
 
 class CurrencyScreen extends StatefulWidget {
   const CurrencyScreen({super.key});
@@ -69,7 +70,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       debugPrint("Error fetching currency: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("Error al conectar. Verifica tu internet."),
+            // Aplicamos TranslatedText a la alerta de error
+            content: TranslatedText("Error al conectar. Verifica tu internet."),
             backgroundColor: Colors.redAccent),
       );
     } finally {
@@ -101,7 +103,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Divisas en Tiempo Real",
+        // Aplicamos TranslatedText al título
+        title: const TranslatedText("Divisas en Tiempo Real",
             style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: primaryGreen,
@@ -124,15 +127,15 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 controller: _montoController,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+                enableInteractiveSelection: false, 
                 inputFormatters: [
-                  // <-- Solo permite números positivos y punto decimal
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
                 style: TextStyle(
                     fontSize: 28, fontWeight: FontWeight.bold, color: darkText),
                 decoration: InputDecoration(
-                  labelText: "Monto a convertir",
+                  // Usamos label en lugar de labelText para poder pasar el Widget TranslatedText
+                  label: const TranslatedText("Monto a convertir"),
                   labelStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
                   prefixIcon:
                       Icon(Icons.attach_money, color: primaryGreen, size: 30),
@@ -219,7 +222,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               ),
               child: Column(
                 children: [
-                  const Text("Monto Convertido",
+                  // Aplicamos TranslatedText
+                  const TranslatedText("Monto Convertido",
                       style: TextStyle(
                           fontSize: 16,
                           color: Colors.white70,
@@ -239,7 +243,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                           child: Text(
                             "\$${_resultado.toStringAsFixed(2)} $_toCurrency",
                             key: ValueKey<double>(
-                                _resultado), // El key fuerza la animación cuando el valor cambia
+                                _resultado), 
                             style: const TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.w900,
@@ -255,9 +259,19 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                     decoration: BoxDecoration(
                         color: Colors.white24,
                         borderRadius: BorderRadius.circular(20)),
-                    child: Text(
-                      "Tasa de mercado: 1 $_fromCurrency = ${_tasaActual.toStringAsFixed(2)} $_toCurrency",
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    // Aquí separamos la parte dinámica de la parte estática a traducir
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const TranslatedText(
+                          "Tasa de mercado: ",
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                        Text(
+                          "1 $_fromCurrency = ${_tasaActual.toStringAsFixed(2)} $_toCurrency",
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
                     ),
                   )
                 ],
@@ -287,7 +301,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
           items: _monedas.map((String coin) {
             return DropdownMenuItem<String>(
               value: coin,
-              child: Text(coin),
+              child: Text(coin), // Las siglas USD, COP, no se traducen
             );
           }).toList(),
           onChanged: onChanged,

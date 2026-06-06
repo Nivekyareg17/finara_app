@@ -1,10 +1,10 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // <-- Añadido para los formatters
+import 'package:flutter/services.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:intl/intl.dart';
 import 'calculator_widgets.dart';
+import '../../widgets/translate_widget.dart';
 
 class SavingsGoalScreen extends StatefulWidget {
   const SavingsGoalScreen({super.key});
@@ -37,8 +37,8 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
   @override
   Widget build(BuildContext context) {
     return CalculatorScaffold(
-      title: "Ahorro",
-      subtitle: "Define cuanto necesitas guardar cada mes para llegar a tu meta.",
+      title: const TranslatedText("Ahorro"),
+      subtitle: const TranslatedText("Define cuanto necesitas guardar cada mes para llegar a tu meta."),
       icon: Icons.savings_rounded,
       accentColor: const Color(0xFFF59E0B),
       children: [
@@ -47,15 +47,16 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
             TextField(
               controller: goalController,
               keyboardType: TextInputType.number,
-              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
                   mantissaLength: 0,
                 ),
               ],
               decoration: calculatorInputDecoration(
-                label: "Meta de ahorro",
+                label: const TranslatedText("Meta de ahorro"),
                 hint: "Ej: 3.000.000",
                 icon: Icons.flag_rounded,
                 prefixText: "\$ ",
@@ -65,13 +66,12 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
             TextField(
               controller: rateController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
-                // Solo permite números positivos y el punto decimal
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: calculatorInputDecoration(
-                label: "Rendimiento mensual (%)",
+                label: const TranslatedText("Rendimiento mensual (%)"),
                 hint: "Ej: 1 o 0.5%",
                 icon: Icons.percent_rounded,
               ),
@@ -80,35 +80,37 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
             TextField(
               controller: monthsController,
               keyboardType: const TextInputType.numberWithOptions(decimal: false),
-              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
-                // Solo permite números enteros positivos
                 FilteringTextInputFormatter.digitsOnly,
               ],
               decoration: calculatorInputDecoration(
-                label: "Tiempo en meses",
+                label: const TranslatedText("Tiempo en meses"),
                 hint: "Ej: 12",
                 icon: Icons.calendar_view_month_rounded,
               ),
             ),
             const SizedBox(height: 18),
-            CalculatorButton(label: "Calcular ahorro", onTap: calculate),
+            CalculatorButton(
+                label: const TranslatedText("Calcular ahorro"), 
+                onTap: calculate
+            ),
           ],
         ),
         const SizedBox(height: 16),
         if (monthlySaving != null)
           ResultCard(
-            title: "Ahorro mensual",
-            value: "\$ ${formatter.format(monthlySaving)}",
-            caption: "Guarda este monto para llegar a tiempo.",
+            title: const TranslatedText("Ahorro mensual"),
+            value: Text("\$ ${formatter.format(monthlySaving)}"),
+            caption: TranslatedText("Guarda este monto para llegar a tiempo."),
             icon: Icons.check_circle_rounded,
             accentColor: const Color(0xFFF59E0B),
           )
         else
           const ResultCard(
-            title: "Plan",
-            value: "Meta + tiempo",
-            caption: "Convierte una meta grande en cuotas mensuales.",
+            title: TranslatedText("Plan"),
+            value: TranslatedText("Meta + tiempo"),
+            caption: TranslatedText("Convierte una meta grande en cuotas mensuales."),
             icon: Icons.route_rounded,
             accentColor: Color(0xFFF59E0B),
           ),

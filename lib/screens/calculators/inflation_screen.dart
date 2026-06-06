@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart'; // <-- Necesario para el bloqueo de negativos
-import 'dart:math'; // <-- Necesario para la fórmula real de inflación (potencia)
+import 'package:flutter/services.dart'; 
+import 'dart:math'; 
 import 'calculator_widgets.dart';
+import '../../widgets/translate_widget.dart';
 
 class InflationScreen extends StatefulWidget {
   const InflationScreen({super.key});
@@ -27,7 +28,6 @@ class _InflationScreenState extends State<InflationScreen> {
     final years = double.tryParse(yearsController.text) ?? 0;
 
     setState(() {
-      // Fórmula corregida a interés compuesto (inflación real)
       futureValue = amount * pow(1 + rate, years);
     });
   }
@@ -35,8 +35,8 @@ class _InflationScreenState extends State<InflationScreen> {
   @override
   Widget build(BuildContext context) {
     return CalculatorScaffold(
-      title: "Inflacion",
-      subtitle: "Mide como cambia el precio de tus compras con el tiempo.",
+      title: const TranslatedText("Inflacion"),
+      subtitle: const TranslatedText("Mide como cambia el precio de tus compras con el tiempo."),
       icon: Icons.price_change_rounded,
       accentColor: const Color(0xFFEF4444),
       children: [
@@ -45,15 +45,16 @@ class _InflationScreenState extends State<InflationScreen> {
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
-              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
                   mantissaLength: 0,
                 ),
               ],
               decoration: calculatorInputDecoration(
-                label: "Valor actual",
+                label: const TranslatedText("Valor actual"),
                 hint: "Ej: 1.000.000",
                 icon: Icons.shopping_bag_rounded,
                 prefixText: "\$ ",
@@ -63,13 +64,12 @@ class _InflationScreenState extends State<InflationScreen> {
             TextField(
               controller: rateController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
-                // Solo permite números positivos y el punto decimal
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: calculatorInputDecoration(
-                label: "Inflacion anual (%)",
+                label: const TranslatedText("Inflacion anual (%)"),
                 hint: "Ej: 8 o 3.5",
                 icon: Icons.percent_rounded,
               ),
@@ -78,35 +78,37 @@ class _InflationScreenState extends State<InflationScreen> {
             TextField(
               controller: yearsController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+              enableInteractiveSelection: false,
               inputFormatters: [
-                // Solo permite números positivos y el punto decimal
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               decoration: calculatorInputDecoration(
-                label: "Tiempo en años",
+                label: const TranslatedText("Tiempo en años"),
                 hint: "Ej: 5",
                 icon: Icons.hourglass_bottom_rounded,
               ),
             ),
             const SizedBox(height: 18),
-            CalculatorButton(label: "Calcular valor futuro", onTap: calculate),
+            CalculatorButton(
+                label: const TranslatedText("Calcular valor futuro"), 
+                onTap: calculate
+            ),
           ],
         ),
         const SizedBox(height: 16),
         if (futureValue != null)
           ResultCard(
-            title: "Valor futuro estimado",
-            value: "\$ ${formatter.format(futureValue)}",
-            caption: "Referencia para planear compras futuras.",
+            title: const TranslatedText("Valor futuro estimado"),
+            value: Text("\$ ${formatter.format(futureValue)}"),
+            caption: TranslatedText("Ganancia estimada: \$ ${formatter.format(futureValue)}"),
             icon: Icons.trending_up_rounded,
             accentColor: const Color(0xFFEF4444),
           )
         else
           const ResultCard(
-            title: "Poder adquisitivo",
-            value: "Precio hoy vs futuro",
-            caption: "Te ayuda a anticipar aumentos de precio.",
+            title: TranslatedText("Poder adquisitivo"),
+            value: TranslatedText("Precio hoy vs futuro"),
+            caption: TranslatedText("Te ayuda a anticipar aumentos de precio."),
             icon: Icons.query_stats_rounded,
             accentColor: Color(0xFFEF4444),
           ),

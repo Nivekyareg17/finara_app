@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import '../../widgets/translate_widget.dart';
 
 class HousingGoalScreen extends StatefulWidget {
   const HousingGoalScreen({super.key});
@@ -92,12 +93,12 @@ class _HousingGoalScreenState extends State<HousingGoalScreen> {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: false),
-      enableInteractiveSelection: false, // <-- AÑADIDO: Bloqueo de portapapeles
+      enableInteractiveSelection: false,
       inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly, // <-- Ya tenías esto: Bloquea negativos y decimales automáticamente
+        FilteringTextInputFormatter.digitsOnly,
       ],
       decoration: InputDecoration(
-        labelText: label,
+        label: TranslatedText(label), // Traducido
         prefixIcon: Icon(icon),
         border: const OutlineInputBorder(),
       ),
@@ -111,7 +112,7 @@ class _HousingGoalScreenState extends State<HousingGoalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Planificador de Vivienda")),
+      appBar: AppBar(title: const TranslatedText("Planificador de Vivienda")), // Traducido
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -132,7 +133,7 @@ class _HousingGoalScreenState extends State<HousingGoalScreen> {
               ),
               child: Column(
                 children: [
-                  const Text(
+                  const TranslatedText(
                     "FASE 1: Ahorro Cuota Inicial (30%)",
                     style: TextStyle(
                       fontSize: 14,
@@ -143,10 +144,7 @@ class _HousingGoalScreenState extends State<HousingGoalScreen> {
                   const SizedBox(height: 10),
                   Text(
                     "\$${_money(_cuotaInicial)}",
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const Divider(height: 30),
                   if (_montoFaltanteInicial <= 0 && _valorVivienda > 0)
@@ -154,19 +152,16 @@ class _HousingGoalScreenState extends State<HousingGoalScreen> {
                       children: [
                         Icon(Icons.check_circle, color: Colors.green, size: 40),
                         SizedBox(height: 5),
-                        Text(
+                        TranslatedText(
                           "¡Meta de ahorro cumplida!",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
                         ),
                       ],
                     )
                   else
                     Column(
                       children: [
-                        const Text("Tiempo estimado para lograrlo"),
+                        const TranslatedText("Tiempo estimado para lograrlo"),
                         Text(
                           "$_mesesFaltantes meses",
                           style: const TextStyle(
@@ -191,24 +186,18 @@ class _HousingGoalScreenState extends State<HousingGoalScreen> {
               ),
               child: Column(
                 children: [
-                  const Text(
+                  const TranslatedText(
                     "FASE 2: El Crédito Bancario (70%)",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                   ),
                   const SizedBox(height: 10),
-                  const Text("Monto a financiar con el banco:"),
+                  const TranslatedText("Monto a financiar con el banco:"),
                   Text(
                     "\$${_money(_montoFinanciar)}",
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const Divider(height: 30),
-                  const Text("Cuota mensual estimada (A 20 años)"),
+                  const TranslatedText("Cuota mensual estimada (A 20 años)"),
                   Text(
                     "\$${_money(_cuotaMensualEstimada)}",
                     style: const TextStyle(
