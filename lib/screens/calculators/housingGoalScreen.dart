@@ -92,8 +92,9 @@ class _HousingGoalScreenState extends State<HousingGoalScreen> {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: false),
+      enableInteractiveSelection: false, // <-- AÑADIDO: Bloqueo de portapapeles
       inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
+        FilteringTextInputFormatter.digitsOnly, // <-- Ya tenías esto: Bloquea negativos y decimales automáticamente
       ],
       decoration: InputDecoration(
         labelText: label,
