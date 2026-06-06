@@ -4,28 +4,9 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Note, User
 from pydantic import BaseModel
-from jose import jwt, JWTError
+from routers.user_routes import get_current_user  # ✅ reutiliza el mismo que funciona en /users/me
 
 router = APIRouter(prefix="/notes", tags=["Notas"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-SECRET_KEY = "tu_secret_key"   # el mismo que usas al crear el token
-ALGORITHM = "HS256"
-
-# Dependencia que extrae el usuario del token
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("user_id")  # o "sub", según cómo lo generes
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return user
 
 class NoteSchema(BaseModel):
     title: str
@@ -38,7 +19,7 @@ async def create_note(data: NoteSchema, db: Session = Depends(get_db), current_u
         title=data.title,
         content=data.content,
         category_name=data.category_name,
-        user_id=current_user.id  # ✅ usa el usuario del token
+        user_id=current_user.id
     )
     db.add(new_note)
     db.commit()
@@ -47,11 +28,11 @@ async def create_note(data: NoteSchema, db: Session = Depends(get_db), current_u
 
 @router.get("/")
 async def get_notes(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Note).filter(Note.user_id == current_user.id).all()  # ✅ solo sus notas
+    return db.query(Note).filter(Note.user_id == current_user.id).all()
 
 @router.put("/{note_id}/")
 async def update_note(note_id: int, data: NoteSchema, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()  # ✅ verifica que sea suya
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
     if not note:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
     note.title = data.title
@@ -63,7 +44,7 @@ async def update_note(note_id: int, data: NoteSchema, db: Session = Depends(get_
 
 @router.delete("/{note_id}/")
 async def delete_note(note_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()  # ✅ verifica que sea suya
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
     if not note:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
     db.delete(note)
