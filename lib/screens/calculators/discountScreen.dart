@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 class DiscountScreen extends StatefulWidget {
   const DiscountScreen({super.key});
@@ -64,7 +65,12 @@ class _DiscountScreenState extends State<DiscountScreen> {
             children: [
               TextField(
                 controller: _precioController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+                inputFormatters: [
+                  // Solo permite números positivos y el punto decimal
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
                 decoration: const InputDecoration(
                   labelText: "Precio Original",
                   prefixIcon: Icon(Icons.sell),
@@ -75,7 +81,12 @@ class _DiscountScreenState extends State<DiscountScreen> {
               const SizedBox(height: 15),
               TextField(
                 controller: _descuentoController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+                inputFormatters: [
+                  // Solo permite números positivos y el punto decimal
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
                 decoration: const InputDecoration(
                   labelText: "Porcentaje de descuento (%)",
                   prefixIcon: Icon(Icons.percent),
