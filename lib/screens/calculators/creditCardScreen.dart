@@ -83,8 +83,9 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: false),
+      enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
       inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
+        FilteringTextInputFormatter.digitsOnly, // <-- Bloquea negativos y decimales por defecto
       ],
       decoration: InputDecoration(
         labelText: label,
@@ -119,6 +120,11 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
                   child: TextField(
                     controller: _tasaController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+                    inputFormatters: [
+                      // Solo permite números positivos y el punto decimal
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
                     decoration: const InputDecoration(
                       labelText: "Tasa Interés M.V (%)",
                       border: OutlineInputBorder(),
@@ -134,6 +140,11 @@ class _CreditCardScreenState extends State<CreditCardScreen> {
             TextField(
               controller: _cashbackController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: const InputDecoration(
                 labelText: "% de Cashback de tu tarjeta",
                 border: OutlineInputBorder(),
