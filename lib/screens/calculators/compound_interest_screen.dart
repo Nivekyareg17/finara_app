@@ -49,7 +49,8 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
               keyboardType: TextInputType.number,
               enableInteractiveSelection: false, // <-- Bloquea el portapapeles
               inputFormatters: [
-                // MoneyInputFormatter bloquea los negativos por defecto
+                // <-- ¡FILTRO AÑADIDO! Bloquea letras y signos negativos antes de formatear
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
                   mantissaLength: 0,
