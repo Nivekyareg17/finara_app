@@ -125,7 +125,6 @@ class AIService {
 
   // ──────────────────────────────────────────────
   // OBTENER HISTORIAL DE UNA SESIÓN
-  // Reconstruye tanto mensajes del usuario como de Daiko
   // ──────────────────────────────────────────────
   Future<List<ChatMessage>> getHistoryBySession(
       String sessionId, String token, String userNameReal) async {
@@ -202,6 +201,36 @@ class AIService {
     } catch (e) {
       print("Error de conexión al eliminar sesión: $e");
       return false;
+    }
+  }
+
+ // ──────────────────────────────────────────────
+  // OBTENER CRÉDITOS IA DEL USUARIO (POR HERRAMIENTA)
+  // ──────────────────────────────────────────────
+  Future<Map<String, int>> obtenerCreditosDeUsuario(String token, String userNameReal) async {
+    // Añadimos el user_name a la URL (codificado por si tiene espacios)
+    final url = Uri.parse('$_baseUrl/creditos?user_name=${Uri.encodeComponent(userNameReal)}'); 
+    
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        // Convertimos la respuesta del backend a un mapa de Textos y Números
+        return data.map((key, value) => MapEntry(key, value as int));
+      } else {
+        print("Error obteniendo créditos: ${response.statusCode} - ${response.body}");
+        return {}; // Retorna mapa vacío si falla
+      }
+    } catch (e) {
+      print("Error de conexión al obtener créditos: $e");
+      return {}; 
     }
   }
 }
