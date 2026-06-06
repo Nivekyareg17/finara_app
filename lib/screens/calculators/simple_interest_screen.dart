@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // <-- Añadido para los formatters
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:intl/intl.dart';
 import 'calculator_widgets.dart';
@@ -44,6 +45,7 @@ class _SimpleInterestScreenState extends State<SimpleInterestScreen> {
             TextField(
               controller: capitalController,
               keyboardType: TextInputType.number,
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
               inputFormatters: [
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
@@ -60,20 +62,30 @@ class _SimpleInterestScreenState extends State<SimpleInterestScreen> {
             const SizedBox(height: 14),
             TextField(
               controller: rateController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Tasa anual (%)",
-                hint: "Ej: 10 o 2.4%",
+                hint: "Ej: 10 o 2.4",
                 icon: Icons.percent_rounded,
               ),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: timeController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Tiempo en años",
-                hint: "Ej: 2",
+                hint: "Ej: 2 o 1.5",
                 icon: Icons.calendar_month_rounded,
               ),
             ),
