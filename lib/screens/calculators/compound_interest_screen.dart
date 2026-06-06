@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // <-- Necesario para los formatters (regex)
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:intl/intl.dart';
 import 'calculator_widgets.dart';
@@ -46,7 +47,9 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
             TextField(
               controller: capitalController,
               keyboardType: TextInputType.number,
+              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
               inputFormatters: [
+                // MoneyInputFormatter bloquea los negativos por defecto
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
                   mantissaLength: 0,
@@ -62,17 +65,27 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
             const SizedBox(height: 14),
             TextField(
               controller: rateController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Tasa anual (%)",
-                hint: "Ej: 12 o 5.5%",
+                hint: "Ej: 12 o 5.5",
                 icon: Icons.percent_rounded,
               ),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: timeController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Tiempo en años",
                 hint: "Ej: 5",
