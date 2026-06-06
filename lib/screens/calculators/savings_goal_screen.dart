@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // <-- Añadido para los formatters
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:intl/intl.dart';
 import 'calculator_widgets.dart';
@@ -46,6 +47,7 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
             TextField(
               controller: goalController,
               keyboardType: TextInputType.number,
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
               inputFormatters: [
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
@@ -62,7 +64,12 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
             const SizedBox(height: 14),
             TextField(
               controller: rateController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Rendimiento mensual (%)",
                 hint: "Ej: 1 o 0.5%",
@@ -72,7 +79,12 @@ class _SavingsGoalScreenState extends State<SavingsGoalScreen> {
             const SizedBox(height: 14),
             TextField(
               controller: monthsController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: false),
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              inputFormatters: [
+                // Solo permite números enteros positivos
+                FilteringTextInputFormatter.digitsOnly,
+              ],
               decoration: calculatorInputDecoration(
                 label: "Tiempo en meses",
                 hint: "Ej: 12",
