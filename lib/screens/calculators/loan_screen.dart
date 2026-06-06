@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // <-- Añadido para los formatters
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:intl/intl.dart';
 import 'calculator_widgets.dart';
@@ -49,6 +50,7 @@ class _LoanScreenState extends State<LoanScreen> {
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
               inputFormatters: [
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
@@ -65,7 +67,12 @@ class _LoanScreenState extends State<LoanScreen> {
             const SizedBox(height: 14),
             TextField(
               controller: rateController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Tasa mensual (%)",
                 hint: "Ej: 2 o 0.5%",
@@ -75,7 +82,12 @@ class _LoanScreenState extends State<LoanScreen> {
             const SizedBox(height: 14),
             TextField(
               controller: monthsController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: false),
+              enableInteractiveSelection: false, // <-- Bloqueo de portapapeles
+              inputFormatters: [
+                // Solo permite números enteros positivos
+                FilteringTextInputFormatter.digitsOnly,
+              ],
               decoration: calculatorInputDecoration(
                 label: "Numero de cuotas",
                 hint: "Ej: 24",
