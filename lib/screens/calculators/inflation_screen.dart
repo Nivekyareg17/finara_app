@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart'; // <-- Necesario para el bloqueo de negativos
+import 'dart:math'; // <-- Necesario para la fórmula real de inflación (potencia)
 import 'calculator_widgets.dart';
 
 class InflationScreen extends StatefulWidget {
@@ -25,7 +27,8 @@ class _InflationScreenState extends State<InflationScreen> {
     final years = double.tryParse(yearsController.text) ?? 0;
 
     setState(() {
-      futureValue = amount * (1 + rate * years);
+      // Fórmula corregida a interés compuesto (inflación real)
+      futureValue = amount * pow(1 + rate, years);
     });
   }
 
@@ -42,6 +45,7 @@ class _InflationScreenState extends State<InflationScreen> {
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
+              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
               inputFormatters: [
                 MoneyInputFormatter(
                   thousandSeparator: ThousandSeparator.Period,
@@ -58,17 +62,27 @@ class _InflationScreenState extends State<InflationScreen> {
             const SizedBox(height: 14),
             TextField(
               controller: rateController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Inflacion anual (%)",
-                hint: "Ej: 8 o 3.5%",
+                hint: "Ej: 8 o 3.5",
                 icon: Icons.percent_rounded,
               ),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: yearsController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              enableInteractiveSelection: false, // <-- Bloquea el portapapeles
+              inputFormatters: [
+                // Solo permite números positivos y el punto decimal
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               decoration: calculatorInputDecoration(
                 label: "Tiempo en años",
                 hint: "Ej: 5",
