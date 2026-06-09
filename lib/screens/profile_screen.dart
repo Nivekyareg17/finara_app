@@ -1019,6 +1019,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _showProfileInfoSheet();
                     },
                   ),
+
+                  _buildDrawerItem(
+                    icon: Icons.admin_panel_settings_rounded,
+                    title: "Alternar Vista",
+                    subtitle: "Cambiar a Admin/Cliente",
+                    color: Colors.deepPurple,
+                    onTap: () async {
+                      Navigator.pop(context); // cierra drawer
+                      await Future.delayed(const Duration(milliseconds: 200));
+                      final auth = context.read<AuthProvider>();
+                      auth.toggleView(); // cambia el rol
+                      // Redirige según el nuevo rol
+                      final newRoute =
+                          auth.isAdmin ? '/admin' : '/home';
+                      Navigator.pushReplacementNamed(context, newRoute);
+                    },
+                  ),
                 ],
               ),
             ),
