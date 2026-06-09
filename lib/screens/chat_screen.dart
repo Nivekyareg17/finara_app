@@ -302,9 +302,21 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> sendMessage() async {
+  Future<void> sendMessage() async {    
     final text = controller.text.trim();
-    if (text.isEmpty || isBlockedByMe || isBlockedByOther || isSendingMessage) {
+
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Color.fromARGB(255, 26, 92, 28),
+          content: Text("No puedes enviar un mensaje vacío"),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return; 
+    }
+
+    if (isBlockedByMe || isBlockedByOther || isSendingMessage) {
       return;
     }
 
@@ -467,82 +479,85 @@ class _ChatScreenState extends State<ChatScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: isDark ? const Color(0xFF10231F) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : const Color(0xFFDADDE1),
-                    borderRadius: BorderRadius.circular(999),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : const Color(0xFFDADDE1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                contactAvatar(82),
-                const SizedBox(height: 12),
-                Text(
-                  widget.userName,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
+                  const SizedBox(height: 18),
+                  contactAvatar(82),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.userName,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: const Icon(Icons.person_rounded),
-                  title: const Text("Ver perfil"),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    openContactProfile();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.refresh_rounded),
-                  title: const Text("Actualizar chat"),
-                  onTap: () async {
-                    Navigator.pop(sheetContext);
-                    await loadMessages();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.cleaning_services_rounded),
-                  title: const Text("Limpiar chat"),
-                  onTap: () async {
-                    Navigator.pop(sheetContext);
-                    await clearChatView();
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    isBlockedByMe
-                        ? Icons.lock_open_rounded
-                        : Icons.block_rounded,
-                    color: isBlockedByMe ? Colors.green : Colors.redAccent,
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: const Icon(Icons.person_rounded),
+                    title: const Text("Ver perfil"),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      openContactProfile();
+                    },
                   ),
-                  title: Text(
-                    isBlockedByMe
-                        ? "Desbloquear contacto"
-                        : "Bloquear contacto",
+                  ListTile(
+                    leading: const Icon(Icons.refresh_rounded),
+                    title: const Text("Actualizar chat"),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      await loadMessages();
+                    },
                   ),
-                  textColor: isBlockedByMe ? Colors.green : Colors.redAccent,
-                  onTap: isLoadingBlock
-                      ? null
-                      : () async {
-                          Navigator.pop(sheetContext);
-                          await toggleBlock();
-                        },
-                ),
-              ],
+                  ListTile(
+                    leading: const Icon(Icons.cleaning_services_rounded),
+                    title: const Text("Limpiar chat"),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      await clearChatView();
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      isBlockedByMe
+                          ? Icons.lock_open_rounded
+                          : Icons.block_rounded,
+                      color: isBlockedByMe ? Colors.green : Colors.redAccent,
+                    ),
+                    title: Text(
+                      isBlockedByMe
+                          ? "Desbloquear contacto"
+                          : "Bloquear contacto",
+                    ),
+                    textColor: isBlockedByMe ? Colors.green : Colors.redAccent,
+                    onTap: isLoadingBlock
+                        ? null
+                        : () async {
+                            Navigator.pop(sheetContext);
+                            await toggleBlock();
+                          },
+                  ),
+                ],
+              ),
             ),
           ),
         );
