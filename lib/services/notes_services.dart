@@ -3,8 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/note.dart';
 
 class NoteService {
-  final String baseUrl = "https://finara-app-ohwq.onrender.com/notes";
-
+  final String baseUrl = "https://finara-app-rc3x.onrender.com/notes";
 
   Future<List<Note>> fetchNotes(String token) async {
     try {
@@ -12,10 +11,10 @@ class NoteService {
         Uri.parse('$baseUrl/'),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer $token", 
+          "Authorization": "Bearer $token",
         },
       );
-      
+
       print("📡 STATUS FETCH: ${response.statusCode}");
       if (response.statusCode == 200) {
         List data = json.decode(response.body);
@@ -57,7 +56,9 @@ class NoteService {
         body: json.encode(note.toJson()),
       );
       print("📡 STATUS ACTUALIZAR: ${response.statusCode}");
-      return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204;
+      return response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          response.statusCode == 204;
     } catch (e) {
       print("🚨 Error en updateNote: $e");
       return false;

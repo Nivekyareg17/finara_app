@@ -98,7 +98,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
 
     link = (
-        f"https://finara-app-ohwq.onrender.com/auth/verify?token={token}"
+        f"https://finara-app-rc3x.onrender.com/auth/verify?token={token}"
     )
 
     print("VERIFY TOKEN:", token)
@@ -196,7 +196,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
 
     link = (
-        f"https://finara-app-ohwq.onrender.com/auth/reset?token={token}"
+        f"https://finara-app-rc3x.onrender.com/auth/reset?token={token}"
     )
 
     send_email(data.email, link)
@@ -329,7 +329,7 @@ async def upload_image(
         shutil.copyfileobj(file.file, buffer)
     
     # 4. CREAR URL Y GUARDAR EN POSTGRESQL
-    url_completa = f"https://finara-app-ohwq.onrender.com/{file_path}"
+    url_completa = f"https://finara-app-rc3x.onrender.com/{file_path}"
     
     current_user.profile_image_url = url_completa # Asignamos la URL al modelo del usuario
     db.add(current_user) # Aseguramos que SQLAlchemy lo siga

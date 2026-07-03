@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "https://finara-app-ohwq.onrender.com";
+  static const String baseUrl = "https://finara-app-rc3x.onrender.com";
 
   static Future<String?> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
@@ -591,7 +591,7 @@ class ApiService {
 
   Future<List<dynamic>> obtenerLecturas() async {
     final response = await http
-        .get(Uri.parse("https://finara-app-ohwq.onrender.com/api/lecturas/"));
+        .get(Uri.parse("https://finara-app-rc3x.onrender.com/api/lecturas/"));
 
     if (response.statusCode == 200) {
       return json.decode(response.body);

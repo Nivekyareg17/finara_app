@@ -75,7 +75,7 @@ class AIService {
   Future<List<Map<String, dynamic>>> obtenerGastosParaDaiko(
       String token) async {
     final url =
-        Uri.parse('https://finara-app-ohwq.onrender.com/transactions/');
+        Uri.parse('https://finara-app-rc3x.onrender.com/transactions/');
     try {
       final response = await http.get(
         url,
