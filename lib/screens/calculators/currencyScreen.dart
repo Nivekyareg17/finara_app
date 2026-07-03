@@ -101,12 +101,12 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         // Aplicamos TranslatedText al título
         title: const TranslatedText("Divisas en Tiempo Real",
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: primaryGreen,
         elevation: 0,
         centerTitle: true,
@@ -119,9 +119,9 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Theme.of(context).cardTheme.color,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
               child: TextField(
                 controller: _montoController,
@@ -136,7 +136,9 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 decoration: InputDecoration(
                   // Usamos label en lugar de labelText para poder pasar el Widget TranslatedText
                   label: const TranslatedText("Monto a convertir"),
-                  labelStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                  labelStyle: TextStyle(
+    color: Theme.of(context).textTheme.bodyLarge?.color,
+  ),
                   prefixIcon:
                       Icon(Icons.attach_money, color: primaryGreen, size: 30),
                   border: InputBorder.none,

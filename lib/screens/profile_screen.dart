@@ -832,6 +832,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final metas = context.watch<AuthProvider>().metas;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color primaryColor = Color(0xFF064E3B);
+    final auth = context.watch<AuthProvider>();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -1020,19 +1021,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
 
+
+            if (auth.isAdmin) 
                   _buildDrawerItem(
                     icon: Icons.admin_panel_settings_rounded,
                     title: "Alternar Vista",
                     subtitle: "Cambiar a Admin/Cliente",
                     color: Colors.deepPurple,
                     onTap: () async {
-                      Navigator.pop(context); // cierra drawer
+                      Navigator.pop(context);
                       await Future.delayed(const Duration(milliseconds: 200));
-                      final auth = context.read<AuthProvider>();
-                      auth.toggleView(); // cambia el rol
-                      // Redirige según el nuevo rol
-                      final newRoute =
-                          auth.isAdmin ? '/admin' : '/home';
+                      auth.toggleView();
+                      final newRoute = auth.isAdmin ? '/admin' : '/home';
                       Navigator.pushReplacementNamed(context, newRoute);
                     },
                   ),

@@ -110,10 +110,10 @@ class _NetSalaryScreenState extends State<NetSalaryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const TranslatedText("Salario Neto 2026", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: primaryGreen,
         elevation: 0,
         centerTitle: true,
