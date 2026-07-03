@@ -312,29 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 25),
-                const TranslatedText("OR CONTINUE WITH"),
-                const SizedBox(height: 15),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundColor:
-                          isDark ? Colors.black26 : Colors.grey[200],
-                      child: const Icon(Icons.g_mobiledata, size: 30),
-                    ),
-                    const SizedBox(width: 20),
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundColor:
-                          isDark ? Colors.black26 : Colors.grey[200],
-                      child: const Icon(Icons.apple),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 30),
+    
               ],
             ),
           ),
