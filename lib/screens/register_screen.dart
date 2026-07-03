@@ -280,7 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: passwordController,
                   obscureText: obscurePassword,
                   decoration: InputDecoration(
-                    hintText: "123456",
+                    hintText: "Ejm: Aa10Finara#",
                     filled: true,
                     fillColor: isDark ? Colors.black26 : Colors.grey[100],
                     border: OutlineInputBorder(
@@ -304,7 +304,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 const TranslatedText(
-                  "CONFIRMAR CONTRASEÑA",
+                  "Confirmar contraseña",
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
