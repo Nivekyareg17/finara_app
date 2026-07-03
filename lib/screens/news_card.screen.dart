@@ -192,10 +192,6 @@ class NewsScreen extends StatelessWidget {
                     TranslatedText(noticia.tiempoLectura,
                         style: TextStyle(color: Colors.white54, fontSize: 11)),
                     Spacer(),
-                    IconButton(
-                        icon: Icon(Icons.bookmark_border_outlined,
-                            color: Colors.white54, size: 18),
-                        onPressed: () {}),
                   ],
                 ),
               ],
